@@ -329,11 +329,24 @@
     </section>
   </main>
 
-  <!-- Rejection Modal -->
+  <!-- Approval Modal (notes required) -->
+  <div class="modal-overlay hidden" id="approve-modal">
+    <div class="modal">
+      <h3>Approve Video</h3>
+      <p>What worked well? Notes help the AI improve future videos for this format.</p>
+      <textarea id="approve-notes" rows="4" placeholder="e.g. Great pacing on the hook, CTA felt natural, loved the lighting…"></textarea>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="btn-cancel-approve">Cancel</button>
+        <button class="btn btn-primary" id="btn-confirm-approve">Approve &amp; Continue</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rejection Modal (notes required) -->
   <div class="modal-overlay hidden" id="reject-modal">
     <div class="modal">
       <h3>Reject &amp; Revise</h3>
-      <p>Provide notes so the AI can revise this video:</p>
+      <p>What needs to change? Notes help the AI revise this video.</p>
       <textarea id="reject-notes" rows="4" placeholder="e.g. Make the hook punchier, slow down the demo section…"></textarea>
       <div class="modal-actions">
         <button class="btn btn-secondary" id="btn-cancel-reject">Cancel</button>

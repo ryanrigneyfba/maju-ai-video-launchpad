@@ -27,7 +27,20 @@
   let queue = JSON.parse(localStorage.getItem(CONFIG.storageKeys.queue) || '[]');
   let apiKeys = JSON.parse(localStorage.getItem(CONFIG.storageKeys.apiKeys) || '{}');
   let currentRejectId = null;
+  let currentApproveId = null;
   let analyticsLoaded = false;
+
+  // ─── Feedback Log (persisted for AI learning) ───
+  const FEEDBACK_KEY = 'maju_feedback_log';
+  let feedbackLog = JSON.parse(localStorage.getItem(FEEDBACK_KEY) || '[]');
+
+  function saveFeedback(entry) {
+    feedbackLog.push({
+      ...entry,
+      timestamp: new Date().toISOString(),
+    });
+    localStorage.setItem(FEEDBACK_KEY, JSON.stringify(feedbackLog));
+  }
 
   // ─── DOM Refs ───
   const $ = (sel) => document.querySelector(sel);
@@ -99,7 +112,6 @@
 
   // ─── Generate Video ───
   $('#submit-video').addEventListener('click', () => {
-    alert('Generate clicked! Creating ' + $('#versions').value + ' versions...');
     const type = $('#video-type').value;
     const versions = parseInt($('#versions').value);
     const avatar = $('#avatar').value;
@@ -216,6 +228,7 @@
             ${(item.revisionCount || 0) > 0 ? `<div class="revision-count">🔄 Revision ${item.revisionCount}</div>` : ''}
           </div>
           ${(item.revisionNotes || []).length ? (item.revisionNotes || []).map((n, i) => `<div class="rejection-notes">Rev ${i + 1}: ${n}</div>`).join('') : ''}
+          ${(item.approvalNotes || []).length ? (item.approvalNotes || []).map((n) => `<div class="approval-notes">Approved: ${n}</div>`).join('') : ''}
         </div>
         <div class="queue-actions">
           ${item.status === 'pending' || item.status === 'revision'
@@ -246,18 +259,10 @@
     if (!action || !id) return;
 
     if (action === 'approve') {
-      const item = queue.find((q) => q.id === id);
-      if (item) {
-        item.status = 'approved';
-        item.pipelineStage = 'post';
-        saveQueue();
-        renderQueue(getActiveFilter());
-        renderActivity();
-        updateBadge();
-
-        // Schedule via Metricool if key is set
-        scheduleApprovedItem(item);
-      }
+      currentApproveId = id;
+      $('#approve-modal').classList.remove('hidden');
+      $('#approve-notes').value = '';
+      $('#approve-notes').focus();
     }
 
     if (action === 'reject') {
@@ -265,6 +270,58 @@
       $('#reject-modal').classList.remove('hidden');
       $('#reject-notes').value = '';
       $('#reject-notes').focus();
+    }
+  });
+
+  // ─── Approval Modal ───
+  $('#btn-cancel-approve').addEventListener('click', () => {
+    $('#approve-modal').classList.add('hidden');
+    currentApproveId = null;
+  });
+
+  $('#btn-confirm-approve').addEventListener('click', () => {
+    const notes = $('#approve-notes').value.trim();
+    if (!notes) {
+      $('#approve-notes').style.borderColor = 'var(--danger)';
+      return;
+    }
+
+    const item = queue.find((q) => q.id === currentApproveId);
+    if (item) {
+      item.status = 'approved';
+      item.pipelineStage = 'post';
+      if (!item.approvalNotes) item.approvalNotes = [];
+      item.approvalNotes.push(notes);
+
+      // Save to feedback log for AI learning
+      saveFeedback({
+        action: 'approve',
+        videoType: item.type,
+        avatar: item.avatar,
+        product: item.product,
+        version: item.version,
+        revisionCount: item.revisionCount || 0,
+        notes,
+        allRevisionNotes: item.revisionNotes || [],
+      });
+
+      saveQueue();
+      renderQueue(getActiveFilter());
+      renderActivity();
+      updateBadge();
+
+      // Schedule via Metricool if key is set
+      scheduleApprovedItem(item);
+    }
+
+    $('#approve-modal').classList.add('hidden');
+    currentApproveId = null;
+  });
+
+  $('#approve-modal').addEventListener('click', (e) => {
+    if (e.target === $('#approve-modal')) {
+      $('#approve-modal').classList.add('hidden');
+      currentApproveId = null;
     }
   });
 
@@ -288,19 +345,27 @@
       if (!item.revisionNotes) item.revisionNotes = [];
       item.revisionNotes.push(notes);
       item.pipelineStage = 'generate'; // back to Higgsfield for revision
+
+      // Save to feedback log for AI learning
+      saveFeedback({
+        action: 'reject',
+        videoType: item.type,
+        avatar: item.avatar,
+        product: item.product,
+        version: item.version,
+        revisionCount: item.revisionCount,
+        notes,
+        allRevisionNotes: item.revisionNotes,
+      });
+
       saveQueue();
       renderQueue(getActiveFilter());
       renderActivity();
       updateBadge();
 
-      // If higgsfield key exists, would send revision request here
+      // If higgsfield key exists, send revision request
       if (apiKeys.higgsfield) {
-        console.log('[Higgsfield] Would send revision request:', {
-          asset: CONFIG.higgsfield.asset,
-          avatar: CONFIG.higgsfield.avatar,
-          notes,
-          revisionCount: item.revisionCount,
-        });
+        API.higgsfield.reviseVideo(item.id, notes);
       }
     }
 
@@ -308,7 +373,7 @@
     currentRejectId = null;
   });
 
-  // Close modal on overlay click
+  // Close modals on overlay click
   $('#reject-modal').addEventListener('click', (e) => {
     if (e.target === $('#reject-modal')) {
       $('#reject-modal').classList.add('hidden');

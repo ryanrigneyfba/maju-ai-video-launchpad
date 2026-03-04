@@ -168,6 +168,7 @@ code{background:var(--bg-input);padding:1px 5px;border-radius:4px;font-size:.8re
 .queue-actions{display:flex;gap:.4rem;flex-shrink:0;align-items:center}
 .revision-count{font-size:.72rem;color:var(--revision);margin-top:.2rem}
 .rejection-notes{font-size:.78rem;color:var(--revision);margin-top:.3rem;font-style:italic;border-left:2px solid var(--revision);padding-left:.5rem}
+.approval-notes{font-size:.78rem;color:var(--accent);margin-top:.3rem;font-style:italic;border-left:2px solid var(--accent);padding-left:.5rem}
 
 /* ── Scheduled Posts ── */
 .api-status{
