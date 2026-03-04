@@ -549,7 +549,13 @@ app.get('/api/proxy/creatify/:taskId/status', async (req, res) => {
 });
 
 // ─── Serve Frontend (for local dev) ───
-app.use(express.static(path.join(__dirname, '..')));
+app.use(express.static(path.join(__dirname, '..'), {
+  etag: false,
+  maxAge: 0,
+  setHeaders: (res) => {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+  },
+}));
 
 // ─── Start ───
 app.listen(PORT, () => {
