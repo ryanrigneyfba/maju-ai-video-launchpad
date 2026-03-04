@@ -130,53 +130,26 @@
         <p class="pipeline-msg" id="pipeline-msg"></p>
       </div>
 
-      <!-- FFmpeg Stitch Panel -->
+      <!-- FFmpeg Auto-Stitch Panel -->
       <div class="card" id="stitch-card">
-        <h3 class="card-title">FFmpeg Stitch — Selfcare Snack Reel</h3>
+        <h3 class="card-title">FFmpeg Auto-Stitch + Captions</h3>
         <div class="backend-status" id="backend-status">
           <span class="status-dot disconnected"></span>
           <span>Backend: Not connected</span>
         </div>
-        <p class="settings-note">Upload clips for each SOP segment. The backend will stitch them into a 9:16 vertical video.</p>
+        <p class="settings-note">Videos are automatically stitched into a 9:16 vertical reel with captions after Higgsfield renders them. The pipeline handles everything — generate, stitch, caption, and queue for approval.</p>
+
         <div class="stitch-segments" id="stitch-segments">
-          <div class="stitch-segment" data-segment="hook">
-            <label>1. Hook (0-3s)</label>
-            <input type="file" accept="video/*" data-segment="hook">
-            <span class="file-status">No file</span>
-          </div>
-          <div class="stitch-segment" data-segment="reveal">
-            <label>2. Reveal (3-8s)</label>
-            <input type="file" accept="video/*" data-segment="reveal">
-            <span class="file-status">No file</span>
-          </div>
-          <div class="stitch-segment" data-segment="demo">
-            <label>3. Demo (8-18s)</label>
-            <input type="file" accept="video/*" data-segment="demo">
-            <span class="file-status">No file</span>
-          </div>
-          <div class="stitch-segment" data-segment="result">
-            <label>4. Result + CTA (18-25s)</label>
-            <input type="file" accept="video/*" data-segment="result">
-            <span class="file-status">No file</span>
-          </div>
-          <div class="stitch-segment" data-segment="endcard">
-            <label>5. End Card (25-30s)</label>
-            <input type="file" accept="video/*" data-segment="endcard">
-            <span class="file-status">No file</span>
-          </div>
+          <div class="stitch-segment"><span>1. Hook (0-3s)</span> <span class="file-status" id="seg-hook">Waiting…</span></div>
+          <div class="stitch-segment"><span>2. Reveal (3-8s)</span> <span class="file-status" id="seg-reveal">Waiting…</span></div>
+          <div class="stitch-segment"><span>3. Demo (8-18s)</span> <span class="file-status" id="seg-demo">Waiting…</span></div>
+          <div class="stitch-segment"><span>4. Result + CTA (18-25s)</span> <span class="file-status" id="seg-result">Waiting…</span></div>
+          <div class="stitch-segment"><span>5. End Card (25-30s)</span> <span class="file-status" id="seg-endcard">Waiting…</span></div>
         </div>
-        <div class="stitch-options">
-          <div class="form-group">
-            <label for="stitch-text">Text Overlay (optional)</label>
-            <input type="text" id="stitch-text" placeholder="e.g. Maju's Black Seed Oil — Shop Now">
-          </div>
-        </div>
-        <button class="btn btn-primary" id="btn-stitch" disabled>
-          🎬 Upload &amp; Stitch Video
-        </button>
+
         <div class="stitch-progress hidden" id="stitch-progress">
           <div class="progress-bar"><div class="progress-fill" id="stitch-fill"></div></div>
-          <p class="stitch-status" id="stitch-status">Uploading clips…</p>
+          <p class="stitch-status" id="stitch-status">Waiting for pipeline…</p>
         </div>
         <div class="stitch-result hidden" id="stitch-result">
           <p>Stitched video ready:</p>

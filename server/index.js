@@ -213,7 +213,6 @@ app.get('/api/download/:id', (req, res) => {
 function runStitch(jobId, clips, outputPath, options = {}) {
   const job = jobs.get(jobId);
   const resolution = options.resolution || '1080x1920'; // 9:16 vertical default
-  const format = options.format || 'mp4';
 
   // Create concat file list for FFmpeg
   const concatListPath = path.join(UPLOAD_DIR, `${jobId}-concat.txt`);
@@ -222,27 +221,48 @@ function runStitch(jobId, clips, outputPath, options = {}) {
     .join('\n');
   fs.writeFileSync(concatListPath, concatContent);
 
+  // Build video filter chain
+  const [w, h] = resolution.split('x');
+  const vfParts = [
+    `scale=${w}:${h}:force_original_aspect_ratio=decrease`,
+    `pad=${w}:${h}:(ow-iw)/2:(oh-ih)/2:black`,
+  ];
+
+  // Burn-in captions from SOP segments
+  // options.captions: array of { text, startTime, endTime } for each segment
+  if (options.captions && options.captions.length) {
+    // Generate SRT subtitle file
+    const srtPath = path.join(UPLOAD_DIR, `${jobId}-captions.srt`);
+    const srtContent = options.captions.map((cap, i) => {
+      const start = formatSrtTime(cap.startTime || 0);
+      const end = formatSrtTime(cap.endTime || (cap.startTime || 0) + 3);
+      return `${i + 1}\n${start} --> ${end}\n${cap.text}\n`;
+    }).join('\n');
+    fs.writeFileSync(srtPath, srtContent);
+
+    // Burn subtitles with bold white text, black outline — reel-style captions
+    const escapedSrt = srtPath.replace(/\\/g, '/').replace(/:/g, '\\:');
+    vfParts.push(
+      `subtitles='${escapedSrt}':force_style='FontSize=22,FontName=Arial,Bold=1,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,Outline=2,Shadow=1,Alignment=2,MarginV=80'`
+    );
+  }
+
+  // Static text overlay if provided (separate from captions)
+  if (options.overlayText) {
+    const escaped = options.overlayText.replace(/'/g, "'\\''").replace(/:/g, '\\:');
+    vfParts.push(
+      `drawtext=text='${escaped}':fontsize=48:fontcolor=white:x=(w-tw)/2:y=h-80:shadowcolor=black:shadowx=2:shadowy=2`
+    );
+  }
+
   // Build FFmpeg args
   const args = [
     '-y',
     '-f', 'concat',
     '-safe', '0',
     '-i', concatListPath,
+    '-vf', vfParts.join(','),
   ];
-
-  // Scale to target resolution (9:16 vertical for Reels/TikTok/Shorts)
-  const [w, h] = resolution.split('x');
-  args.push(
-    '-vf', `scale=${w}:${h}:force_original_aspect_ratio=decrease,pad=${w}:${h}:(ow-iw)/2:(oh-ih)/2:black`
-  );
-
-  // Text overlay if provided
-  if (options.overlayText) {
-    const escaped = options.overlayText.replace(/'/g, "'\\''");
-    args.push(
-      '-vf', `drawtext=text='${escaped}':fontsize=48:fontcolor=white:x=(w-tw)/2:y=h-80:shadowcolor=black:shadowx=2:shadowy=2`
-    );
-  }
 
   // Audio background track if provided
   if (options.audioBg) {
@@ -278,8 +298,9 @@ function runStitch(jobId, clips, outputPath, options = {}) {
   });
 
   ffmpeg.on('close', (code) => {
-    // Clean up concat list
+    // Clean up temp files
     try { fs.unlinkSync(concatListPath); } catch {}
+    try { fs.unlinkSync(path.join(UPLOAD_DIR, `${jobId}-captions.srt`)); } catch {}
 
     if (code === 0) {
       job.status = 'done';
@@ -296,6 +317,101 @@ function runStitch(jobId, clips, outputPath, options = {}) {
   ffmpeg.on('error', (err) => {
     job.status = 'error';
     job.error = err.message;
+  });
+}
+
+// Format seconds to SRT time format (HH:MM:SS,mmm)
+function formatSrtTime(seconds) {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = Math.floor(seconds % 60);
+  const ms = Math.round((seconds % 1) * 1000);
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')},${String(ms).padStart(3, '0')}`;
+}
+
+// ─── Auto-Stitch from URLs ───
+// Downloads video clips from URLs (e.g. Higgsfield output) and stitches them automatically
+app.post('/api/auto-stitch', async (req, res) => {
+  const { clips, options = {} } = req.body;
+  // clips: array of { url, label } — each is a video URL to download
+  if (!clips || !clips.length) {
+    return res.status(400).json({ error: 'No clips provided' });
+  }
+
+  const jobId = uuidv4();
+  const outputFile = `${jobId}.mp4`;
+  const outputPath = path.join(OUTPUT_DIR, outputFile);
+
+  jobs.set(jobId, {
+    id: jobId,
+    status: 'downloading',
+    progress: 0,
+    clips: clips.length,
+    outputFile: null,
+    error: null,
+    createdAt: new Date().toISOString(),
+  });
+
+  res.json({ jobId, status: 'downloading' });
+
+  // Download all clips in parallel, then stitch
+  try {
+    const downloadedClips = [];
+    const downloadPromises = clips.map(async (clip, i) => {
+      const ext = '.mp4';
+      const filename = `${jobId}-clip-${i}${ext}`;
+      const filepath = path.join(UPLOAD_DIR, filename);
+
+      await downloadFile(clip.url, filepath);
+      downloadedClips[i] = { filename };
+
+      const job = jobs.get(jobId);
+      const dlProgress = Math.round(((downloadedClips.filter(Boolean).length) / clips.length) * 40);
+      job.progress = dlProgress;
+    });
+
+    await Promise.all(downloadPromises);
+
+    const job = jobs.get(jobId);
+    job.status = 'processing';
+    job.progress = 45;
+
+    // Stitch the downloaded clips in order
+    runStitch(jobId, downloadedClips, outputPath, options);
+  } catch (err) {
+    const job = jobs.get(jobId);
+    job.status = 'error';
+    job.error = `Download failed: ${err.message}`;
+  }
+});
+
+// Download a file from URL to local path
+function downloadFile(url, destPath) {
+  return new Promise((resolve, reject) => {
+    const urlObj = new URL(url);
+    const transport = urlObj.protocol === 'https:' ? https : http;
+
+    const doRequest = (requestUrl) => {
+      const parsed = new URL(requestUrl);
+      const t = parsed.protocol === 'https:' ? https : http;
+      t.get(requestUrl, (response) => {
+        // Follow redirects
+        if (response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) {
+          doRequest(response.headers.location);
+          return;
+        }
+        if (response.statusCode !== 200) {
+          reject(new Error(`HTTP ${response.statusCode} downloading ${requestUrl}`));
+          return;
+        }
+        const file = fs.createWriteStream(destPath);
+        response.pipe(file);
+        file.on('finish', () => { file.close(); resolve(); });
+        file.on('error', (err) => { fs.unlink(destPath, () => {}); reject(err); });
+      }).on('error', reject);
+    };
+
+    doRequest(url);
   });
 }
 

@@ -130,10 +130,21 @@ Product: ${product}
 
 Your job: Based on the user's notes and past feedback (what worked, what didn't), generate an optimized video brief/prompt that will produce the best possible video.
 
+The video follows a Selfcare Snack Reel SOP with these segments:
+1. Hook (0-3s) — attention-grabbing opener
+2. Reveal (3-8s) — product reveal
+3. Demo (8-18s) — application/usage demonstration
+4. Result + CTA (18-25s) — results and call to action
+5. End Card (25-30s) — branding/handle
+
 Return ONLY a JSON object with these fields:
 - "script": the avatar speaking script (30 seconds max)
 - "direction": visual/pacing/tone direction for the AI
-- "reasoning": 1 sentence explaining what you optimized based on feedback`;
+- "reasoning": 1 sentence explaining what you optimized based on feedback
+- "captions": array of 5 objects for each segment, each with { "text": "caption text shown on screen", "startTime": seconds, "endTime": seconds }
+
+Example captions:
+[{"text":"Wait you NEED to try this","startTime":0,"endTime":3},{"text":"Maju Black Seed Oil","startTime":3,"endTime":8},{"text":"Just a few drops daily","startTime":8,"endTime":18},{"text":"My skin has never been better","startTime":18,"endTime":25},{"text":"@majuwellness","startTime":25,"endTime":30}]`;
 
     const feedbackContext = relevantFeedback.length
       ? `\n\nPast feedback for this format (${relevantFeedback.length} entries):
@@ -244,35 +255,149 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     const steps = $$('.pipeline-step');
     const msg = $('#pipeline-msg');
 
-    // Simulate pipeline stages
-    let stage = 0;
-    const stages = [
-      { label: 'Sending to Higgsfield for generation…', key: 'generate' },
-      { label: 'FFmpeg stitching & editing…', key: 'stitch' },
-      { label: 'Added to approval queue. Review when ready.', key: 'queue' },
-    ];
+    // Reset steps
+    steps.forEach((s) => s.classList.remove('active', 'done'));
 
-    function advance() {
-      if (stage > 0) steps[stage - 1].classList.replace('active', 'done');
-      if (stage < stages.length) {
-        steps[stage].classList.add('active');
-        msg.textContent = stages[stage].label;
+    function setStage(idx, text) {
+      if (idx > 0) steps[idx - 1].classList.replace('active', 'done');
+      if (idx < steps.length) steps[idx].classList.add('active');
+      msg.textContent = text;
+    }
 
-        // Check if API key exists for the current stage
-        if (stage === 0 && !apiKeys.higgsfield) {
-          msg.textContent =
-            '⚠️ Higgsfield API key not set — video generation simulated. Add key in Settings.';
-        }
+    // If no Higgsfield key, simulate the whole pipeline
+    if (!apiKeys.higgsfield) {
+      let stage = 0;
+      const sim = [
+        '⚠️ Higgsfield API key not set — video generation simulated. Add key in Settings.',
+        'FFmpeg stitch simulated (no backend connected).',
+        '✓ Pipeline complete — videos in queue (simulated).',
+      ];
+      function advanceSim() {
+        setStage(stage, sim[stage]);
         stage++;
-        if (stage < stages.length) setTimeout(advance, 1800);
-        else setTimeout(() => (msg.textContent = '✓ Pipeline complete — videos in queue.'), 1200);
+        if (stage < sim.length) setTimeout(advanceSim, 1800);
+      }
+      advanceSim();
+      return;
+    }
+
+    // Real pipeline: Generate → Stitch → Queue
+    runRealPipeline(steps, msg, setStage);
+  }
+
+  async function runRealPipeline(steps, msg, setStage) {
+    // Stage 0: Generate via Higgsfield
+    setStage(0, 'Sending to Higgsfield for generation…');
+
+    // Get the most recent queue items (just generated)
+    const newItems = queue.filter(q => q.pipelineStage === 'generate');
+    const videoIds = [];
+
+    for (const item of newItems) {
+      const params = {};
+      if (item.aiPrompt && item.aiPrompt.direction) {
+        params.prompt = item.aiPrompt.direction;
+      } else if (item.notes) {
+        params.prompt = item.notes;
+      }
+
+      const result = await API.higgsfield.generateVideo(params);
+      if (result.ok && result.id) {
+        item.higgsVideoId = result.id;
+        videoIds.push({ item, videoId: result.id });
+        msg.textContent = `Higgsfield generating… (${videoIds.length}/${newItems.length} submitted)`;
+      } else {
+        msg.textContent = `⚠️ Higgsfield error: ${result.error || 'Unknown error'}. Videos added to queue as pending.`;
+        item.pipelineStage = 'queue';
+      }
+      saveQueue();
+    }
+
+    if (!videoIds.length) {
+      setStage(2, '✓ Videos added to approval queue.');
+      return;
+    }
+
+    // Poll Higgsfield for completion
+    msg.textContent = 'Waiting for Higgsfield to render videos…';
+    const completedVideos = [];
+
+    for (const { item, videoId } of videoIds) {
+      let done = false;
+      let attempts = 0;
+      while (!done && attempts < 120) { // max ~6 min polling
+        await new Promise(r => setTimeout(r, 3000));
+        attempts++;
+        const status = await API.higgsfield.getStatus(videoId);
+        if (status.status === 'completed' || status.status === 'done') {
+          done = true;
+          const videoUrl = status.video_url || status.url || status.output_url;
+          if (videoUrl) {
+            completedVideos.push({ url: videoUrl, label: item.typeName });
+            item.videoUrl = videoUrl;
+          }
+          item.pipelineStage = 'stitch';
+          msg.textContent = `Rendered ${completedVideos.length}/${videoIds.length} videos…`;
+        } else if (status.status === 'failed' || status.status === 'error') {
+          done = true;
+          item.pipelineStage = 'queue';
+          msg.textContent = `⚠️ Video ${item.typeName} failed to render.`;
+        } else {
+          msg.textContent = `Rendering… (${status.status || 'processing'}) — ${completedVideos.length}/${videoIds.length} done`;
+        }
+        saveQueue();
       }
     }
-    // Reset
-    steps.forEach((s) => {
-      s.classList.remove('active', 'done');
-    });
-    advance();
+
+    // Stage 1: Auto-stitch via FFmpeg with captions
+    if (completedVideos.length > 0 && apiKeys.backendUrl) {
+      setStage(1, `FFmpeg auto-stitching ${completedVideos.length} clips with captions…`);
+
+      // Get captions from the AI brief if available
+      const stitchOptions = {};
+      const firstItem = newItems[0];
+      if (firstItem && firstItem.aiPrompt && firstItem.aiPrompt.captions) {
+        stitchOptions.captions = firstItem.aiPrompt.captions;
+      }
+
+      try {
+        const stitchResult = await API.backend.autoStitch(completedVideos, stitchOptions);
+        if (stitchResult.jobId) {
+          // Poll stitch job
+          let stitchDone = false;
+          while (!stitchDone) {
+            await new Promise(r => setTimeout(r, 1500));
+            const st = await API.backend.jobStatus(stitchResult.jobId);
+            msg.textContent = `Stitching… ${st.progress || 0}%`;
+
+            if (st.status === 'done') {
+              stitchDone = true;
+              const dlUrl = API.backend.downloadUrl(stitchResult.jobId);
+              // Store stitch result on the first queue item
+              newItems[0].stitchJobId = stitchResult.jobId;
+              newItems[0].stitchedVideoUrl = dlUrl;
+              msg.textContent = 'Stitch complete!';
+            } else if (st.status === 'error') {
+              stitchDone = true;
+              msg.textContent = `⚠️ Stitch error: ${st.error}`;
+            }
+          }
+        }
+      } catch (err) {
+        msg.textContent = `⚠️ Stitch error: ${err.message}`;
+      }
+    } else if (completedVideos.length > 0) {
+      setStage(1, 'Stitch skipped — no backend URL set. Individual videos available.');
+    } else {
+      setStage(1, 'Stitch skipped — no completed videos.');
+    }
+
+    // Stage 2: Queue
+    newItems.forEach(item => { item.pipelineStage = 'queue'; });
+    saveQueue();
+    renderQueue();
+    updateBadge();
+    setStage(2, '✓ Pipeline complete — videos in approval queue.');
   }
 
   // ─── Queue Rendering ───
@@ -849,6 +974,15 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       downloadUrl(jobId) {
         return backendUrl(`/api/download/${jobId}`);
       },
+
+      async autoStitch(clips, options = {}) {
+        const res = await fetch(backendUrl('/api/auto-stitch'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ clips, options }),
+        });
+        return await res.json();
+      },
     },
   };
 
@@ -871,92 +1005,16 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     }
   }
 
-  // ─── FFmpeg Stitch UI ───
-  const stitchFiles = {};
-
-  // Track file selections
-  $$('#stitch-segments input[type="file"]').forEach((input) => {
-    input.addEventListener('change', () => {
-      const segment = input.dataset.segment;
-      const statusEl = input.closest('.stitch-segment').querySelector('.file-status');
-      if (input.files.length) {
-        stitchFiles[segment] = input.files[0];
-        statusEl.textContent = input.files[0].name;
-        statusEl.classList.add('ready');
-      } else {
-        delete stitchFiles[segment];
-        statusEl.textContent = 'No file';
-        statusEl.classList.remove('ready');
-      }
-      // Enable stitch button when at least 2 clips are selected
-      const count = Object.keys(stitchFiles).length;
-      $('#btn-stitch').disabled = count < 2;
-    });
-  });
-
-  // Stitch button handler
-  $('#btn-stitch').addEventListener('click', async () => {
-    const segments = ['hook', 'reveal', 'demo', 'result', 'endcard'];
-    const files = segments.filter((s) => stitchFiles[s]).map((s) => stitchFiles[s]);
-
-    if (files.length < 2) return;
-
-    const btn = $('#btn-stitch');
-    const progress = $('#stitch-progress');
-    const result = $('#stitch-result');
-    const fill = $('#stitch-fill');
-    const status = $('#stitch-status');
-
-    btn.disabled = true;
-    progress.classList.remove('hidden');
-    result.classList.add('hidden');
-    fill.style.width = '5%';
-    status.textContent = 'Uploading clips to backend…';
-
-    try {
-      const options = {};
-      const overlayText = $('#stitch-text').value.trim();
-      if (overlayText) options.overlayText = overlayText;
-
-      // Upload and start stitch
-      fill.style.width = '15%';
-      const job = await API.backend.uploadAndStitch(files, options);
-
-      if (!job.jobId) throw new Error(job.error || 'Failed to start stitch job');
-
-      status.textContent = 'Stitching with FFmpeg…';
-      fill.style.width = '30%';
-
-      // Poll for completion
-      let done = false;
-      while (!done) {
-        await new Promise((r) => setTimeout(r, 1500));
-        const st = await API.backend.jobStatus(job.jobId);
-        fill.style.width = Math.max(30, st.progress || 30) + '%';
-        status.textContent = `Stitching… ${st.progress || 0}%`;
-
-        if (st.status === 'done') {
-          done = true;
-          fill.style.width = '100%';
-          status.textContent = 'Stitch complete!';
-
-          // Show result
-          const dlUrl = API.backend.downloadUrl(job.jobId);
-          const outputUrl = backendUrl(`/output/${st.outputFile}`);
-          result.classList.remove('hidden');
-          $('#stitch-preview').src = outputUrl;
-          $('#stitch-download').href = dlUrl;
-        } else if (st.status === 'error') {
-          throw new Error(st.error || 'Stitch failed');
-        }
-      }
-    } catch (err) {
-      status.textContent = `Error: ${err.message}`;
-      fill.style.width = '0%';
+  // ─── Auto-Stitch Segment Status Updates ───
+  // Called by the pipeline to update segment status in the stitch panel
+  function updateSegmentStatus(segment, statusText, isReady) {
+    const el = $(`#seg-${segment}`);
+    if (el) {
+      el.textContent = statusText;
+      if (isReady) el.classList.add('ready');
     }
-
-    btn.disabled = false;
-  });
+  }
+  window.updateSegmentStatus = updateSegmentStatus;
 
   // ─── Live Metricool Scheduled Posts ───
   async function fetchScheduledPosts() {
