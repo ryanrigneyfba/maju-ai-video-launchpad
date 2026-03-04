@@ -788,7 +788,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
 
   // ─── API Integrations (Live) ───
 
-  const DEFAULT_BACKEND = 'https://maju-backend.onrender.com';
+  const DEFAULT_BACKEND = ''; // Set your backend URL in Settings after deploying
 
   function backendUrl(path) {
     const base = (apiKeys.backendUrl || DEFAULT_BACKEND).replace(/\/+$/, '');
@@ -1071,7 +1071,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     for (let i = 0; i < retries; i++) {
       try {
         const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 30000); // 30s for Render cold start
+        const timeout = setTimeout(() => controller.abort(), 30000);
         const res = await fetch(backendUrl('/api/health'), { signal: controller.signal });
         clearTimeout(timeout);
         const status = await res.json();
@@ -1080,14 +1080,14 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
           return;
         }
       } catch {
-        // Render free tier cold-starts take ~30s, retry
+        // Backend may be cold-starting, retry
         if (i < retries - 1) {
           el.innerHTML = `<span class="status-dot connecting"></span><span>Backend: Waking up… (attempt ${i + 2}/${retries})</span>`;
           await new Promise(r => setTimeout(r, 5000));
         }
       }
     }
-    el.innerHTML = '<span class="status-dot disconnected"></span><span>Backend: Not connected — check Render dashboard or set URL in <a href="#" data-goto="settings">Settings</a></span>';
+    el.innerHTML = '<span class="status-dot disconnected"></span><span>Backend: Not connected — set your backend URL in <a href="#" data-goto="settings">Settings</a></span>';
   }
 
   // ─── Auto-Stitch Segment Status Updates ───
