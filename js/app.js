@@ -138,6 +138,14 @@
     updateBadge();
     showPipeline();
 
+    // Scroll pipeline into view so user sees it
+    $('#pipeline-card').scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+    // Flash the approval badge to draw attention
+    const badge = $('#queue-badge');
+    badge.classList.add('pulse');
+    setTimeout(() => badge.classList.remove('pulse'), 2000);
+
     // Reset form
     $('#notes').value = '';
   });

@@ -60,6 +60,8 @@ body{
   background:var(--danger);color:#fff;font-size:.7rem;
   padding:1px 7px;border-radius:50px;margin-left:auto;
 }
+.badge.pulse{animation:badgePulse .5s ease-in-out 3}
+@keyframes badgePulse{0%,100%{transform:scale(1)}50%{transform:scale(1.4)}}
 .sidebar-footer{margin-top:auto}
 .version{font-size:.7rem;color:var(--text-dim)}
 
