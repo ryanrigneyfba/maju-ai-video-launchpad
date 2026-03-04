@@ -9,6 +9,256 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <h1 class="logo">MAJU<span class="logo-accent">AI</span></h1>
+      <p class="logo-sub">Video Launchpad</p>
+    </div>
+    <nav class="sidebar-nav">
+      <button class="nav-btn active" data-view="dashboard">
+        <span class="nav-icon">⚡</span> Dashboard
+      </button>
+      <button class="nav-btn" data-view="approval">
+        <span class="nav-icon">✅</span> Approval Queue
+        <span class="badge" id="queue-badge">0</span>
+      </button>
+      <button class="nav-btn" data-view="scheduled">
+        <span class="nav-icon">📅</span> Scheduled Posts
+      </button>
+      <button class="nav-btn" data-view="sop-wiki">
+        <span class="nav-icon">📖</span> SOP Wiki
+      </button>
+      <button class="nav-btn" data-view="settings">
+        <span class="nav-icon">⚙️</span> API Settings
+      </button>
+    </nav>
+    <div class="sidebar-footer">
+      <p class="version">v1.1.0</p>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main" id="main">
+    <header class="topbar">
+      <button class="menu-toggle" id="menu-toggle">☰</button>
+      <h2 class="page-title" id="page-title">Dashboard</h2>
+    </header>
+
+    <!-- Dashboard View -->
+    <section class="view active" id="view-dashboard">
+      <div class="card">
+        <h3 class="card-title">Create New Video</h3>
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="video-type">Video Type</label>
+            <select id="video-type">
+              <option value="selfcare-snack-reel" selected>Selfcare Snack Reel</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="versions">Versions</label>
+            <select id="versions">
+              <option value="1">1 version</option>
+              <option value="2">2 versions</option>
+              <option value="3" selected>3 versions</option>
+              <option value="5">5 versions</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="avatar">Avatar</label>
+            <select id="avatar">
+              <option value="pateit" data-ig="@breealba" selected>Patient Maya (Bree Alba)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="product">Product</label>
+            <select id="product">
+              <option value="majurender8oz" selected>Maju's Black Seed Oil 8oz</option>
+            </select>
+          </div>
+          <div class="form-group full-width">
+            <label>Posting</label>
+            <div class="posting-toggle">
+              <label class="toggle-option">
+                <input type="radio" name="postMode" value="asap" checked>
+                <span class="toggle-label">Post ASAP</span>
+              </label>
+              <label class="toggle-option">
+                <input type="radio" name="postMode" value="schedule">
+                <span class="toggle-label">Schedule</span>
+              </label>
+            </div>
+            <div id="schedule-field" class="schedule-field hidden">
+              <input type="datetime-local" id="schedule-date">
+            </div>
+          </div>
+          <div class="form-group full-width">
+            <label for="notes">Notes / Brief</label>
+            <textarea id="notes" rows="3" placeholder="Any extra direction for the AI…"></textarea>
+          </div>
+        </div>
+        <button class="btn btn-primary" id="submit-video">
+          🚀 Generate &amp; Send to Queue
+        </button>
+      </div>
+
+      <!-- Pipeline Status -->
+      <div class="card hidden" id="pipeline-card">
+        <h3 class="card-title">Pipeline Status</h3>
+        <div class="pipeline">
+          <div class="pipeline-step" data-step="generate">
+            <span class="step-num">1</span>
+            <span class="step-label">Higgsfield Generate</span>
+          </div>
+          <div class="pipeline-step" data-step="stitch">
+            <span class="step-num">2</span>
+            <span class="step-label">FFmpeg Stitch</span>
+          </div>
+          <div class="pipeline-step" data-step="queue">
+            <span class="step-num">3</span>
+            <span class="step-label">Approval Queue</span>
+          </div>
+          <div class="pipeline-step" data-step="post">
+            <span class="step-num">4</span>
+            <span class="step-label">Post via Metricool</span>
+          </div>
+        </div>
+        <p class="pipeline-msg" id="pipeline-msg"></p>
+      </div>
+
+      <!-- Recent Activity -->
+      <div class="card">
+        <h3 class="card-title">Recent Activity</h3>
+        <div id="recent-activity" class="activity-list">
+          <p class="empty-state">No videos generated yet. Create your first one above!</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Approval Queue View -->
+    <section class="view" id="view-approval">
+      <div class="card">
+        <h3 class="card-title">Approval Queue</h3>
+        <div class="queue-filters">
+          <button class="filter-btn active" data-filter="all">All</button>
+          <button class="filter-btn" data-filter="pending">Pending</button>
+          <button class="filter-btn" data-filter="approved">Approved</button>
+          <button class="filter-btn" data-filter="rejected">Rejected</button>
+          <button class="filter-btn" data-filter="revision">In Revision</button>
+        </div>
+        <div id="queue-list" class="queue-list">
+          <p class="empty-state">Queue is empty. Generate videos from the Dashboard.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Scheduled Posts View (Metricool) -->
+    <section class="view" id="view-scheduled">
+      <div class="card">
+        <h3 class="card-title">Scheduled Posts</h3>
+        <div class="api-status" id="metricool-status">
+          <span class="status-dot disconnected"></span>
+          <span>Metricool: Not connected</span>
+          <a href="#" class="link-settings" data-goto="settings">Add API key →</a>
+        </div>
+        <div id="scheduled-list" class="scheduled-list">
+          <p class="empty-state">Connect your Metricool API key in Settings to see scheduled posts.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- SOP Wiki View -->
+    <section class="view" id="view-sop-wiki">
+      <div class="card">
+        <h3 class="card-title">SOP Wiki</h3>
+        <div class="sop-container">
+          <div class="sop-sidebar" id="sop-sidebar">
+            <button class="sop-link active" data-sop="selfcare-snack-reel">Selfcare Snack Reel</button>
+          </div>
+          <div class="sop-content" id="sop-content">
+            <p class="empty-state">Select an SOP from the list.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- API Settings View -->
+    <section class="view" id="view-settings">
+      <div class="card">
+        <h3 class="card-title">API Integrations</h3>
+        <p class="settings-note">Keys are stored locally in your browser. Never sent to third-party servers beyond the service itself.</p>
+
+        <div class="api-group">
+          <div class="api-field">
+            <label>Higgsfield API Key</label>
+            <div class="api-input-row">
+              <input type="password" id="api-higgsfield" placeholder="Enter Higgsfield key…">
+              <button class="btn btn-sm btn-toggle-vis" data-target="api-higgsfield">Show</button>
+            </div>
+            <span class="api-hint">AI avatar video generation — Asset: <code>majurender8oz</code> | Avatar: <code>pateit</code></span>
+          </div>
+
+          <div class="api-field">
+            <label>Metricool API Key</label>
+            <div class="api-input-row">
+              <input type="password" id="api-metricool" placeholder="Enter Metricool key…">
+              <button class="btn btn-sm btn-toggle-vis" data-target="api-metricool">Show</button>
+            </div>
+            <span class="api-hint">Social scheduling &amp; analytics — powers the Scheduled Posts view</span>
+          </div>
+
+          <div class="api-field">
+            <label>Arcads API Key</label>
+            <div class="api-input-row">
+              <input type="password" id="api-arcads" placeholder="Enter Arcads key…">
+              <button class="btn btn-sm btn-toggle-vis" data-target="api-arcads">Show</button>
+            </div>
+            <span class="api-hint">UGC-style ad video generation (future workflows)</span>
+          </div>
+
+          <div class="api-field">
+            <label>Creatify API Key</label>
+            <div class="api-input-row">
+              <input type="password" id="api-creatify" placeholder="Enter Creatify key…">
+              <button class="btn btn-sm btn-toggle-vis" data-target="api-creatify">Show</button>
+            </div>
+            <span class="api-hint">AI product video generation (future workflows)</span>
+          </div>
+        </div>
+
+        <button class="btn btn-primary" id="btn-save-keys">💾 Save Keys</button>
+        <p class="save-msg hidden" id="save-msg">✓ Keys saved to local storage</p>
+      </div>
+    </section>
+  </main>
+
+  <!-- Rejection Modal -->
+  <div class="modal-overlay hidden" id="reject-modal">
+    <div class="modal">
+      <h3>Reject &amp; Revise</h3>
+      <p>Provide notes so the AI can revise this video:</p>
+      <textarea id="reject-notes" rows="4" placeholder="e.g. Make the hook punchier, slow down the demo section…"></textarea>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="btn-cancel-reject">Cancel</button>
+        <button class="btn btn-danger" id="btn-confirm-reject">Reject &amp; Send for Revision</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MAJU AI Video Launchpad</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
       <h1 class="logo">MAJU<span class="logo-accent">AI</span></h1>
