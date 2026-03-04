@@ -197,9 +197,9 @@
           <div class="queue-meta">
             Status: <strong>${item.status.toUpperCase()}</strong> ·
             Created: ${formatDate(item.createdAt)}
-            ${item.revisionCount > 0 ? `<div class="revision-count">🔄 Revision ${item.revisionCount}</div>` : ''}
+            ${(item.revisionCount || 0) > 0 ? `<div class="revision-count">🔄 Revision ${item.revisionCount}</div>` : ''}
           </div>
-          ${item.revisionNotes.length ? item.revisionNotes.map((n, i) => `<div class="rejection-notes">Rev ${i + 1}: ${n}</div>`).join('') : ''}
+          ${(item.revisionNotes || []).length ? (item.revisionNotes || []).map((n, i) => `<div class="rejection-notes">Rev ${i + 1}: ${n}</div>`).join('') : ''}
         </div>
         <div class="queue-actions">
           ${item.status === 'pending' || item.status === 'revision'
@@ -270,7 +270,8 @@
     const item = queue.find((q) => q.id === currentRejectId);
     if (item) {
       item.status = 'revision';
-      item.revisionCount++;
+      item.revisionCount = (item.revisionCount || 0) + 1;
+      if (!item.revisionNotes) item.revisionNotes = [];
       item.revisionNotes.push(notes);
       item.pipelineStage = 'generate'; // back to Higgsfield for revision
       saveQueue();
