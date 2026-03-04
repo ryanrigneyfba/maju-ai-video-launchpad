@@ -161,6 +161,9 @@ code{background:var(--bg-input);padding:1px 5px;border-radius:4px;font-size:.8re
 .queue-item.status-approved{border-left-color:var(--success)}
 .queue-item.status-rejected{border-left-color:var(--danger)}
 .queue-item.status-revision{border-left-color:var(--revision)}
+.queue-video{flex-shrink:0;width:120px;border-radius:var(--radius);overflow:hidden;background:#000}
+.queue-video video{width:100%;display:block;border-radius:var(--radius)}
+.queue-video-placeholder{height:160px;display:flex;align-items:center;justify-content:center;background:var(--bg-card);border:1px dashed var(--text-dim);font-size:.72rem;color:var(--text-dim)}
 .queue-info{flex:1}
 .queue-info h4{font-size:.9rem;font-weight:600;margin-bottom:.25rem}
 .queue-info p{font-size:.78rem;color:var(--text-dim)}

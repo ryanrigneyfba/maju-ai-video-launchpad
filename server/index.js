@@ -473,15 +473,33 @@ app.post('/api/proxy/claude/messages', async (req, res) => {
   }
 });
 
-// ── Higgsfield Proxy ──
+// ── Hedra (formerly Higgsfield) Proxy ──
+// API docs: https://www.hedra.com/docs/api-reference/public/generate-asset
+app.post('/api/proxy/hedra/generate', async (req, res) => {
+  const apiKey = req.headers['x-api-key-value'];
+  if (!apiKey) return res.status(400).json({ error: 'Missing Hedra API key' });
+  try {
+    const result = await proxyRequest(
+      'https://api.hedra.com/web-app/public/generations',
+      'POST',
+      { 'X-API-Key': apiKey, 'Content-Type': 'application/json' },
+      req.body
+    );
+    res.status(result.status).json(result.data);
+  } catch (err) {
+    res.status(502).json({ error: err.message });
+  }
+});
+
+// Legacy route alias (frontend still calls /higgsfield/)
 app.post('/api/proxy/higgsfield/generate', async (req, res) => {
   const apiKey = req.headers['x-api-key-value'];
-  if (!apiKey) return res.status(400).json({ error: 'Missing API key' });
+  if (!apiKey) return res.status(400).json({ error: 'Missing Hedra API key' });
   try {
     const result = await proxyRequest(
-      'https://api.higgsfield.ai/v1/video/generate',
+      'https://api.hedra.com/web-app/public/generations',
       'POST',
-      { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      { 'X-API-Key': apiKey, 'Content-Type': 'application/json' },
       req.body
     );
     res.status(result.status).json(result.data);
@@ -490,14 +508,32 @@ app.post('/api/proxy/higgsfield/generate', async (req, res) => {
   }
 });
 
+app.post('/api/proxy/hedra/revise', async (req, res) => {
+  const apiKey = req.headers['x-api-key-value'];
+  if (!apiKey) return res.status(400).json({ error: 'Missing Hedra API key' });
+  try {
+    // Hedra revise = new generation with revision notes in the prompt
+    const result = await proxyRequest(
+      'https://api.hedra.com/web-app/public/generations',
+      'POST',
+      { 'X-API-Key': apiKey, 'Content-Type': 'application/json' },
+      req.body
+    );
+    res.status(result.status).json(result.data);
+  } catch (err) {
+    res.status(502).json({ error: err.message });
+  }
+});
+
+// Legacy alias
 app.post('/api/proxy/higgsfield/revise', async (req, res) => {
   const apiKey = req.headers['x-api-key-value'];
-  if (!apiKey) return res.status(400).json({ error: 'Missing API key' });
+  if (!apiKey) return res.status(400).json({ error: 'Missing Hedra API key' });
   try {
     const result = await proxyRequest(
-      'https://api.higgsfield.ai/v1/video/revise',
+      'https://api.hedra.com/web-app/public/generations',
       'POST',
-      { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      { 'X-API-Key': apiKey, 'Content-Type': 'application/json' },
       req.body
     );
     res.status(result.status).json(result.data);
@@ -506,14 +542,30 @@ app.post('/api/proxy/higgsfield/revise', async (req, res) => {
   }
 });
 
-app.get('/api/proxy/higgsfield/status/:videoId', async (req, res) => {
+app.get('/api/proxy/hedra/status/:generationId', async (req, res) => {
   const apiKey = req.headers['x-api-key-value'];
-  if (!apiKey) return res.status(400).json({ error: 'Missing API key' });
+  if (!apiKey) return res.status(400).json({ error: 'Missing Hedra API key' });
   try {
     const result = await proxyRequest(
-      `https://api.higgsfield.ai/v1/video/${encodeURIComponent(req.params.videoId)}`,
+      `https://api.hedra.com/web-app/public/generations/${encodeURIComponent(req.params.generationId)}/status`,
       'GET',
-      { 'Authorization': `Bearer ${apiKey}` }
+      { 'X-API-Key': apiKey }
+    );
+    res.status(result.status).json(result.data);
+  } catch (err) {
+    res.status(502).json({ error: err.message });
+  }
+});
+
+// Legacy alias
+app.get('/api/proxy/higgsfield/status/:generationId', async (req, res) => {
+  const apiKey = req.headers['x-api-key-value'];
+  if (!apiKey) return res.status(400).json({ error: 'Missing Hedra API key' });
+  try {
+    const result = await proxyRequest(
+      `https://api.hedra.com/web-app/public/generations/${encodeURIComponent(req.params.generationId)}/status`,
+      'GET',
+      { 'X-API-Key': apiKey }
     );
     res.status(result.status).json(result.data);
   } catch (err) {
