@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MAJU AI Video Launchpad</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <h1 class="logo">MAJU<span class="logo-accent">AI</span></h1>
+      <p class="logo-sub">Video Launchpad</p>
+    </div>
+    <nav class="sidebar-nav">
+      <button class="nav-btn active" data-view="dashboard"><span class="nav-icon">⚡</span> Dashboard</button>
+      <button class="nav-btn" data-view="approval"><span class="nav-icon">✅</span> Approval Queue <span class="badge" id="queue-badge">0</span></button>
+      <button class="nav-btn" data-view="sop-wiki"><span class="nav-icon">📖</span> SOP Wiki</button>
+    </nav>
+    <div class="sidebar-footer"><p class="version">v1.0.0</p></div>
+  </aside>
+  <main class="main" id="main">
+    <header class="topbar">
+      <button class="menu-toggle" id="menu-toggle">☰</button>
+      <h2 class="page-title" id="page-title">Dashboard</h2>
+    </header>
+    <section class="view active" id="view-dashboard">
+      <div class="card">
+        <h3 class="card-title">Create New Video</h3>
+        <div class="form-grid">
+          <div class="form-group"><label for="video-type">Video Type</label><select id="video-type"><option value="">Select type…</option><option value="selfcare-snack-reel">Selfcare Snack Reel</option><option value="product-explainer">Product Explainer</option><option value="testimonial">Testimonial</option><option value="behind-the-scenes">Behind the Scenes</option><option value="tutorial">Tutorial / How-To</option><option value="promo">Promo / Sale</option></select></div>
+          <div class="form-group"><label for="versions">Versions</label><select id="versions"><option value="1">1 version</option><option value="2">2 versions</option><option value="3" selected>3 versions</option><option value="5">5 versions</option></select></div>
+          <div class="form-group"><label for="avatar">Avatar</label><select id="avatar"><option value="">Select avatar…</option><option value="alex">Alex</option><option value="maya">Maya</option><option value="jordan">Jordan</option><option value="custom">Custom Upload</option></select></div>
+          <div class="form-group"><label for="product">Product</label><select id="product"><option value="">Select product…</option><option value="serum">Hydrating Serum</option><option value="moisturizer">Daily Moisturizer</option><option value="cleanser">Gentle Cleanser</option><option value="sunscreen">SPF Shield</option><option value="mask">Glow Mask</option></select></div>
+          <div class="form-group full-width"><label for="schedule-date">Schedule Date</label><input type="datetime-local" id="schedule-date"></div>
+          <div class="form-group full-width"><label for="notes">Notes / Brief</label><textarea id="notes" rows="3" placeholder="Any extra direction for the AI…"></textarea></div>
+        </div>
+        <button class="btn btn-primary" id="submit-video">🚀 Generate &amp; Send to Queue</button>
+      </div>
+      <div class="card"><h3 class="card-title">Recent Activity</h3><div id="recent-activity" class="activity-list"><p class="empty-state">No videos generated yet. Create your first one above!</p></div></div>
+    </section>
+    <section class="view" id="view-approval">
+      <div class="card">
+        <h3 class="card-title">Approval Queue</h3>
+        <div class="queue-filters"><button class="filter-btn active" data-filter="all">All</button><button class="filter-btn" data-filter="pending">Pending</button><button class="filter-btn" data-filter="approved">Approved</button><button class="filter-btn" data-filter="rejected">Rejected</button></div>
+        <div id="queue-list" class="queue-list"><p class="empty-state">Queue is empty. Generate videos from the Dashboard.</p></div>
+      </div>
+    </section>
+    <section class="view" id="view-sop-wiki">
+      <div class="card">
+        <h3 class="card-title">SOP Wiki</h3>
+        <div class="sop-container">
+          <div class="sop-sidebar" id="sop-sidebar"><button class="sop-link active" data-sop="selfcare-snack-reel">Selfcare Snack Reel</button></div>
+          <div class="sop-content" id="sop-content"><p class="empty-state">Select an SOP from the list.</p></div>
+        </div>
+      </div>
+    </section>
+  </main>
+  <script src="js/app.js"></script>
+</body>
+</html>
