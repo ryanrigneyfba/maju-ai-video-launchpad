@@ -1064,18 +1064,30 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
   window.MAJU_CONFIG = CONFIG;
 
   // ─── Backend Status Check ───
-  async function checkBackendStatus() {
+  async function checkBackendStatus(retries = 3) {
     const el = $('#backend-status');
-    try {
-      const status = await API.backend.health();
-      if (status.status === 'ok') {
-        el.innerHTML = `<span class="status-dot connected"></span><span>Backend: Connected${status.ffmpeg ? ' (FFmpeg ready)' : ' (FFmpeg not found!)'}</span>`;
-      } else {
-        el.innerHTML = '<span class="status-dot disconnected"></span><span>Backend: Not connected</span>';
+    el.innerHTML = '<span class="status-dot connecting"></span><span>Backend: Connecting…</span>';
+
+    for (let i = 0; i < retries; i++) {
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 30000); // 30s for Render cold start
+        const res = await fetch(backendUrl('/api/health'), { signal: controller.signal });
+        clearTimeout(timeout);
+        const status = await res.json();
+        if (status.status === 'ok') {
+          el.innerHTML = `<span class="status-dot connected"></span><span>Backend: Connected${status.ffmpeg ? ' (FFmpeg ready)' : ' (FFmpeg not found!)'}</span>`;
+          return;
+        }
+      } catch {
+        // Render free tier cold-starts take ~30s, retry
+        if (i < retries - 1) {
+          el.innerHTML = `<span class="status-dot connecting"></span><span>Backend: Waking up… (attempt ${i + 2}/${retries})</span>`;
+          await new Promise(r => setTimeout(r, 5000));
+        }
       }
-    } catch {
-      el.innerHTML = '<span class="status-dot disconnected"></span><span>Backend: Not connected — set URL in <a href="#" data-goto="settings">Settings</a></span>';
     }
+    el.innerHTML = '<span class="status-dot disconnected"></span><span>Backend: Not connected — check Render dashboard or set URL in <a href="#" data-goto="settings">Settings</a></span>';
   }
 
   // ─── Auto-Stitch Segment Status Updates ───
