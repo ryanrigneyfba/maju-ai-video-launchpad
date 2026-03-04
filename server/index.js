@@ -299,13 +299,222 @@ function runStitch(jobId, clips, outputPath, options = {}) {
   });
 }
 
+// ─── API Proxy Routes ───
+// Proxy third-party API calls to avoid CORS issues from the browser.
+// Frontend sends API keys in x-api-key-value header; backend forwards them properly.
+
+const https = require('https');
+const http = require('http');
+
+function proxyRequest(targetUrl, method, headers, body) {
+  return new Promise((resolve, reject) => {
+    const url = new URL(targetUrl);
+    const transport = url.protocol === 'https:' ? https : http;
+    const options = {
+      hostname: url.hostname,
+      port: url.port || (url.protocol === 'https:' ? 443 : 80),
+      path: url.pathname + url.search,
+      method,
+      headers,
+    };
+
+    const req = transport.request(options, (res) => {
+      let data = '';
+      res.on('data', (chunk) => (data += chunk));
+      res.on('end', () => {
+        try {
+          resolve({ status: res.statusCode, data: JSON.parse(data) });
+        } catch {
+          resolve({ status: res.statusCode, data });
+        }
+      });
+    });
+
+    req.on('error', (err) => reject(err));
+    if (body) req.write(typeof body === 'string' ? body : JSON.stringify(body));
+    req.end();
+  });
+}
+
+// ── Higgsfield Proxy ──
+app.post('/api/proxy/higgsfield/generate', async (req, res) => {
+  const apiKey = req.headers['x-api-key-value'];
+  if (!apiKey) return res.status(400).json({ error: 'Missing API key' });
+  try {
+    const result = await proxyRequest(
+      'https://api.higgsfield.ai/v1/video/generate',
+      'POST',
+      { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      req.body
+    );
+    res.status(result.status).json(result.data);
+  } catch (err) {
+    res.status(502).json({ error: err.message });
+  }
+});
+
+app.post('/api/proxy/higgsfield/revise', async (req, res) => {
+  const apiKey = req.headers['x-api-key-value'];
+  if (!apiKey) return res.status(400).json({ error: 'Missing API key' });
+  try {
+    const result = await proxyRequest(
+      'https://api.higgsfield.ai/v1/video/revise',
+      'POST',
+      { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      req.body
+    );
+    res.status(result.status).json(result.data);
+  } catch (err) {
+    res.status(502).json({ error: err.message });
+  }
+});
+
+app.get('/api/proxy/higgsfield/status/:videoId', async (req, res) => {
+  const apiKey = req.headers['x-api-key-value'];
+  if (!apiKey) return res.status(400).json({ error: 'Missing API key' });
+  try {
+    const result = await proxyRequest(
+      `https://api.higgsfield.ai/v1/video/${encodeURIComponent(req.params.videoId)}`,
+      'GET',
+      { 'Authorization': `Bearer ${apiKey}` }
+    );
+    res.status(result.status).json(result.data);
+  } catch (err) {
+    res.status(502).json({ error: err.message });
+  }
+});
+
+// ── Metricool Proxy ──
+app.get('/api/proxy/metricool/posts', async (req, res) => {
+  const apiKey = req.headers['x-api-key-value'];
+  if (!apiKey) return res.status(400).json({ error: 'Missing API key' });
+  try {
+    const qs = new URLSearchParams(req.query).toString();
+    const result = await proxyRequest(
+      `https://app.metricool.com/api/v2/scheduler/posts${qs ? '?' + qs : ''}`,
+      'GET',
+      { 'X-Mc-Auth': apiKey, 'Content-Type': 'application/json' }
+    );
+    res.status(result.status).json(result.data);
+  } catch (err) {
+    res.status(502).json({ error: err.message });
+  }
+});
+
+app.post('/api/proxy/metricool/posts', async (req, res) => {
+  const apiKey = req.headers['x-api-key-value'];
+  if (!apiKey) return res.status(400).json({ error: 'Missing API key' });
+  try {
+    const result = await proxyRequest(
+      'https://app.metricool.com/api/v2/scheduler/posts',
+      'POST',
+      { 'X-Mc-Auth': apiKey, 'Content-Type': 'application/json' },
+      req.body
+    );
+    res.status(result.status).json(result.data);
+  } catch (err) {
+    res.status(502).json({ error: err.message });
+  }
+});
+
+// ── Arcads Proxy ──
+app.post('/api/proxy/arcads/videos', async (req, res) => {
+  const apiKey = req.headers['x-api-key-value'];
+  if (!apiKey) return res.status(400).json({ error: 'Missing API key' });
+  try {
+    const result = await proxyRequest(
+      'https://api.arcads.ai/v1/videos',
+      'POST',
+      { 'Authorization': `Basic ${apiKey}`, 'Content-Type': 'application/json' },
+      req.body
+    );
+    res.status(result.status).json(result.data);
+  } catch (err) {
+    res.status(502).json({ error: err.message });
+  }
+});
+
+app.get('/api/proxy/arcads/videos/:videoId', async (req, res) => {
+  const apiKey = req.headers['x-api-key-value'];
+  if (!apiKey) return res.status(400).json({ error: 'Missing API key' });
+  try {
+    const result = await proxyRequest(
+      `https://api.arcads.ai/v1/videos/${encodeURIComponent(req.params.videoId)}`,
+      'GET',
+      { 'Authorization': `Basic ${apiKey}` }
+    );
+    res.status(result.status).json(result.data);
+  } catch (err) {
+    res.status(502).json({ error: err.message });
+  }
+});
+
+// ── Creatify Proxy ──
+app.post('/api/proxy/creatify/gen-image', async (req, res) => {
+  const apiId = req.headers['x-creatify-id'];
+  const apiKey = req.headers['x-creatify-key'];
+  if (!apiId || !apiKey) return res.status(400).json({ error: 'Missing Creatify credentials' });
+  try {
+    const result = await proxyRequest(
+      'https://api.creatify.ai/api/product_to_videos/gen_image/',
+      'POST',
+      { 'X-API-ID': apiId, 'X-API-KEY': apiKey, 'Content-Type': 'application/json' },
+      req.body
+    );
+    res.status(result.status).json(result.data);
+  } catch (err) {
+    res.status(502).json({ error: err.message });
+  }
+});
+
+app.post('/api/proxy/creatify/:taskId/gen-video', async (req, res) => {
+  const apiId = req.headers['x-creatify-id'];
+  const apiKey = req.headers['x-creatify-key'];
+  if (!apiId || !apiKey) return res.status(400).json({ error: 'Missing Creatify credentials' });
+  try {
+    const result = await proxyRequest(
+      `https://api.creatify.ai/api/product_to_videos/${encodeURIComponent(req.params.taskId)}/gen_video/`,
+      'POST',
+      { 'X-API-ID': apiId, 'X-API-KEY': apiKey, 'Content-Type': 'application/json' },
+      req.body
+    );
+    res.status(result.status).json(result.data);
+  } catch (err) {
+    res.status(502).json({ error: err.message });
+  }
+});
+
+app.get('/api/proxy/creatify/:taskId/status', async (req, res) => {
+  const apiId = req.headers['x-creatify-id'];
+  const apiKey = req.headers['x-creatify-key'];
+  if (!apiId || !apiKey) return res.status(400).json({ error: 'Missing Creatify credentials' });
+  try {
+    const result = await proxyRequest(
+      `https://api.creatify.ai/api/product_to_videos/${encodeURIComponent(req.params.taskId)}/`,
+      'GET',
+      { 'X-API-ID': apiId, 'X-API-KEY': apiKey }
+    );
+    res.status(result.status).json(result.data);
+  } catch (err) {
+    res.status(502).json({ error: err.message });
+  }
+});
+
+// ─── Serve Frontend (for local dev) ───
+app.use(express.static(path.join(__dirname, '..')));
+
 // ─── Start ───
 app.listen(PORT, () => {
   console.log(`MAJU Backend running on http://localhost:${PORT}`);
-  console.log(`  POST /api/upload      — Upload clips`);
-  console.log(`  POST /api/stitch      — Stitch clips into final video`);
-  console.log(`  POST /api/pipeline    — Upload + stitch in one step`);
-  console.log(`  GET  /api/jobs/:id    — Check job status`);
-  console.log(`  GET  /api/download/:id — Download finished video`);
-  console.log(`  GET  /api/health      — Health check`);
+  console.log(`  Frontend:  http://localhost:${PORT} (serves index.html)`);
+  console.log(`  POST /api/upload         — Upload clips`);
+  console.log(`  POST /api/stitch         — Stitch clips into final video`);
+  console.log(`  POST /api/pipeline       — Upload + stitch in one step`);
+  console.log(`  GET  /api/jobs/:id       — Check job status`);
+  console.log(`  GET  /api/download/:id   — Download finished video`);
+  console.log(`  GET  /api/health         — Health check`);
+  console.log(`  /api/proxy/higgsfield/*  — Higgsfield proxy`);
+  console.log(`  /api/proxy/metricool/*   — Metricool proxy`);
+  console.log(`  /api/proxy/arcads/*      — Arcads proxy`);
+  console.log(`  /api/proxy/creatify/*    — Creatify proxy`);
 });

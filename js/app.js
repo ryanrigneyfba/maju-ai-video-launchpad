@@ -475,24 +475,19 @@
     return base + path;
   }
 
+  // All API calls route through the backend proxy to avoid CORS issues.
+
   const API = {
-    // ── Higgsfield — AI avatar video generation ──
+    // ── Higgsfield — AI avatar video generation (via proxy) ──
     higgsfield: {
       async generateVideo(params) {
         console.log('[Higgsfield] Generate video:', params);
         if (!apiKeys.higgsfield) return { ok: false, error: 'No API key set' };
         try {
-          const res = await fetch('https://api.higgsfield.ai/v1/video/generate', {
+          const res = await fetch(backendUrl('/api/proxy/higgsfield/generate'), {
             method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${apiKeys.higgsfield}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              asset: CONFIG.higgsfield.asset,
-              avatar: CONFIG.higgsfield.avatar,
-              ...params,
-            }),
+            headers: { 'Content-Type': 'application/json', 'x-api-key-value': apiKeys.higgsfield },
+            body: JSON.stringify({ asset: CONFIG.higgsfield.asset, avatar: CONFIG.higgsfield.avatar, ...params }),
           });
           const data = await res.json();
           return { ok: res.ok, ...data };
@@ -503,15 +498,11 @@
       },
 
       async reviseVideo(videoId, notes) {
-        console.log('[Higgsfield] Revise video:', videoId, notes);
         if (!apiKeys.higgsfield) return { ok: false, error: 'No API key set' };
         try {
-          const res = await fetch('https://api.higgsfield.ai/v1/video/revise', {
+          const res = await fetch(backendUrl('/api/proxy/higgsfield/revise'), {
             method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${apiKeys.higgsfield}`,
-              'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json', 'x-api-key-value': apiKeys.higgsfield },
             body: JSON.stringify({ videoId, notes }),
           });
           const data = await res.json();
@@ -524,8 +515,8 @@
       async getStatus(videoId) {
         if (!apiKeys.higgsfield) return { ok: false, error: 'No API key set' };
         try {
-          const res = await fetch(`https://api.higgsfield.ai/v1/video/${encodeURIComponent(videoId)}`, {
-            headers: { 'Authorization': `Bearer ${apiKeys.higgsfield}` },
+          const res = await fetch(backendUrl(`/api/proxy/higgsfield/status/${encodeURIComponent(videoId)}`), {
+            headers: { 'x-api-key-value': apiKeys.higgsfield },
           });
           const data = await res.json();
           return { ok: res.ok, ...data };
@@ -535,7 +526,7 @@
       },
     },
 
-    // ── Metricool — Social scheduling & analytics ──
+    // ── Metricool — Social scheduling & analytics (via proxy) ──
     metricool: {
       async getScheduledPosts() {
         console.log('[Metricool] Fetching scheduled posts');
@@ -547,11 +538,8 @@
             init_date: now.toISOString().split('T')[0],
             end_date: future.toISOString().split('T')[0],
           });
-          const res = await fetch(`https://app.metricool.com/api/v2/scheduler/posts?${params}`, {
-            headers: {
-              'X-Mc-Auth': apiKeys.metricool,
-              'Content-Type': 'application/json',
-            },
+          const res = await fetch(backendUrl(`/api/proxy/metricool/posts?${params}`), {
+            headers: { 'x-api-key-value': apiKeys.metricool },
           });
           const data = await res.json();
           return { ok: res.ok, posts: data.posts || data || [] };
@@ -565,12 +553,9 @@
         console.log('[Metricool] Schedule post:', params);
         if (!apiKeys.metricool) return { ok: false, error: 'No API key set' };
         try {
-          const res = await fetch('https://app.metricool.com/api/v2/scheduler/posts', {
+          const res = await fetch(backendUrl('/api/proxy/metricool/posts'), {
             method: 'POST',
-            headers: {
-              'X-Mc-Auth': apiKeys.metricool,
-              'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json', 'x-api-key-value': apiKeys.metricool },
             body: JSON.stringify(params),
           });
           const data = await res.json();
@@ -582,18 +567,15 @@
       },
     },
 
-    // ── Arcads — UGC-style ad video generation ──
+    // ── Arcads — UGC-style ad video generation (via proxy) ──
     arcads: {
       async generateUGC(params) {
         console.log('[Arcads] Generate UGC video:', params);
         if (!apiKeys.arcads) return { ok: false, error: 'No API key set' };
         try {
-          const res = await fetch('https://api.arcads.ai/v1/videos', {
+          const res = await fetch(backendUrl('/api/proxy/arcads/videos'), {
             method: 'POST',
-            headers: {
-              'Authorization': `Basic ${apiKeys.arcads}`,
-              'Content-Type': 'application/json',
-            },
+            headers: { 'Content-Type': 'application/json', 'x-api-key-value': apiKeys.arcads },
             body: JSON.stringify(params),
           });
           const data = await res.json();
@@ -607,8 +589,8 @@
       async getStatus(videoId) {
         if (!apiKeys.arcads) return { ok: false, error: 'No API key set' };
         try {
-          const res = await fetch(`https://api.arcads.ai/v1/videos/${encodeURIComponent(videoId)}`, {
-            headers: { 'Authorization': `Basic ${apiKeys.arcads}` },
+          const res = await fetch(backendUrl(`/api/proxy/arcads/videos/${encodeURIComponent(videoId)}`), {
+            headers: { 'x-api-key-value': apiKeys.arcads },
           });
           const data = await res.json();
           return { ok: res.ok, ...data };
@@ -618,24 +600,22 @@
       },
     },
 
-    // ── Creatify — AI product video generation ──
-    // Auth: store as "X-API-ID:X-API-KEY" in one field, colon-separated
+    // ── Creatify — AI product video generation (via proxy) ──
     creatify: {
-      _headers() {
-        const [apiId, apiKey] = apiKeys.creatify.includes(':')
+      _creatifyHeaders() {
+        const [apiId, apiKey] = (apiKeys.creatify || '').includes(':')
           ? apiKeys.creatify.split(':')
-          : [apiKeys.creatify, ''];
-        return { 'X-API-ID': apiId, 'X-API-KEY': apiKey || apiId, 'Content-Type': 'application/json' };
+          : [apiKeys.creatify || '', ''];
+        return { 'x-creatify-id': apiId, 'x-creatify-key': apiKey || apiId, 'Content-Type': 'application/json' };
       },
 
       async generatePreview(params) {
-        // Step 1: generate preview image from product URL
         console.log('[Creatify] Generate preview:', params);
         if (!apiKeys.creatify) return { ok: false, error: 'No API key set' };
         try {
-          const res = await fetch('https://api.creatify.ai/api/product_to_videos/gen_image/', {
+          const res = await fetch(backendUrl('/api/proxy/creatify/gen-image'), {
             method: 'POST',
-            headers: this._headers(),
+            headers: this._creatifyHeaders(),
             body: JSON.stringify({
               product_url: params.productUrl,
               aspect_ratio: params.aspectRatio || '9x16',
@@ -651,12 +631,11 @@
       },
 
       async generateVideo(taskId, params = {}) {
-        // Step 2: generate video from preview
         if (!apiKeys.creatify) return { ok: false, error: 'No API key set' };
         try {
-          const res = await fetch(`https://api.creatify.ai/api/product_to_videos/${encodeURIComponent(taskId)}/gen_video/`, {
+          const res = await fetch(backendUrl(`/api/proxy/creatify/${encodeURIComponent(taskId)}/gen-video`), {
             method: 'POST',
-            headers: this._headers(),
+            headers: this._creatifyHeaders(),
             body: JSON.stringify({ video_prompt: params.videoPrompt || '' }),
           });
           const data = await res.json();
@@ -669,8 +648,8 @@
       async getStatus(taskId) {
         if (!apiKeys.creatify) return { ok: false, error: 'No API key set' };
         try {
-          const res = await fetch(`https://api.creatify.ai/api/product_to_videos/${encodeURIComponent(taskId)}/`, {
-            headers: this._headers(),
+          const res = await fetch(backendUrl(`/api/proxy/creatify/${encodeURIComponent(taskId)}/status`), {
+            headers: this._creatifyHeaders(),
           });
           const data = await res.json();
           return { ok: res.ok, ...data };
@@ -851,8 +830,6 @@
   }
 
   // ─── Wire Approve → Metricool Post ───
-  const origApproveHandler = document.querySelector.bind(document);
-  // Already handled in the click listener above, now add Metricool scheduling
   function scheduleApprovedItem(item) {
     if (!apiKeys.metricool) {
       console.log('[Metricool] No API key — skip scheduling');
