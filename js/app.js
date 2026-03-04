@@ -239,10 +239,8 @@
         renderActivity();
         updateBadge();
 
-        // If metricool key exists, would post here
-        if (apiKeys.metricool) {
-          console.log('[Metricool] Would schedule/post:', item);
-        }
+        // Schedule via Metricool if key is set
+        scheduleApprovedItem(item);
       }
     }
 
@@ -408,6 +406,7 @@
   // ─── API Settings ───
   // Load saved keys
   function loadApiKeys() {
+    if (apiKeys.backendUrl) $('#api-backend-url').value = apiKeys.backendUrl;
     if (apiKeys.higgsfield) $('#api-higgsfield').value = apiKeys.higgsfield;
     if (apiKeys.metricool) $('#api-metricool').value = apiKeys.metricool;
     if (apiKeys.arcads) $('#api-arcads').value = apiKeys.arcads;
@@ -431,6 +430,7 @@
   // Save keys
   $('#btn-save-keys').addEventListener('click', () => {
     apiKeys = {
+      backendUrl: $('#api-backend-url').value.trim(),
       higgsfield: $('#api-higgsfield').value.trim(),
       metricool: $('#api-metricool').value.trim(),
       arcads: $('#api-arcads').value.trim(),
@@ -441,6 +441,7 @@
     msg.classList.remove('hidden');
     setTimeout(() => msg.classList.add('hidden'), 2500);
     renderScheduledPosts();
+    checkBackendStatus();
   });
 
   // ─── Helpers ───
@@ -467,68 +468,249 @@
     }
   }
 
-  // ─── API Integration Stubs ───
-  // These are ready to be wired up when API keys are provided.
+  // ─── API Integrations (Live) ───
+
+  function backendUrl(path) {
+    const base = (apiKeys.backendUrl || 'http://localhost:3001').replace(/\/+$/, '');
+    return base + path;
+  }
 
   const API = {
+    // ── Higgsfield — AI avatar video generation ──
     higgsfield: {
       async generateVideo(params) {
-        // POST to Higgsfield API
-        // params: { asset, avatar, prompt, notes }
         console.log('[Higgsfield] Generate video:', params);
-        if (!apiKeys.higgsfield)
-          return { ok: false, error: 'No API key set' };
-        // TODO: Real API call
-        // const res = await fetch('https://api.higgsfield.ai/v1/generate', {
-        //   method: 'POST',
-        //   headers: { 'Authorization': `Bearer ${apiKeys.higgsfield}`, 'Content-Type': 'application/json' },
-        //   body: JSON.stringify({ asset: CONFIG.higgsfield.asset, avatar: CONFIG.higgsfield.avatar, ...params })
-        // });
-        return { ok: true, videoId: 'sim_' + Date.now() };
+        if (!apiKeys.higgsfield) return { ok: false, error: 'No API key set' };
+        try {
+          const res = await fetch('https://api.higgsfield.ai/v1/video/generate', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${apiKeys.higgsfield}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              asset: CONFIG.higgsfield.asset,
+              avatar: CONFIG.higgsfield.avatar,
+              ...params,
+            }),
+          });
+          const data = await res.json();
+          return { ok: res.ok, ...data };
+        } catch (err) {
+          console.error('[Higgsfield] Error:', err);
+          return { ok: false, error: err.message };
+        }
       },
 
       async reviseVideo(videoId, notes) {
         console.log('[Higgsfield] Revise video:', videoId, notes);
-        if (!apiKeys.higgsfield)
-          return { ok: false, error: 'No API key set' };
-        return { ok: true, videoId: videoId + '_rev' };
+        if (!apiKeys.higgsfield) return { ok: false, error: 'No API key set' };
+        try {
+          const res = await fetch('https://api.higgsfield.ai/v1/video/revise', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${apiKeys.higgsfield}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ videoId, notes }),
+          });
+          const data = await res.json();
+          return { ok: res.ok, ...data };
+        } catch (err) {
+          return { ok: false, error: err.message };
+        }
+      },
+
+      async getStatus(videoId) {
+        if (!apiKeys.higgsfield) return { ok: false, error: 'No API key set' };
+        try {
+          const res = await fetch(`https://api.higgsfield.ai/v1/video/${encodeURIComponent(videoId)}`, {
+            headers: { 'Authorization': `Bearer ${apiKeys.higgsfield}` },
+          });
+          const data = await res.json();
+          return { ok: res.ok, ...data };
+        } catch (err) {
+          return { ok: false, error: err.message };
+        }
       },
     },
 
+    // ── Metricool — Social scheduling & analytics ──
     metricool: {
       async getScheduledPosts() {
         console.log('[Metricool] Fetching scheduled posts');
-        if (!apiKeys.metricool)
-          return { ok: false, error: 'No API key set' };
-        // TODO: Real API call
-        // const res = await fetch('https://app.metricool.com/api/v1/posts/scheduled', {
-        //   headers: { 'Authorization': `Bearer ${apiKeys.metricool}` }
-        // });
-        return { ok: true, posts: [] };
+        if (!apiKeys.metricool) return { ok: false, error: 'No API key set' };
+        try {
+          const now = new Date();
+          const future = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+          const params = new URLSearchParams({
+            init_date: now.toISOString().split('T')[0],
+            end_date: future.toISOString().split('T')[0],
+          });
+          const res = await fetch(`https://app.metricool.com/api/v2/scheduler/posts?${params}`, {
+            headers: {
+              'X-Mc-Auth': apiKeys.metricool,
+              'Content-Type': 'application/json',
+            },
+          });
+          const data = await res.json();
+          return { ok: res.ok, posts: data.posts || data || [] };
+        } catch (err) {
+          console.error('[Metricool] Error:', err);
+          return { ok: false, error: err.message, posts: [] };
+        }
       },
 
       async schedulePost(params) {
         console.log('[Metricool] Schedule post:', params);
-        if (!apiKeys.metricool)
-          return { ok: false, error: 'No API key set' };
-        return { ok: true, postId: 'mc_' + Date.now() };
+        if (!apiKeys.metricool) return { ok: false, error: 'No API key set' };
+        try {
+          const res = await fetch('https://app.metricool.com/api/v2/scheduler/posts', {
+            method: 'POST',
+            headers: {
+              'X-Mc-Auth': apiKeys.metricool,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(params),
+          });
+          const data = await res.json();
+          return { ok: res.ok, ...data };
+        } catch (err) {
+          console.error('[Metricool] Error:', err);
+          return { ok: false, error: err.message };
+        }
       },
     },
 
+    // ── Arcads — UGC-style ad video generation ──
     arcads: {
       async generateUGC(params) {
         console.log('[Arcads] Generate UGC video:', params);
         if (!apiKeys.arcads) return { ok: false, error: 'No API key set' };
-        return { ok: true };
+        try {
+          const res = await fetch('https://api.arcads.ai/v1/videos', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Basic ${apiKeys.arcads}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(params),
+          });
+          const data = await res.json();
+          return { ok: res.ok, ...data };
+        } catch (err) {
+          console.error('[Arcads] Error:', err);
+          return { ok: false, error: err.message };
+        }
+      },
+
+      async getStatus(videoId) {
+        if (!apiKeys.arcads) return { ok: false, error: 'No API key set' };
+        try {
+          const res = await fetch(`https://api.arcads.ai/v1/videos/${encodeURIComponent(videoId)}`, {
+            headers: { 'Authorization': `Basic ${apiKeys.arcads}` },
+          });
+          const data = await res.json();
+          return { ok: res.ok, ...data };
+        } catch (err) {
+          return { ok: false, error: err.message };
+        }
       },
     },
 
+    // ── Creatify — AI product video generation ──
+    // Auth: store as "X-API-ID:X-API-KEY" in one field, colon-separated
     creatify: {
-      async generateProductVideo(params) {
-        console.log('[Creatify] Generate product video:', params);
-        if (!apiKeys.creatify)
-          return { ok: false, error: 'No API key set' };
-        return { ok: true };
+      _headers() {
+        const [apiId, apiKey] = apiKeys.creatify.includes(':')
+          ? apiKeys.creatify.split(':')
+          : [apiKeys.creatify, ''];
+        return { 'X-API-ID': apiId, 'X-API-KEY': apiKey || apiId, 'Content-Type': 'application/json' };
+      },
+
+      async generatePreview(params) {
+        // Step 1: generate preview image from product URL
+        console.log('[Creatify] Generate preview:', params);
+        if (!apiKeys.creatify) return { ok: false, error: 'No API key set' };
+        try {
+          const res = await fetch('https://api.creatify.ai/api/product_to_videos/gen_image/', {
+            method: 'POST',
+            headers: this._headers(),
+            body: JSON.stringify({
+              product_url: params.productUrl,
+              aspect_ratio: params.aspectRatio || '9x16',
+              image_prompt: params.imagePrompt || '',
+            }),
+          });
+          const data = await res.json();
+          return { ok: res.ok, ...data };
+        } catch (err) {
+          console.error('[Creatify] Error:', err);
+          return { ok: false, error: err.message };
+        }
+      },
+
+      async generateVideo(taskId, params = {}) {
+        // Step 2: generate video from preview
+        if (!apiKeys.creatify) return { ok: false, error: 'No API key set' };
+        try {
+          const res = await fetch(`https://api.creatify.ai/api/product_to_videos/${encodeURIComponent(taskId)}/gen_video/`, {
+            method: 'POST',
+            headers: this._headers(),
+            body: JSON.stringify({ video_prompt: params.videoPrompt || '' }),
+          });
+          const data = await res.json();
+          return { ok: res.ok, ...data };
+        } catch (err) {
+          return { ok: false, error: err.message };
+        }
+      },
+
+      async getStatus(taskId) {
+        if (!apiKeys.creatify) return { ok: false, error: 'No API key set' };
+        try {
+          const res = await fetch(`https://api.creatify.ai/api/product_to_videos/${encodeURIComponent(taskId)}/`, {
+            headers: this._headers(),
+          });
+          const data = await res.json();
+          return { ok: res.ok, ...data };
+        } catch (err) {
+          return { ok: false, error: err.message };
+        }
+      },
+    },
+
+    // ── Backend — FFmpeg stitching server ──
+    backend: {
+      async health() {
+        try {
+          const res = await fetch(backendUrl('/api/health'));
+          return await res.json();
+        } catch {
+          return { status: 'unreachable', ffmpeg: false };
+        }
+      },
+
+      async uploadAndStitch(files, options = {}) {
+        const formData = new FormData();
+        files.forEach((f) => formData.append('clips', f));
+        if (Object.keys(options).length) {
+          formData.append('options', JSON.stringify(options));
+        }
+        const res = await fetch(backendUrl('/api/pipeline'), {
+          method: 'POST',
+          body: formData,
+        });
+        return await res.json();
+      },
+
+      async jobStatus(jobId) {
+        const res = await fetch(backendUrl(`/api/jobs/${jobId}`));
+        return await res.json();
+      },
+
+      downloadUrl(jobId) {
+        return backendUrl(`/api/download/${jobId}`);
       },
     },
   };
@@ -537,10 +719,170 @@
   window.MAJU_API = API;
   window.MAJU_CONFIG = CONFIG;
 
+  // ─── Backend Status Check ───
+  async function checkBackendStatus() {
+    const el = $('#backend-status');
+    try {
+      const status = await API.backend.health();
+      if (status.status === 'ok') {
+        el.innerHTML = `<span class="status-dot connected"></span><span>Backend: Connected${status.ffmpeg ? ' (FFmpeg ready)' : ' (FFmpeg not found!)'}</span>`;
+      } else {
+        el.innerHTML = '<span class="status-dot disconnected"></span><span>Backend: Not connected</span>';
+      }
+    } catch {
+      el.innerHTML = '<span class="status-dot disconnected"></span><span>Backend: Not connected — set URL in <a href="#" data-goto="settings">Settings</a></span>';
+    }
+  }
+
+  // ─── FFmpeg Stitch UI ───
+  const stitchFiles = {};
+
+  // Track file selections
+  $$('#stitch-segments input[type="file"]').forEach((input) => {
+    input.addEventListener('change', () => {
+      const segment = input.dataset.segment;
+      const statusEl = input.closest('.stitch-segment').querySelector('.file-status');
+      if (input.files.length) {
+        stitchFiles[segment] = input.files[0];
+        statusEl.textContent = input.files[0].name;
+        statusEl.classList.add('ready');
+      } else {
+        delete stitchFiles[segment];
+        statusEl.textContent = 'No file';
+        statusEl.classList.remove('ready');
+      }
+      // Enable stitch button when at least 2 clips are selected
+      const count = Object.keys(stitchFiles).length;
+      $('#btn-stitch').disabled = count < 2;
+    });
+  });
+
+  // Stitch button handler
+  $('#btn-stitch').addEventListener('click', async () => {
+    const segments = ['hook', 'reveal', 'demo', 'result', 'endcard'];
+    const files = segments.filter((s) => stitchFiles[s]).map((s) => stitchFiles[s]);
+
+    if (files.length < 2) return;
+
+    const btn = $('#btn-stitch');
+    const progress = $('#stitch-progress');
+    const result = $('#stitch-result');
+    const fill = $('#stitch-fill');
+    const status = $('#stitch-status');
+
+    btn.disabled = true;
+    progress.classList.remove('hidden');
+    result.classList.add('hidden');
+    fill.style.width = '5%';
+    status.textContent = 'Uploading clips to backend…';
+
+    try {
+      const options = {};
+      const overlayText = $('#stitch-text').value.trim();
+      if (overlayText) options.overlayText = overlayText;
+
+      // Upload and start stitch
+      fill.style.width = '15%';
+      const job = await API.backend.uploadAndStitch(files, options);
+
+      if (!job.jobId) throw new Error(job.error || 'Failed to start stitch job');
+
+      status.textContent = 'Stitching with FFmpeg…';
+      fill.style.width = '30%';
+
+      // Poll for completion
+      let done = false;
+      while (!done) {
+        await new Promise((r) => setTimeout(r, 1500));
+        const st = await API.backend.jobStatus(job.jobId);
+        fill.style.width = Math.max(30, st.progress || 30) + '%';
+        status.textContent = `Stitching… ${st.progress || 0}%`;
+
+        if (st.status === 'done') {
+          done = true;
+          fill.style.width = '100%';
+          status.textContent = 'Stitch complete!';
+
+          // Show result
+          const dlUrl = API.backend.downloadUrl(job.jobId);
+          const outputUrl = backendUrl(`/output/${st.outputFile}`);
+          result.classList.remove('hidden');
+          $('#stitch-preview').src = outputUrl;
+          $('#stitch-download').href = dlUrl;
+        } else if (st.status === 'error') {
+          throw new Error(st.error || 'Stitch failed');
+        }
+      }
+    } catch (err) {
+      status.textContent = `Error: ${err.message}`;
+      fill.style.width = '0%';
+    }
+
+    btn.disabled = false;
+  });
+
+  // ─── Live Metricool Scheduled Posts ───
+  async function fetchScheduledPosts() {
+    const statusEl = $('#metricool-status');
+    const listEl = $('#scheduled-list');
+
+    if (!apiKeys.metricool) return;
+
+    statusEl.innerHTML = '<span class="status-dot connected"></span><span>Metricool: Fetching…</span>';
+
+    const result = await API.metricool.getScheduledPosts();
+    if (result.ok && result.posts && result.posts.length) {
+      statusEl.innerHTML = '<span class="status-dot connected"></span><span>Metricool: Connected</span>';
+      listEl.innerHTML = result.posts.map((post) => `
+        <div class="scheduled-item">
+          <div>
+            <div class="sch-title">${post.content || post.text || 'Scheduled Post'}</div>
+            <div class="sch-meta">${post.publicationDate || post.date || ''}</div>
+          </div>
+          <span class="sch-platform">${post.network || post.platform || 'Social'}</span>
+        </div>
+      `).join('');
+    } else if (result.ok) {
+      statusEl.innerHTML = '<span class="status-dot connected"></span><span>Metricool: Connected</span>';
+      listEl.innerHTML = '<p class="empty-state">No scheduled posts in the next 30 days.</p>';
+    } else {
+      statusEl.innerHTML = `<span class="status-dot disconnected"></span><span>Metricool: Error — ${result.error}</span>`;
+    }
+  }
+
+  // ─── Wire Approve → Metricool Post ───
+  const origApproveHandler = document.querySelector.bind(document);
+  // Already handled in the click listener above, now add Metricool scheduling
+  function scheduleApprovedItem(item) {
+    if (!apiKeys.metricool) {
+      console.log('[Metricool] No API key — skip scheduling');
+      return;
+    }
+    const postParams = {
+      content: `${item.productName} — ${item.typeName} by ${item.avatarName}`,
+      publicationDate: item.schedDate
+        ? { dateTime: item.schedDate, timezone: Intl.DateTimeFormat().resolvedOptions().timeZone }
+        : undefined,
+    };
+    API.metricool.schedulePost(postParams).then((res) => {
+      if (res.ok) {
+        console.log('[Metricool] Post scheduled:', res);
+        item.metricoolId = res.postId || res.id;
+        saveQueue();
+      } else {
+        console.warn('[Metricool] Schedule failed:', res.error);
+      }
+    });
+  }
+
   // ─── Init ───
   loadApiKeys();
   renderQueue();
   renderActivity();
   updateBadge();
   renderScheduledPosts();
+  checkBackendStatus();
+
+  // Fetch live scheduled posts if Metricool key is set
+  if (apiKeys.metricool) fetchScheduledPosts();
 })();

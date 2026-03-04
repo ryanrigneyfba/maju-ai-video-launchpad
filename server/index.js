@@ -1,0 +1,311 @@
+/* ═══════════════════════════════════════════
+   MAJU AI Video Launchpad — Backend Server
+   FFmpeg stitching + job management
+   ═══════════════════════════════════════════ */
+
+const express = require('express');
+const cors = require('cors');
+const multer = require('multer');
+const { v4: uuidv4 } = require('uuid');
+const { spawn } = require('child_process');
+const path = require('path');
+const fs = require('fs');
+
+const app = express();
+const PORT = process.env.PORT || 3001;
+
+// ─── Directories ───
+const UPLOAD_DIR = path.join(__dirname, 'uploads');
+const OUTPUT_DIR = path.join(__dirname, 'output');
+fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+fs.mkdirSync(OUTPUT_DIR, { recursive: true });
+
+// ─── Middleware ───
+app.use(cors());
+app.use(express.json());
+app.use('/output', express.static(OUTPUT_DIR));
+
+// ─── File Upload ───
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, UPLOAD_DIR),
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname);
+    cb(null, `${uuidv4()}${ext}`);
+  },
+});
+const upload = multer({
+  storage,
+  limits: { fileSize: 200 * 1024 * 1024 }, // 200MB per clip
+  fileFilter: (req, file, cb) => {
+    const allowed = ['.mp4', '.mov', '.webm', '.avi', '.mkv'];
+    const ext = path.extname(file.originalname).toLowerCase();
+    if (allowed.includes(ext)) cb(null, true);
+    else cb(new Error(`File type ${ext} not allowed`));
+  },
+});
+
+// ─── Job Tracking ───
+const jobs = new Map();
+
+// ─── SOP Segment Definitions ───
+// Based on Selfcare Snack Reel SOP
+const SOP_SEGMENTS = {
+  'selfcare-snack-reel': [
+    { name: 'hook', label: 'Hook (0-3s)', maxDuration: 3 },
+    { name: 'reveal', label: 'Reveal (3-8s)', maxDuration: 5 },
+    { name: 'demo', label: 'Application/Demo (8-18s)', maxDuration: 10 },
+    { name: 'result', label: 'Result + CTA (18-25s)', maxDuration: 7 },
+    { name: 'endcard', label: 'End Card (25-30s)', maxDuration: 5 },
+  ],
+};
+
+// ─── Routes ───
+
+// Health check
+app.get('/api/health', (req, res) => {
+  // Check if ffmpeg is available
+  const ffcheck = spawn('ffmpeg', ['-version']);
+  let found = false;
+  ffcheck.on('close', (code) => {
+    if (!found) {
+      found = true;
+      res.json({
+        status: 'ok',
+        ffmpeg: code === 0,
+        jobs: jobs.size,
+      });
+    }
+  });
+  ffcheck.on('error', () => {
+    if (!found) {
+      found = true;
+      res.json({
+        status: 'ok',
+        ffmpeg: false,
+        jobs: jobs.size,
+      });
+    }
+  });
+});
+
+// Get SOP segment definitions
+app.get('/api/sop/:name/segments', (req, res) => {
+  const sop = SOP_SEGMENTS[req.params.name];
+  if (!sop) return res.status(404).json({ error: 'SOP not found' });
+  res.json({ segments: sop });
+});
+
+// Upload clips
+app.post('/api/upload', upload.array('clips', 10), (req, res) => {
+  if (!req.files || !req.files.length) {
+    return res.status(400).json({ error: 'No files uploaded' });
+  }
+  const files = req.files.map((f) => ({
+    id: path.basename(f.filename, path.extname(f.filename)),
+    filename: f.filename,
+    originalName: f.originalname,
+    size: f.size,
+    path: f.path,
+  }));
+  res.json({ files });
+});
+
+// Stitch video from uploaded clips
+app.post('/api/stitch', (req, res) => {
+  const { clips, options = {} } = req.body;
+
+  // clips: array of { filename } in stitch order
+  // options: { resolution, overlayText, audioBg, format }
+  if (!clips || !clips.length) {
+    return res.status(400).json({ error: 'No clips provided' });
+  }
+
+  // Validate all clip files exist
+  for (const clip of clips) {
+    const clipPath = path.join(UPLOAD_DIR, clip.filename);
+    if (!fs.existsSync(clipPath)) {
+      return res.status(400).json({ error: `Clip not found: ${clip.filename}` });
+    }
+  }
+
+  const jobId = uuidv4();
+  const outputFile = `${jobId}.mp4`;
+  const outputPath = path.join(OUTPUT_DIR, outputFile);
+
+  jobs.set(jobId, {
+    id: jobId,
+    status: 'processing',
+    progress: 0,
+    clips: clips.length,
+    outputFile: null,
+    error: null,
+    createdAt: new Date().toISOString(),
+  });
+
+  // Build FFmpeg concat command
+  runStitch(jobId, clips, outputPath, options);
+
+  res.json({ jobId, status: 'processing' });
+});
+
+// Full pipeline: upload + stitch in one request
+app.post(
+  '/api/pipeline',
+  upload.array('clips', 10),
+  (req, res) => {
+    if (!req.files || !req.files.length) {
+      return res.status(400).json({ error: 'No clips uploaded' });
+    }
+
+    const options = req.body.options ? JSON.parse(req.body.options) : {};
+    const clips = req.files.map((f) => ({ filename: f.filename }));
+
+    const jobId = uuidv4();
+    const outputFile = `${jobId}.mp4`;
+    const outputPath = path.join(OUTPUT_DIR, outputFile);
+
+    jobs.set(jobId, {
+      id: jobId,
+      status: 'processing',
+      progress: 0,
+      clips: clips.length,
+      outputFile: null,
+      error: null,
+      createdAt: new Date().toISOString(),
+    });
+
+    runStitch(jobId, clips, outputPath, options);
+
+    res.json({
+      jobId,
+      status: 'processing',
+      uploadedFiles: req.files.map((f) => f.filename),
+    });
+  }
+);
+
+// Job status
+app.get('/api/jobs/:id', (req, res) => {
+  const job = jobs.get(req.params.id);
+  if (!job) return res.status(404).json({ error: 'Job not found' });
+  res.json(job);
+});
+
+// List all jobs
+app.get('/api/jobs', (req, res) => {
+  const all = Array.from(jobs.values()).sort(
+    (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+  );
+  res.json({ jobs: all });
+});
+
+// Download finished video
+app.get('/api/download/:id', (req, res) => {
+  const job = jobs.get(req.params.id);
+  if (!job) return res.status(404).json({ error: 'Job not found' });
+  if (job.status !== 'done') return res.status(400).json({ error: 'Job not complete' });
+  const filePath = path.join(OUTPUT_DIR, job.outputFile);
+  if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'File missing' });
+  res.download(filePath);
+});
+
+// ─── FFmpeg Stitching Logic ───
+function runStitch(jobId, clips, outputPath, options = {}) {
+  const job = jobs.get(jobId);
+  const resolution = options.resolution || '1080x1920'; // 9:16 vertical default
+  const format = options.format || 'mp4';
+
+  // Create concat file list for FFmpeg
+  const concatListPath = path.join(UPLOAD_DIR, `${jobId}-concat.txt`);
+  const concatContent = clips
+    .map((c) => `file '${path.join(UPLOAD_DIR, c.filename)}'`)
+    .join('\n');
+  fs.writeFileSync(concatListPath, concatContent);
+
+  // Build FFmpeg args
+  const args = [
+    '-y',
+    '-f', 'concat',
+    '-safe', '0',
+    '-i', concatListPath,
+  ];
+
+  // Scale to target resolution (9:16 vertical for Reels/TikTok/Shorts)
+  const [w, h] = resolution.split('x');
+  args.push(
+    '-vf', `scale=${w}:${h}:force_original_aspect_ratio=decrease,pad=${w}:${h}:(ow-iw)/2:(oh-ih)/2:black`
+  );
+
+  // Text overlay if provided
+  if (options.overlayText) {
+    const escaped = options.overlayText.replace(/'/g, "'\\''");
+    args.push(
+      '-vf', `drawtext=text='${escaped}':fontsize=48:fontcolor=white:x=(w-tw)/2:y=h-80:shadowcolor=black:shadowx=2:shadowy=2`
+    );
+  }
+
+  // Audio background track if provided
+  if (options.audioBg) {
+    const audioPath = path.join(UPLOAD_DIR, options.audioBg);
+    if (fs.existsSync(audioPath)) {
+      args.push('-i', audioPath, '-shortest');
+    }
+  }
+
+  // Output settings
+  args.push(
+    '-c:v', 'libx264',
+    '-preset', 'fast',
+    '-crf', '23',
+    '-c:a', 'aac',
+    '-b:a', '128k',
+    '-movflags', '+faststart',
+    outputPath
+  );
+
+  const ffmpeg = spawn('ffmpeg', args);
+
+  let stderrData = '';
+  ffmpeg.stderr.on('data', (data) => {
+    stderrData += data.toString();
+    // Parse progress from FFmpeg output
+    const timeMatch = data.toString().match(/time=(\d{2}):(\d{2}):(\d{2})/);
+    if (timeMatch) {
+      const secs = parseInt(timeMatch[1]) * 3600 + parseInt(timeMatch[2]) * 60 + parseInt(timeMatch[3]);
+      // Estimate total ~30s for a selfcare snack reel
+      job.progress = Math.min(95, Math.round((secs / 30) * 100));
+    }
+  });
+
+  ffmpeg.on('close', (code) => {
+    // Clean up concat list
+    try { fs.unlinkSync(concatListPath); } catch {}
+
+    if (code === 0) {
+      job.status = 'done';
+      job.progress = 100;
+      job.outputFile = path.basename(outputPath);
+      job.completedAt = new Date().toISOString();
+    } else {
+      job.status = 'error';
+      job.error = `FFmpeg exited with code ${code}`;
+      job.ffmpegLog = stderrData.slice(-500);
+    }
+  });
+
+  ffmpeg.on('error', (err) => {
+    job.status = 'error';
+    job.error = err.message;
+  });
+}
+
+// ─── Start ───
+app.listen(PORT, () => {
+  console.log(`MAJU Backend running on http://localhost:${PORT}`);
+  console.log(`  POST /api/upload      — Upload clips`);
+  console.log(`  POST /api/stitch      — Stitch clips into final video`);
+  console.log(`  POST /api/pipeline    — Upload + stitch in one step`);
+  console.log(`  GET  /api/jobs/:id    — Check job status`);
+  console.log(`  GET  /api/download/:id — Download finished video`);
+  console.log(`  GET  /api/health      — Health check`);
+});

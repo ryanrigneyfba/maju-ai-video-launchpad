@@ -245,6 +245,55 @@ code{background:var(--bg-input);padding:1px 5px;border-radius:4px;font-size:.8re
 .activity-item:last-child{border-bottom:none}
 .activity-time{font-size:.72rem;color:var(--text-dim)}
 
+/* ── Stitch Panel ── */
+.backend-status{
+  display:flex;align-items:center;gap:.5rem;
+  padding:.5rem .8rem;border-radius:var(--radius);
+  background:var(--bg-input);font-size:.82rem;margin-bottom:1rem;
+}
+.stitch-segments{display:flex;flex-direction:column;gap:.6rem;margin-bottom:1rem}
+.stitch-segment{
+  display:flex;align-items:center;gap:.8rem;
+  padding:.6rem .8rem;border-radius:var(--radius);
+  background:var(--bg-input);border:1px solid var(--border);
+}
+.stitch-segment label{font-size:.82rem;font-weight:500;min-width:160px;flex-shrink:0}
+.stitch-segment input[type="file"]{
+  flex:1;font-size:.8rem;color:var(--text-dim);
+  background:none;border:none;padding:0;
+}
+.stitch-segment input[type="file"]::file-selector-button{
+  background:var(--accent);color:#fff;border:none;
+  padding:.3rem .7rem;border-radius:6px;font-size:.78rem;cursor:pointer;
+  margin-right:.5rem;
+}
+.stitch-segment .file-status{font-size:.72rem;color:var(--text-dim);min-width:60px;text-align:right}
+.stitch-segment .file-status.ready{color:var(--success)}
+.stitch-options{margin-bottom:1rem}
+.stitch-options .form-group{margin-bottom:.5rem}
+.stitch-options input[type="text"]{
+  width:100%;padding:.5rem .8rem;
+  background:var(--bg-input);border:1px solid var(--border);
+  border-radius:var(--radius);color:var(--text);font:inherit;font-size:.85rem;
+}
+.stitch-progress{margin-top:1rem}
+.progress-bar{
+  height:8px;background:var(--bg-input);border-radius:50px;overflow:hidden;margin-bottom:.5rem;
+}
+.progress-fill{
+  height:100%;background:var(--accent);border-radius:50px;
+  transition:width .3s ease;width:0%;
+}
+.stitch-status{font-size:.82rem;color:var(--text-dim);font-style:italic}
+.stitch-result{margin-top:1rem;text-align:center}
+.stitch-result p{font-size:.88rem;margin-bottom:.6rem;color:var(--success)}
+.stitch-result video{
+  border-radius:var(--radius);border:1px solid var(--border);
+  max-height:400px;margin-bottom:.6rem;display:block;margin:0 auto .6rem;
+}
+.stitch-result .btn-secondary{display:inline-block;text-decoration:none}
+#btn-stitch:disabled{opacity:.5;cursor:not-allowed}
+
 /* ── Utilities ── */
 .hidden{display:none!important}
 .empty-state{color:var(--text-dim);text-align:center;padding:2rem;font-size:.9rem}
