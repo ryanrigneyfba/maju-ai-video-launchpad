@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: maju-backend
+    runtime: docker
+    dockerfilePath: ./server/Dockerfile
+    dockerContext: ./server
+    plan: free
+    envVars:
+      - key: PORT
+        value: 3001
