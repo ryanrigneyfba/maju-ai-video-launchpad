@@ -98,7 +98,9 @@
   );
 
   // ─── Generate Video ───
+  console.log('[MAJU] submit-video element:', $('#submit-video'));
   $('#submit-video').addEventListener('click', () => {
+    console.log('[MAJU] Generate button clicked!');
     const type = $('#video-type').value;
     const versions = parseInt($('#versions').value);
     const avatar = $('#avatar').value;
