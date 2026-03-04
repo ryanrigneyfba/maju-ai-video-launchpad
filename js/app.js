@@ -1,11 +1,11 @@
-/* âââââââââââââââââââââââââââââââââââââââââââ
-   MAJU AI Video Launchpad â v1.1
+/* ═══════════════════════════════════════════
+   MAJU AI Video Launchpad — v1.1
    Main application logic
-   âââââââââââââââââââââââââââââââââââââââââââ */
+   ═══════════════════════════════════════════ */
 (function () {
   'use strict';
 
-  // âââ Config âââ
+  // ─── Config ───
   const CONFIG = {
     higgsfield: {
       asset: 'majurender8oz',
@@ -23,16 +23,16 @@
     },
   };
 
-  // âââ State âââ
+  // ─── State ───
   let queue = JSON.parse(localStorage.getItem(CONFIG.storageKeys.queue) || '[]');
   let apiKeys = JSON.parse(localStorage.getItem(CONFIG.storageKeys.apiKeys) || '{}');
   let currentRejectId = null;
 
-  // âââ DOM Refs âââ
+  // ─── DOM Refs ───
   const $ = (sel) => document.querySelector(sel);
   const $$ = (sel) => document.querySelectorAll(sel);
 
-  // âââ Navigation âââ
+  // ─── Navigation ───
   const viewMap = {
     dashboard: 'view-dashboard',
     approval: 'view-approval',
@@ -78,7 +78,7 @@
     });
   }
 
-  // âââ Posting Toggle âââ
+  // ─── Posting Toggle ───
   $$('input[name="postMode"]').forEach((radio) =>
     radio.addEventListener('change', () => {
       const schedField = $('#schedule-field');
@@ -90,7 +90,7 @@
     })
   );
 
-  // âââ Generate Video âââ
+  // ─── Generate Video ───
   $('#submit-video').addEventListener('click', () => {
     const type = $('#video-type').value;
     const versions = parseInt($('#versions').value);
@@ -120,7 +120,7 @@
         revisionCount: 0,
         revisionNotes: [],
         createdAt: new Date().toISOString(),
-        pipelineStage: 'generate', // generate â stitch â queue â post
+        pipelineStage: 'generate', // generate → stitch → queue → post
       };
       queue.unshift(item);
     }
@@ -135,7 +135,7 @@
     $('#notes').value = '';
   });
 
-  // âââ Pipeline Visualization âââ
+  // ─── Pipeline Visualization ───
   function showPipeline() {
     const card = $('#pipeline-card');
     card.classList.remove('hidden');
@@ -145,8 +145,8 @@
     // Simulate pipeline stages
     let stage = 0;
     const stages = [
-      { label: 'Sending to Higgsfield for generationâ¦', key: 'generate' },
-      { label: 'FFmpeg stitching & editingâ¦', key: 'stitch' },
+      { label: 'Sending to Higgsfield for generation…', key: 'generate' },
+      { label: 'FFmpeg stitching & editing…', key: 'stitch' },
       { label: 'Added to approval queue. Review when ready.', key: 'queue' },
     ];
 
@@ -159,11 +159,11 @@
         // Check if API key exists for the current stage
         if (stage === 0 && !apiKeys.higgsfield) {
           msg.textContent =
-            'â ï¸ Higgsfield API key not set â video generation simulated. Add key in Settings.';
+            '⚠️ Higgsfield API key not set — video generation simulated. Add key in Settings.';
         }
         stage++;
         if (stage < stages.length) setTimeout(advance, 1800);
-        else setTimeout(() => (msg.textContent = 'â Pipeline complete â videos in queue.'), 1200);
+        else setTimeout(() => (msg.textContent = '✓ Pipeline complete — videos in queue.'), 1200);
       }
     }
     // Reset
@@ -173,7 +173,7 @@
     advance();
   }
 
-  // âââ Queue Rendering âââ
+  // ─── Queue Rendering ───
   function renderQueue(filter = 'all') {
     const list = $('#queue-list');
     const filtered =
@@ -190,21 +190,21 @@
         (item) => `
       <div class="queue-item status-${item.status}" data-id="${item.id}">
         <div class="queue-info">
-          <h4>${item.typeName} â v${item.version}/${item.totalVersions}</h4>
-          <p>${item.productName} Â· ${item.avatarName}</p>
-          ${item.postMode === 'asap' ? '<p>ð Post ASAP</p>' : `<p>ð ${formatDate(item.schedDate)}</p>`}
+          <h4>${item.typeName} — v${item.version}/${item.totalVersions}</h4>
+          <p>${item.productName} · ${item.avatarName}</p>
+          ${item.postMode === 'asap' ? '<p>📌 Post ASAP</p>' : `<p>📅 ${formatDate(item.schedDate)}</p>`}
           ${item.notes ? `<p>"${item.notes}"</p>` : ''}
           <div class="queue-meta">
-            Status: <strong>${item.status.toUpperCase()}</strong> Â·
+            Status: <strong>${item.status.toUpperCase()}</strong> ·
             Created: ${formatDate(item.createdAt)}
-            ${item.revisionCount > 0 ? `<div class="revision-count">ð Revision ${item.revisionCount}</div>` : ''}
+            ${item.revisionCount > 0 ? `<div class="revision-count">🔄 Revision ${item.revisionCount}</div>` : ''}
           </div>
           ${item.revisionNotes.length ? item.revisionNotes.map((n, i) => `<div class="rejection-notes">Rev ${i + 1}: ${n}</div>`).join('') : ''}
         </div>
         <div class="queue-actions">
           ${item.status === 'pending' || item.status === 'revision'
-            ? `<button class="btn-approve" data-action="approve" data-id="${item.id}">â Approve</button>
-               <button class="btn-reject" data-action="reject" data-id="${item.id}">â Reject</button>`
+            ? `<button class="btn-approve" data-action="approve" data-id="${item.id}">✓ Approve</button>
+               <button class="btn-reject" data-action="reject" data-id="${item.id}">✗ Reject</button>`
             : ''
           }
         </div>
@@ -254,7 +254,7 @@
     }
   });
 
-  // âââ Rejection Modal âââ
+  // ─── Rejection Modal ───
   $('#btn-cancel-reject').addEventListener('click', () => {
     $('#reject-modal').classList.add('hidden');
     currentRejectId = null;
@@ -301,7 +301,7 @@
     }
   });
 
-  // âââ Activity Feed âââ
+  // ─── Activity Feed ───
   function renderActivity() {
     const feed = $('#recent-activity');
     const recent = queue.slice(0, 8);
@@ -314,9 +314,9 @@
       .map(
         (item) => `
       <div class="activity-item">
-        <strong>${item.typeName}</strong> v${item.version} â ${item.productName}
+        <strong>${item.typeName}</strong> v${item.version} — ${item.productName}
         <span style="color:var(--${item.status === 'approved' ? 'success' : item.status === 'rejected' ? 'danger' : item.status === 'revision' ? 'revision' : 'warning'})">[${item.status}]</span>
-        ${item.revisionCount > 0 ? `<span style="color:var(--revision)">ð ${item.revisionCount}</span>` : ''}
+        ${item.revisionCount > 0 ? `<span style="color:var(--revision)">🔄 ${item.revisionCount}</span>` : ''}
         <div class="activity-time">${formatDate(item.createdAt)}</div>
       </div>
     `
@@ -324,7 +324,7 @@
       .join('');
   }
 
-  // âââ Badge âââ
+  // ─── Badge ───
   function updateBadge() {
     const pending = queue.filter(
       (q) => q.status === 'pending' || q.status === 'revision'
@@ -334,7 +334,7 @@
     badge.style.display = pending > 0 ? '' : 'none';
   }
 
-  // âââ Scheduled Posts (Metricool) âââ
+  // ─── Scheduled Posts (Metricool) ───
   function renderScheduledPosts() {
     const statusEl = $('#metricool-status');
     const listEl = $('#scheduled-list');
@@ -349,13 +349,13 @@
         '<p class="empty-state">Metricool connected! Scheduled posts will appear here once the API integration is complete.</p>';
     } else {
       statusEl.innerHTML =
-        '<span class="status-dot disconnected"></span><span>Metricool: Not connected</span><a href="#" class="link-settings" data-goto="settings">Add API key â</a>';
+        '<span class="status-dot disconnected"></span><span>Metricool: Not connected</span><a href="#" class="link-settings" data-goto="settings">Add API key →</a>';
       listEl.innerHTML =
         '<p class="empty-state">Connect your Metricool API key in Settings to see scheduled posts.</p>';
     }
   }
 
-  // âââ SOP Wiki âââ
+  // ─── SOP Wiki ───
   $$('.sop-link').forEach((link) =>
     link.addEventListener('click', (e) => {
       e.preventDefault();
@@ -404,7 +404,7 @@
   const firstSop = $('.sop-link.active');
   if (firstSop) loadSop(firstSop.dataset.sop);
 
-  // âââ API Settings âââ
+  // ─── API Settings ───
   // Load saved keys
   function loadApiKeys() {
     if (apiKeys.higgsfield) $('#api-higgsfield').value = apiKeys.higgsfield;
@@ -442,7 +442,7 @@
     renderScheduledPosts();
   });
 
-  // âââ Helpers âââ
+  // ─── Helpers ───
   function saveQueue() {
     localStorage.setItem(CONFIG.storageKeys.queue, JSON.stringify(queue));
   }
@@ -453,7 +453,7 @@
   }
 
   function formatDate(str) {
-    if (!str) return 'â';
+    if (!str) return '—';
     try {
       return new Date(str).toLocaleString('en-US', {
         month: 'short',
@@ -466,7 +466,7 @@
     }
   }
 
-  // âââ API Integration Stubs âââ
+  // ─── API Integration Stubs ───
   // These are ready to be wired up when API keys are provided.
 
   const API = {
@@ -536,7 +536,7 @@
   window.MAJU_API = API;
   window.MAJU_CONFIG = CONFIG;
 
-  // âââ Init âââ
+  // ─── Init ───
   loadApiKeys();
   renderQueue();
   renderActivity();
