@@ -268,7 +268,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     if (!apiKeys.higgsfield) {
       let stage = 0;
       const sim = [
-        '⚠️ Hedra API key not set — video generation simulated. Add key in Settings.',
+        '⚠️ Higgsfield API key not set — video generation simulated. Add key in Settings.',
         'FFmpeg stitch simulated (no backend connected).',
         '✓ Pipeline complete — videos in queue (simulated).',
       ];
@@ -287,7 +287,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
 
   async function runRealPipeline(steps, msg, setStage) {
     // Stage 0: Generate via Higgsfield
-    setStage(0, 'Sending to Hedra for generation…');
+    setStage(0, 'Sending to Higgsfield for generation…');
 
     // Get the most recent queue items (just generated)
     const newItems = queue.filter(q => q.pipelineStage === 'generate');
@@ -305,9 +305,9 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       if (result.ok && result.id) {
         item.higgsVideoId = result.id;
         videoIds.push({ item, videoId: result.id });
-        msg.textContent = `Hedra generating… (${videoIds.length}/${newItems.length} submitted)`;
+        msg.textContent = `Higgsfield generating… (${videoIds.length}/${newItems.length} submitted)`;
       } else {
-        msg.textContent = `⚠️ Hedra error: ${result.error || 'Unknown error'}. Videos added to queue as pending.`;
+        msg.textContent = `⚠️ Higgsfield error: ${result.error || 'Unknown error'}. Videos added to queue as pending.`;
         item.pipelineStage = 'queue';
       }
       saveQueue();
@@ -319,7 +319,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     }
 
     // Poll Higgsfield for completion
-    msg.textContent = 'Waiting for Hedra to render videos…';
+    msg.textContent = 'Waiting for Higgsfield to render videos…';
     const completedVideos = [];
 
     for (const { item, videoId } of videoIds) {
@@ -762,79 +762,84 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
   // All API calls route through the backend proxy to avoid CORS issues.
 
   const API = {
-    // ── Hedra (formerly Higgsfield) — AI avatar video generation (via proxy) ──
+    // ── Higgsfield — AI avatar video generation (via proxy) ──
+    // API: https://platform.higgsfield.ai
+    // Auth: Key KEY_ID:KEY_SECRET
     higgsfield: {
       async generateVideo(params) {
-        console.log('[Hedra] Generate video:', params);
-        if (!apiKeys.higgsfield) return { ok: false, error: 'No Hedra API key set — add in Settings' };
-        // Hedra API: POST /web-app/public/generations
+        console.log('[Higgsfield] Generate video:', params);
+        if (!apiKeys.higgsfield) return { ok: false, error: 'No Higgsfield API key set — add in Settings' };
+        // Higgsfield subscribe API
         const body = {
-          type: 'video',
-          generated_video_inputs: {
-            text_prompt: params.prompt || '',
-            resolution: '540p',
+          endpoint: 'v1/image2video/dop',
+          input: {
+            prompt: params.prompt || '',
             aspect_ratio: '9:16',
-            duration_ms: 30000,
+            duration: 5,
+            resolution: '720p',
+            camera_fixed: false,
           },
         };
+        // Add image_url if provided
+        if (params.image_url) body.input.image_url = params.image_url;
         try {
-          const res = await fetch(backendUrl('/api/proxy/hedra/generate'), {
+          const res = await fetch(backendUrl('/api/proxy/higgsfield/generate'), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'x-api-key-value': apiKeys.higgsfield },
             body: JSON.stringify(body),
           });
           const data = await res.json();
-          console.log('[Hedra] Generate response:', data);
-          // Hedra returns { id, ... } for the generation
-          return { ok: res.ok, id: data.id || data.generation_id, ...data };
+          console.log('[Higgsfield] Generate response:', data);
+          // Returns { request_id, jobs: [...] }
+          return { ok: res.ok, id: data.request_id || data.id, ...data };
         } catch (err) {
-          console.error('[Hedra] Error:', err);
+          console.error('[Higgsfield] Error:', err);
           return { ok: false, error: err.message };
         }
       },
 
       async reviseVideo(videoId, notes) {
-        if (!apiKeys.higgsfield) return { ok: false, error: 'No Hedra API key set' };
-        // Revise = new generation with revision context in the prompt
+        if (!apiKeys.higgsfield) return { ok: false, error: 'No Higgsfield API key set' };
         const body = {
-          type: 'video',
-          generated_video_inputs: {
-            text_prompt: `Revision of previous video. Feedback: ${notes}`,
-            resolution: '540p',
+          endpoint: 'v1/image2video/dop',
+          input: {
+            prompt: `Revision — feedback: ${notes}`,
             aspect_ratio: '9:16',
-            duration_ms: 30000,
+            duration: 5,
+            resolution: '720p',
           },
         };
         try {
-          const res = await fetch(backendUrl('/api/proxy/hedra/revise'), {
+          const res = await fetch(backendUrl('/api/proxy/higgsfield/revise'), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'x-api-key-value': apiKeys.higgsfield },
             body: JSON.stringify(body),
           });
           const data = await res.json();
-          return { ok: res.ok, id: data.id || data.generation_id, ...data };
+          return { ok: res.ok, id: data.request_id || data.id, ...data };
         } catch (err) {
           return { ok: false, error: err.message };
         }
       },
 
-      async getStatus(generationId) {
-        if (!apiKeys.higgsfield) return { ok: false, error: 'No Hedra API key set' };
+      async getStatus(requestId) {
+        if (!apiKeys.higgsfield) return { ok: false, error: 'No Higgsfield API key set' };
         try {
-          const res = await fetch(backendUrl(`/api/proxy/hedra/status/${encodeURIComponent(generationId)}`), {
+          const res = await fetch(backendUrl(`/api/proxy/higgsfield/status/${encodeURIComponent(requestId)}`), {
             headers: { 'x-api-key-value': apiKeys.higgsfield },
           });
           const data = await res.json();
-          // Hedra status response: { status: "complete", url, download_url, ... }
-          // Normalize to what pipeline expects
-          const normalized = {
+          // Higgsfield status: queued, in_progress, completed, failed, nsfw
+          // Normalize for pipeline
+          const job = (data.jobs && data.jobs[0]) || {};
+          const videoUrl = (job.results && (job.results.raw?.url || job.results.min?.url)) || data.video_url || data.url;
+          return {
             ok: res.ok,
-            status: data.status === 'complete' ? 'completed' : data.status,
-            video_url: data.url || data.download_url || data.streaming_url,
+            status: data.status,
+            video_url: videoUrl,
             progress: data.progress,
             ...data,
           };
-          return normalized;
         } catch (err) {
           return { ok: false, error: err.message };
         }
