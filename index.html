@@ -26,6 +26,9 @@
       <button class="nav-btn" data-view="scheduled">
         <span class="nav-icon">📅</span> Scheduled Posts
       </button>
+      <button class="nav-btn" data-view="analytics">
+        <span class="nav-icon">📊</span> Analytics
+      </button>
       <button class="nav-btn" data-view="sop-wiki">
         <span class="nav-icon">📖</span> SOP Wiki
       </button>
@@ -127,6 +130,34 @@
         <p class="pipeline-msg" id="pipeline-msg"></p>
       </div>
 
+      <!-- FFmpeg Auto-Stitch Panel -->
+      <div class="card" id="stitch-card">
+        <h3 class="card-title">FFmpeg Auto-Stitch + Captions</h3>
+        <div class="backend-status" id="backend-status">
+          <span class="status-dot disconnected"></span>
+          <span>Backend: Not connected</span>
+        </div>
+        <p class="settings-note">Videos are automatically stitched into a 9:16 vertical reel with captions after Higgsfield renders them. The pipeline handles everything — generate, stitch, caption, and queue for approval.</p>
+
+        <div class="stitch-segments" id="stitch-segments">
+          <div class="stitch-segment"><span>1. Hook (0-3s)</span> <span class="file-status" id="seg-hook">Waiting…</span></div>
+          <div class="stitch-segment"><span>2. Reveal (3-8s)</span> <span class="file-status" id="seg-reveal">Waiting…</span></div>
+          <div class="stitch-segment"><span>3. Demo (8-18s)</span> <span class="file-status" id="seg-demo">Waiting…</span></div>
+          <div class="stitch-segment"><span>4. Result + CTA (18-25s)</span> <span class="file-status" id="seg-result">Waiting…</span></div>
+          <div class="stitch-segment"><span>5. End Card (25-30s)</span> <span class="file-status" id="seg-endcard">Waiting…</span></div>
+        </div>
+
+        <div class="stitch-progress hidden" id="stitch-progress">
+          <div class="progress-bar"><div class="progress-fill" id="stitch-fill"></div></div>
+          <p class="stitch-status" id="stitch-status">Waiting for pipeline…</p>
+        </div>
+        <div class="stitch-result hidden" id="stitch-result">
+          <p>Stitched video ready:</p>
+          <video id="stitch-preview" controls width="270"></video>
+          <a class="btn btn-secondary" id="stitch-download" download>Download MP4</a>
+        </div>
+      </div>
+
       <!-- Recent Activity -->
       <div class="card">
         <h3 class="card-title">Recent Activity</h3>
@@ -168,6 +199,36 @@
       </div>
     </section>
 
+    <!-- Analytics View -->
+    <section class="view" id="view-analytics">
+      <div class="card">
+        <h3 class="card-title">Analytics Overview</h3>
+        <div class="api-status" id="analytics-status">
+          <span class="status-dot disconnected"></span>
+          <span>Metricool: Not connected</span>
+          <a href="#" class="link-settings" data-goto="settings">Add API key →</a>
+        </div>
+
+        <!-- Account Breakdown -->
+        <div id="analytics-accounts" class="analytics-section hidden">
+          <h4 class="section-title">Connected Accounts</h4>
+          <div class="accounts-grid" id="accounts-grid"></div>
+        </div>
+
+        <!-- Top Performing Posts -->
+        <div id="analytics-top-posts" class="analytics-section hidden">
+          <h4 class="section-title">Top Performing Posts</h4>
+          <div class="top-posts-list" id="top-posts-list"></div>
+        </div>
+
+        <!-- Summary Stats -->
+        <div id="analytics-summary" class="analytics-section hidden">
+          <h4 class="section-title">30-Day Summary</h4>
+          <div class="stats-grid" id="stats-grid"></div>
+        </div>
+      </div>
+    </section>
+
     <!-- SOP Wiki View -->
     <section class="view" id="view-sop-wiki">
       <div class="card">
@@ -191,12 +252,29 @@
 
         <div class="api-group">
           <div class="api-field">
+            <label>Backend URL</label>
+            <div class="api-input-row">
+              <input type="text" id="api-backend-url" placeholder="https://maju-backend.onrender.com">
+            </div>
+            <span class="api-hint">FFmpeg stitching server — deployed on Render (or run locally)</span>
+          </div>
+
+          <div class="api-field">
+            <label>Claude API Key (Anthropic)</label>
+            <div class="api-input-row">
+              <input type="password" id="api-claude" placeholder="sk-ant-…">
+              <button class="btn btn-sm btn-toggle-vis" data-target="api-claude">Show</button>
+            </div>
+            <span class="api-hint">Powers the AI learning loop — reads your feedback to generate smarter video prompts</span>
+          </div>
+
+          <div class="api-field">
             <label>Higgsfield API Key</label>
             <div class="api-input-row">
-              <input type="password" id="api-higgsfield" placeholder="Enter Higgsfield key…">
+              <input type="password" id="api-higgsfield" placeholder="Enter KEY_ID:KEY_SECRET…">
               <button class="btn btn-sm btn-toggle-vis" data-target="api-higgsfield">Show</button>
             </div>
-            <span class="api-hint">AI avatar video generation — Asset: <code>majurender8oz</code> | Avatar: <code>pateit</code></span>
+            <span class="api-hint">AI video generation — get credentials at <code>cloud.higgsfield.ai</code></span>
           </div>
 
           <div class="api-field">
@@ -223,7 +301,7 @@
               <input type="password" id="api-creatify" placeholder="Enter Creatify key…">
               <button class="btn btn-sm btn-toggle-vis" data-target="api-creatify">Show</button>
             </div>
-            <span class="api-hint">AI product video generation (future workflows)</span>
+            <span class="api-hint">AI product video — enter as <code>X-API-ID:X-API-KEY</code> (colon-separated)</span>
           </div>
         </div>
 
@@ -233,11 +311,24 @@
     </section>
   </main>
 
-  <!-- Rejection Modal -->
+  <!-- Approval Modal (notes required) -->
+  <div class="modal-overlay hidden" id="approve-modal">
+    <div class="modal">
+      <h3>Approve Video</h3>
+      <p>What worked well? Notes help the AI improve future videos for this format.</p>
+      <textarea id="approve-notes" rows="4" placeholder="e.g. Great pacing on the hook, CTA felt natural, loved the lighting…"></textarea>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="btn-cancel-approve">Cancel</button>
+        <button class="btn btn-primary" id="btn-confirm-approve">Approve &amp; Continue</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Rejection Modal (notes required) -->
   <div class="modal-overlay hidden" id="reject-modal">
     <div class="modal">
       <h3>Reject &amp; Revise</h3>
-      <p>Provide notes so the AI can revise this video:</p>
+      <p>What needs to change? Notes help the AI revise this video.</p>
       <textarea id="reject-notes" rows="4" placeholder="e.g. Make the hook punchier, slow down the demo section…"></textarea>
       <div class="modal-actions">
         <button class="btn btn-secondary" id="btn-cancel-reject">Cancel</button>
@@ -246,6 +337,6 @@
     </div>
   </div>
 
-  <script src="js/app.js"></script>
+  <script src="js/app.js?v=1.1.2"></script>
 </body>
 </html>
