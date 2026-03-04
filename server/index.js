@@ -59,7 +59,32 @@ const SOP_SEGMENTS = {
   ],
 };
 
+// ─── Persistent Config (API keys synced across devices) ───
+const CONFIG_PATH = path.join(__dirname, '.maju-config.json');
+
+function readConfig() {
+  try { return JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8')); }
+  catch { return {}; }
+}
+
+function writeConfig(data) {
+  fs.writeFileSync(CONFIG_PATH, JSON.stringify(data, null, 2));
+}
+
 // ─── Routes ───
+
+// Get stored API keys
+app.get('/api/config', (req, res) => {
+  res.json(readConfig());
+});
+
+// Save API keys
+app.post('/api/config', (req, res) => {
+  const keys = req.body;
+  if (!keys || typeof keys !== 'object') return res.status(400).json({ error: 'Invalid body' });
+  writeConfig(keys);
+  res.json({ ok: true });
+});
 
 // Health check
 app.get('/api/health', (req, res) => {

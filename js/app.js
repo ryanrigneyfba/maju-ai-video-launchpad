@@ -686,7 +686,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
   if (firstSop) loadSop(firstSop.dataset.sop);
 
   // ─── API Settings ───
-  // Load saved keys
+  // Load saved keys into form fields
   function loadApiKeys() {
     if (apiKeys.backendUrl) $('#api-backend-url').value = apiKeys.backendUrl;
     if (apiKeys.claude) $('#api-claude').value = apiKeys.claude;
@@ -694,6 +694,39 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     if (apiKeys.metricool) $('#api-metricool').value = apiKeys.metricool;
     if (apiKeys.arcads) $('#api-arcads').value = apiKeys.arcads;
     if (apiKeys.creatify) $('#api-creatify').value = apiKeys.creatify;
+  }
+
+  // Sync keys from backend on load (so keys work on any device)
+  async function syncKeysFromBackend() {
+    try {
+      const res = await fetch(backendUrl('/api/config'));
+      if (res.ok) {
+        const remote = await res.json();
+        if (remote && Object.keys(remote).length) {
+          // Merge: remote keys fill in anything missing locally
+          apiKeys = { ...remote, ...apiKeys };
+          // If local was empty, remote wins completely
+          if (!localStorage.getItem(CONFIG.storageKeys.apiKeys)) {
+            apiKeys = remote;
+          }
+          localStorage.setItem(CONFIG.storageKeys.apiKeys, JSON.stringify(apiKeys));
+          loadApiKeys();
+          console.log('[Config] Synced keys from backend');
+        }
+      }
+    } catch { /* backend not reachable, use localStorage */ }
+  }
+
+  // Push keys to backend so they persist across devices
+  async function pushKeysToBackend() {
+    try {
+      await fetch(backendUrl('/api/config'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(apiKeys),
+      });
+      console.log('[Config] Keys saved to backend');
+    } catch { /* silent fail — localStorage still works */ }
   }
 
   // Toggle visibility
@@ -710,7 +743,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     })
   );
 
-  // Save keys
+  // Save keys (local + backend)
   $('#btn-save-keys').addEventListener('click', () => {
     apiKeys = {
       backendUrl: $('#api-backend-url').value.trim(),
@@ -721,6 +754,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       creatify: $('#api-creatify').value.trim(),
     };
     localStorage.setItem(CONFIG.storageKeys.apiKeys, JSON.stringify(apiKeys));
+    pushKeysToBackend();
     const msg = $('#save-msg');
     msg.classList.remove('hidden');
     setTimeout(() => msg.classList.add('hidden'), 2500);
@@ -1263,6 +1297,10 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
 
   // ─── Init ───
   loadApiKeys();
+  syncKeysFromBackend().then(() => {
+    loadApiKeys();
+    checkBackendStatus();
+  });
   renderQueue();
   renderActivity();
   updateBadge();

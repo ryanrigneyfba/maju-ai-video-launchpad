@@ -1,4 +1,5 @@
 node_modules/
+.maju-config.json
 uploads/*
 !uploads/.gitkeep
 output/*
