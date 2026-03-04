@@ -146,7 +146,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-api-key-value': apiKeys.claude },
         body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
+          model: 'claude-haiku-4-5-20251001',
           max_tokens: 1024,
           system: systemPrompt,
           messages: [{
