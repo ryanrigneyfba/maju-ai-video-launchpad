@@ -336,6 +336,27 @@ function proxyRequest(targetUrl, method, headers, body) {
   });
 }
 
+// ── Claude (Anthropic) Proxy — AI Learning Loop ──
+app.post('/api/proxy/claude/messages', async (req, res) => {
+  const apiKey = req.headers['x-api-key-value'];
+  if (!apiKey) return res.status(400).json({ error: 'Missing Claude API key' });
+  try {
+    const result = await proxyRequest(
+      'https://api.anthropic.com/v1/messages',
+      'POST',
+      {
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'Content-Type': 'application/json',
+      },
+      req.body
+    );
+    res.status(result.status).json(result.data);
+  } catch (err) {
+    res.status(502).json({ error: err.message });
+  }
+});
+
 // ── Higgsfield Proxy ──
 app.post('/api/proxy/higgsfield/generate', async (req, res) => {
   const apiKey = req.headers['x-api-key-value'];

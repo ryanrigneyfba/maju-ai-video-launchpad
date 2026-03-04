@@ -287,6 +287,15 @@
           </div>
 
           <div class="api-field">
+            <label>Claude API Key (Anthropic)</label>
+            <div class="api-input-row">
+              <input type="password" id="api-claude" placeholder="sk-ant-…">
+              <button class="btn btn-sm btn-toggle-vis" data-target="api-claude">Show</button>
+            </div>
+            <span class="api-hint">Powers the AI learning loop — reads your feedback to generate smarter video prompts</span>
+          </div>
+
+          <div class="api-field">
             <label>Higgsfield API Key</label>
             <div class="api-input-row">
               <input type="password" id="api-higgsfield" placeholder="Enter Higgsfield key…">
@@ -355,6 +364,6 @@
     </div>
   </div>
 
-  <script src="js/app.js?v=1.1.1"></script>
+  <script src="js/app.js?v=1.1.2"></script>
 </body>
 </html>

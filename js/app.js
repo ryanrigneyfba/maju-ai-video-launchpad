@@ -110,8 +110,70 @@
     })
   );
 
+  // ─── Claude AI Learning Loop ───
+  async function getClaudeOptimizedPrompt(videoType, avatar, product, userNotes) {
+    if (!apiKeys.claude) return null;
+
+    // Build context from feedback log
+    const relevantFeedback = feedbackLog
+      .filter((f) => f.videoType === videoType)
+      .slice(-20); // last 20 entries for this format
+
+    const approvals = relevantFeedback.filter((f) => f.action === 'approve');
+    const rejections = relevantFeedback.filter((f) => f.action === 'reject');
+
+    const systemPrompt = `You are a video production AI assistant for MAJU, a wellness brand. You help generate optimized video briefs for AI avatar video tools like Higgsfield.
+
+The video format is: ${videoType}
+Avatar: ${avatar}
+Product: ${product}
+
+Your job: Based on the user's notes and past feedback (what worked, what didn't), generate an optimized video brief/prompt that will produce the best possible video.
+
+Return ONLY a JSON object with these fields:
+- "script": the avatar speaking script (30 seconds max)
+- "direction": visual/pacing/tone direction for the AI
+- "reasoning": 1 sentence explaining what you optimized based on feedback`;
+
+    const feedbackContext = relevantFeedback.length
+      ? `\n\nPast feedback for this format (${relevantFeedback.length} entries):
+APPROVED videos — what worked:\n${approvals.map((f) => `- "${f.notes}"`).join('\n') || '(none yet)'}
+REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).join('\n') || '(none yet)'}`
+      : '\n\nNo past feedback yet — use best practices for short-form social video.';
+
+    try {
+      const res = await fetch(backendUrl('/api/proxy/claude/messages'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-api-key-value': apiKeys.claude },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 1024,
+          system: systemPrompt,
+          messages: [{
+            role: 'user',
+            content: `Generate an optimized video brief.${feedbackContext}\n\nUser notes for this batch: "${userNotes || 'No specific notes'}"`,
+          }],
+        }),
+      });
+      const data = await res.json();
+      if (data.content && data.content[0]) {
+        const text = data.content[0].text;
+        // Try to parse JSON from response
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          return JSON.parse(jsonMatch[0]);
+        }
+        return { script: text, direction: '', reasoning: 'Raw response' };
+      }
+      return null;
+    } catch (err) {
+      console.error('[Claude] Error:', err);
+      return null;
+    }
+  }
+
   // ─── Generate Video ───
-  $('#submit-video').addEventListener('click', () => {
+  $('#submit-video').addEventListener('click', async () => {
     const type = $('#video-type').value;
     const versions = parseInt($('#versions').value);
     const avatar = $('#avatar').value;
@@ -121,6 +183,17 @@
     const postMode = $('input[name="postMode"]:checked').value;
     const schedDate = $('#schedule-date')?.value || '';
     const notes = $('#notes').value.trim();
+
+    // If Claude key is set, get AI-optimized prompt first
+    let aiPrompt = null;
+    if (apiKeys.claude) {
+      const btn = $('#submit-video');
+      btn.disabled = true;
+      btn.textContent = '🧠 Claude is optimizing your prompt…';
+      aiPrompt = await getClaudeOptimizedPrompt(type, avatar, product, notes);
+      btn.disabled = false;
+      btn.textContent = '🚀 Generate & Send to Queue';
+    }
 
     for (let i = 0; i < versions; i++) {
       const item = {
@@ -134,6 +207,7 @@
         postMode,
         schedDate: postMode === 'schedule' ? schedDate : null,
         notes,
+        aiPrompt, // Claude-optimized prompt (null if no key)
         version: i + 1,
         totalVersions: versions,
         status: 'pending',
@@ -222,6 +296,7 @@
           <p>${item.productName} · ${item.avatarName}</p>
           ${item.postMode === 'asap' ? '<p>📌 Post ASAP</p>' : `<p>📅 ${formatDate(item.schedDate)}</p>`}
           ${item.notes ? `<p>"${item.notes}"</p>` : ''}
+          ${item.aiPrompt ? `<div class="ai-prompt"><strong>AI Brief:</strong> ${item.aiPrompt.reasoning || ''}<br><em>${(item.aiPrompt.direction || '').substring(0, 120)}</em></div>` : ''}
           <div class="queue-meta">
             Status: <strong>${item.status.toUpperCase()}</strong> ·
             Created: ${formatDate(item.createdAt)}
@@ -488,6 +563,7 @@
   // Load saved keys
   function loadApiKeys() {
     if (apiKeys.backendUrl) $('#api-backend-url').value = apiKeys.backendUrl;
+    if (apiKeys.claude) $('#api-claude').value = apiKeys.claude;
     if (apiKeys.higgsfield) $('#api-higgsfield').value = apiKeys.higgsfield;
     if (apiKeys.metricool) $('#api-metricool').value = apiKeys.metricool;
     if (apiKeys.arcads) $('#api-arcads').value = apiKeys.arcads;
@@ -512,6 +588,7 @@
   $('#btn-save-keys').addEventListener('click', () => {
     apiKeys = {
       backendUrl: $('#api-backend-url').value.trim(),
+      claude: $('#api-claude').value.trim(),
       higgsfield: $('#api-higgsfield').value.trim(),
       metricool: $('#api-metricool').value.trim(),
       arcads: $('#api-arcads').value.trim(),

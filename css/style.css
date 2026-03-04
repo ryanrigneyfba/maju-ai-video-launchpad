@@ -169,6 +169,7 @@ code{background:var(--bg-input);padding:1px 5px;border-radius:4px;font-size:.8re
 .revision-count{font-size:.72rem;color:var(--revision);margin-top:.2rem}
 .rejection-notes{font-size:.78rem;color:var(--revision);margin-top:.3rem;font-style:italic;border-left:2px solid var(--revision);padding-left:.5rem}
 .approval-notes{font-size:.78rem;color:var(--accent);margin-top:.3rem;font-style:italic;border-left:2px solid var(--accent);padding-left:.5rem}
+.ai-prompt{font-size:.78rem;color:#4ade80;margin-top:.4rem;border-left:2px solid #4ade80;padding-left:.5rem;background:rgba(74,222,128,.05);padding:.4rem .5rem;border-radius:0 4px 4px 0}
 
 /* ── Scheduled Posts ── */
 .api-status{
