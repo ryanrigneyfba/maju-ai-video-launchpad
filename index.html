@@ -17,20 +17,20 @@
     </div>
     <nav class="sidebar-nav">
       <button class="nav-btn active" data-view="dashboard">
-        <span class="nav-icon">â¡</span> Dashboard
+        <span class="nav-icon">⚡</span> Dashboard
       </button>
       <button class="nav-btn" data-view="approval">
-        <span class="nav-icon">â</span> Approval Queue
+        <span class="nav-icon">✅</span> Approval Queue
         <span class="badge" id="queue-badge">0</span>
       </button>
       <button class="nav-btn" data-view="scheduled">
-        <span class="nav-icon">ð</span> Scheduled Posts
+        <span class="nav-icon">📅</span> Scheduled Posts
       </button>
       <button class="nav-btn" data-view="sop-wiki">
-        <span class="nav-icon">ð</span> SOP Wiki
+        <span class="nav-icon">📖</span> SOP Wiki
       </button>
       <button class="nav-btn" data-view="settings">
-        <span class="nav-icon">âï¸</span> API Settings
+        <span class="nav-icon">⚙️</span> API Settings
       </button>
     </nav>
     <div class="sidebar-footer">
@@ -41,7 +41,7 @@
   <!-- Main Content -->
   <main class="main" id="main">
     <header class="topbar">
-      <button class="menu-toggle" id="menu-toggle">â°</button>
+      <button class="menu-toggle" id="menu-toggle">☰</button>
       <h2 class="page-title" id="page-title">Dashboard</h2>
     </header>
 
@@ -95,11 +95,11 @@
           </div>
           <div class="form-group full-width">
             <label for="notes">Notes / Brief</label>
-            <textarea id="notes" rows="3" placeholder="Any extra direction for the AIâ¦"></textarea>
+            <textarea id="notes" rows="3" placeholder="Any extra direction for the AI…"></textarea>
           </div>
         </div>
         <button class="btn btn-primary" id="submit-video">
-          ð Generate &amp; Send to Queue
+          🚀 Generate &amp; Send to Queue
         </button>
       </div>
 
@@ -160,7 +160,7 @@
         <div class="api-status" id="metricool-status">
           <span class="status-dot disconnected"></span>
           <span>Metricool: Not connected</span>
-          <a href="#" class="link-settings" data-goto="settings">Add API key â</a>
+          <a href="#" class="link-settings" data-goto="settings">Add API key →</a>
         </div>
         <div id="scheduled-list" class="scheduled-list">
           <p class="empty-state">Connect your Metricool API key in Settings to see scheduled posts.</p>
@@ -193,25 +193,25 @@
           <div class="api-field">
             <label>Higgsfield API Key</label>
             <div class="api-input-row">
-              <input type="password" id="api-higgsfield" placeholder="Enter Higgsfield keyâ¦">
+              <input type="password" id="api-higgsfield" placeholder="Enter Higgsfield key…">
               <button class="btn btn-sm btn-toggle-vis" data-target="api-higgsfield">Show</button>
             </div>
-            <span class="api-hint">AI avatar video generation â Asset: <code>majurender8oz</code> | Avatar: <code>pateit</code></span>
+            <span class="api-hint">AI avatar video generation — Asset: <code>majurender8oz</code> | Avatar: <code>pateit</code></span>
           </div>
 
           <div class="api-field">
             <label>Metricool API Key</label>
             <div class="api-input-row">
-              <input type="password" id="api-metricool" placeholder="Enter Metricool keyâ¦">
+              <input type="password" id="api-metricool" placeholder="Enter Metricool key…">
               <button class="btn btn-sm btn-toggle-vis" data-target="api-metricool">Show</button>
             </div>
-            <span class="api-hint">Social scheduling &amp; analytics â powers the Scheduled Posts view</span>
+            <span class="api-hint">Social scheduling &amp; analytics — powers the Scheduled Posts view</span>
           </div>
 
           <div class="api-field">
             <label>Arcads API Key</label>
             <div class="api-input-row">
-              <input type="password" id="api-arcads" placeholder="Enter Arcads keyâ¦">
+              <input type="password" id="api-arcads" placeholder="Enter Arcads key…">
               <button class="btn btn-sm btn-toggle-vis" data-target="api-arcads">Show</button>
             </div>
             <span class="api-hint">UGC-style ad video generation (future workflows)</span>
@@ -220,15 +220,15 @@
           <div class="api-field">
             <label>Creatify API Key</label>
             <div class="api-input-row">
-              <input type="password" id="api-creatify" placeholder="Enter Creatify keyâ¦">
+              <input type="password" id="api-creatify" placeholder="Enter Creatify key…">
               <button class="btn btn-sm btn-toggle-vis" data-target="api-creatify">Show</button>
             </div>
             <span class="api-hint">AI product video generation (future workflows)</span>
           </div>
         </div>
 
-        <button class="btn btn-primary" id="btn-save-keys">ð¾ Save Keys</button>
-        <p class="save-msg hidden" id="save-msg">â Keys saved to local storage</p>
+        <button class="btn btn-primary" id="btn-save-keys">💾 Save Keys</button>
+        <p class="save-msg hidden" id="save-msg">✓ Keys saved to local storage</p>
       </div>
     </section>
   </main>
@@ -238,7 +238,7 @@
     <div class="modal">
       <h3>Reject &amp; Revise</h3>
       <p>Provide notes so the AI can revise this video:</p>
-      <textarea id="reject-notes" rows="4" placeholder="e.g. Make the hook punchier, slow down the demo sectionâ¦"></textarea>
+      <textarea id="reject-notes" rows="4" placeholder="e.g. Make the hook punchier, slow down the demo section…"></textarea>
       <div class="modal-actions">
         <button class="btn btn-secondary" id="btn-cancel-reject">Cancel</button>
         <button class="btn btn-danger" id="btn-confirm-reject">Reject &amp; Send for Revision</button>
