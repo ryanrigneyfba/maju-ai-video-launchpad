@@ -26,6 +26,9 @@
       <button class="nav-btn" data-view="scheduled">
         <span class="nav-icon">📅</span> Scheduled Posts
       </button>
+      <button class="nav-btn" data-view="analytics">
+        <span class="nav-icon">📊</span> Analytics
+      </button>
       <button class="nav-btn" data-view="sop-wiki">
         <span class="nav-icon">📖</span> SOP Wiki
       </button>
@@ -219,6 +222,36 @@
         </div>
         <div id="scheduled-list" class="scheduled-list">
           <p class="empty-state">Connect your Metricool API key in Settings to see scheduled posts.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Analytics View -->
+    <section class="view" id="view-analytics">
+      <div class="card">
+        <h3 class="card-title">Analytics Overview</h3>
+        <div class="api-status" id="analytics-status">
+          <span class="status-dot disconnected"></span>
+          <span>Metricool: Not connected</span>
+          <a href="#" class="link-settings" data-goto="settings">Add API key →</a>
+        </div>
+
+        <!-- Account Breakdown -->
+        <div id="analytics-accounts" class="analytics-section hidden">
+          <h4 class="section-title">Connected Accounts</h4>
+          <div class="accounts-grid" id="accounts-grid"></div>
+        </div>
+
+        <!-- Top Performing Posts -->
+        <div id="analytics-top-posts" class="analytics-section hidden">
+          <h4 class="section-title">Top Performing Posts</h4>
+          <div class="top-posts-list" id="top-posts-list"></div>
+        </div>
+
+        <!-- Summary Stats -->
+        <div id="analytics-summary" class="analytics-section hidden">
+          <h4 class="section-title">30-Day Summary</h4>
+          <div class="stats-grid" id="stats-grid"></div>
         </div>
       </div>
     </section>

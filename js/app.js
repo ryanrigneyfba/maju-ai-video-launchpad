@@ -27,6 +27,7 @@
   let queue = JSON.parse(localStorage.getItem(CONFIG.storageKeys.queue) || '[]');
   let apiKeys = JSON.parse(localStorage.getItem(CONFIG.storageKeys.apiKeys) || '{}');
   let currentRejectId = null;
+  let analyticsLoaded = false;
 
   // ─── DOM Refs ───
   const $ = (sel) => document.querySelector(sel);
@@ -37,6 +38,7 @@
     dashboard: 'view-dashboard',
     approval: 'view-approval',
     scheduled: 'view-scheduled',
+    analytics: 'view-analytics',
     'sop-wiki': 'view-sop-wiki',
     settings: 'view-settings',
   };
@@ -52,10 +54,15 @@
       dashboard: 'Dashboard',
       approval: 'Approval Queue',
       scheduled: 'Scheduled Posts',
+      analytics: 'Analytics',
       'sop-wiki': 'SOP Wiki',
       settings: 'API Settings',
     };
     $('#page-title').textContent = titles[name] || 'Dashboard';
+    // Lazy-load analytics when navigating to that view
+    if (name === 'analytics' && typeof loadAnalytics === 'function' && !analyticsLoaded) {
+      loadAnalytics();
+    }
   }
 
   $$('.nav-btn').forEach((btn) =>
@@ -828,6 +835,160 @@
       statusEl.innerHTML = `<span class="status-dot disconnected"></span><span>Metricool: Error — ${result.error}</span>`;
     }
   }
+
+  // ─── Analytics View ───
+
+  async function loadAnalytics() {
+    if (!apiKeys.metricool) {
+      $('#analytics-status').innerHTML =
+        '<span class="status-dot disconnected"></span><span>Metricool: Not connected</span><a href="#" class="link-settings" data-goto="settings">Add API key →</a>';
+      return;
+    }
+
+    $('#analytics-status').innerHTML =
+      '<span class="status-dot connected"></span><span>Metricool: Loading analytics…</span>';
+
+    // Fetch accounts/networks, analytics, and top posts in parallel
+    const [networksRes, topPostsRes] = await Promise.all([
+      fetchAnalyticsNetworks(),
+      fetchAnalyticsTopPosts(),
+    ]);
+
+    // Show accounts
+    if (networksRes.ok) {
+      const accounts = networksRes.accounts || networksRes.networks || networksRes || [];
+      renderAccountCards(Array.isArray(accounts) ? accounts : [accounts]);
+    }
+
+    // Show top posts
+    if (topPostsRes.ok) {
+      const posts = topPostsRes.posts || topPostsRes || [];
+      renderTopPosts(Array.isArray(posts) ? posts : []);
+    }
+
+    // Summary stats from queue data
+    renderAnalyticsSummary();
+
+    $('#analytics-status').innerHTML =
+      '<span class="status-dot connected"></span><span>Metricool: Connected</span>';
+    analyticsLoaded = true;
+  }
+
+  async function fetchAnalyticsNetworks() {
+    try {
+      const res = await fetch(backendUrl('/api/proxy/metricool/networks'), {
+        headers: { 'x-api-key-value': apiKeys.metricool },
+      });
+      const data = await res.json();
+      return { ok: res.ok, ...data };
+    } catch (err) {
+      return { ok: false, error: err.message };
+    }
+  }
+
+  async function fetchAnalyticsTopPosts() {
+    try {
+      const now = new Date();
+      const past = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      const params = new URLSearchParams({
+        init_date: past.toISOString().split('T')[0],
+        end_date: now.toISOString().split('T')[0],
+        order_by: 'interactions',
+        limit: '10',
+      });
+      const res = await fetch(backendUrl(`/api/proxy/metricool/top-posts?${params}`), {
+        headers: { 'x-api-key-value': apiKeys.metricool },
+      });
+      const data = await res.json();
+      return { ok: res.ok, ...data };
+    } catch (err) {
+      return { ok: false, error: err.message };
+    }
+  }
+
+  function renderAccountCards(accounts) {
+    const grid = $('#accounts-grid');
+    const section = $('#analytics-accounts');
+
+    if (!accounts.length) {
+      section.classList.add('hidden');
+      return;
+    }
+
+    section.classList.remove('hidden');
+    grid.innerHTML = accounts.map((acct) => `
+      <div class="account-card">
+        <span class="acct-platform">${acct.network || acct.platform || acct.type || 'Social'}</span>
+        <div class="acct-name">${acct.name || acct.username || acct.handle || 'Account'}</div>
+        <div class="acct-stats">
+          ${acct.followers != null ? `<div class="acct-stat"><span class="stat-label">Followers</span><span class="stat-value">${formatNum(acct.followers)}</span></div>` : ''}
+          ${acct.following != null ? `<div class="acct-stat"><span class="stat-label">Following</span><span class="stat-value">${formatNum(acct.following)}</span></div>` : ''}
+          ${acct.posts != null ? `<div class="acct-stat"><span class="stat-label">Posts</span><span class="stat-value">${formatNum(acct.posts)}</span></div>` : ''}
+          ${acct.engagement != null ? `<div class="acct-stat"><span class="stat-label">Engagement</span><span class="stat-value">${acct.engagement}%</span></div>` : ''}
+          ${acct.reach != null ? `<div class="acct-stat"><span class="stat-label">Reach</span><span class="stat-value">${formatNum(acct.reach)}</span></div>` : ''}
+          ${acct.impressions != null ? `<div class="acct-stat"><span class="stat-label">Impressions</span><span class="stat-value">${formatNum(acct.impressions)}</span></div>` : ''}
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function renderTopPosts(posts) {
+    const list = $('#top-posts-list');
+    const section = $('#analytics-top-posts');
+
+    if (!posts.length) {
+      section.classList.remove('hidden');
+      list.innerHTML = '<p class="empty-state">No post data available for the last 30 days.</p>';
+      return;
+    }
+
+    section.classList.remove('hidden');
+    list.innerHTML = posts.map((post, i) => `
+      <div class="top-post">
+        <div class="post-info">
+          <div class="post-text">${i + 1}. ${post.content || post.text || post.caption || 'Post'}</div>
+          <div class="post-meta">
+            ${post.network || post.platform || ''} · ${post.publicationDate || post.date || ''}
+          </div>
+        </div>
+        <div class="post-stats">
+          ${post.likes != null ? `<div class="post-stat"><span class="stat-num">${formatNum(post.likes)}</span><span class="stat-label">Likes</span></div>` : ''}
+          ${post.comments != null ? `<div class="post-stat"><span class="stat-num">${formatNum(post.comments)}</span><span class="stat-label">Comments</span></div>` : ''}
+          ${post.shares != null ? `<div class="post-stat"><span class="stat-num">${formatNum(post.shares)}</span><span class="stat-label">Shares</span></div>` : ''}
+          ${post.interactions != null ? `<div class="post-stat"><span class="stat-num">${formatNum(post.interactions)}</span><span class="stat-label">Interactions</span></div>` : ''}
+          ${post.reach != null ? `<div class="post-stat"><span class="stat-num">${formatNum(post.reach)}</span><span class="stat-label">Reach</span></div>` : ''}
+          ${post.impressions != null ? `<div class="post-stat"><span class="stat-num">${formatNum(post.impressions)}</span><span class="stat-label">Views</span></div>` : ''}
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function renderAnalyticsSummary() {
+    const section = $('#analytics-summary');
+    const grid = $('#stats-grid');
+    section.classList.remove('hidden');
+
+    const total = queue.length;
+    const approved = queue.filter((q) => q.status === 'approved').length;
+    const pending = queue.filter((q) => q.status === 'pending' || q.status === 'revision').length;
+    const revisions = queue.reduce((sum, q) => sum + ((q.revisionCount || 0)), 0);
+
+    grid.innerHTML = `
+      <div class="stat-box"><div class="stat-number">${total}</div><div class="stat-desc">Total Videos</div></div>
+      <div class="stat-box"><div class="stat-number">${approved}</div><div class="stat-desc">Approved</div></div>
+      <div class="stat-box"><div class="stat-number">${pending}</div><div class="stat-desc">Pending Review</div></div>
+      <div class="stat-box"><div class="stat-number">${revisions}</div><div class="stat-desc">Total Revisions</div></div>
+    `;
+  }
+
+  function formatNum(n) {
+    if (n == null) return '—';
+    if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
+    if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
+    return n.toString();
+  }
+
+  // Analytics is loaded lazily — triggered from nav click handler below
 
   // ─── Wire Approve → Metricool Post ───
   function scheduleApprovedItem(item) {

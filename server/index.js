@@ -417,6 +417,54 @@ app.post('/api/proxy/metricool/posts', async (req, res) => {
   }
 });
 
+// ── Metricool Analytics Proxy ──
+app.get('/api/proxy/metricool/networks', async (req, res) => {
+  const apiKey = req.headers['x-api-key-value'];
+  if (!apiKey) return res.status(400).json({ error: 'Missing API key' });
+  try {
+    const result = await proxyRequest(
+      'https://app.metricool.com/api/v2/analytics/networks',
+      'GET',
+      { 'X-Mc-Auth': apiKey, 'Content-Type': 'application/json' }
+    );
+    res.status(result.status).json(result.data);
+  } catch (err) {
+    res.status(502).json({ error: err.message });
+  }
+});
+
+app.get('/api/proxy/metricool/analytics/:network', async (req, res) => {
+  const apiKey = req.headers['x-api-key-value'];
+  if (!apiKey) return res.status(400).json({ error: 'Missing API key' });
+  try {
+    const qs = new URLSearchParams(req.query).toString();
+    const result = await proxyRequest(
+      `https://app.metricool.com/api/v2/analytics/${encodeURIComponent(req.params.network)}${qs ? '?' + qs : ''}`,
+      'GET',
+      { 'X-Mc-Auth': apiKey, 'Content-Type': 'application/json' }
+    );
+    res.status(result.status).json(result.data);
+  } catch (err) {
+    res.status(502).json({ error: err.message });
+  }
+});
+
+app.get('/api/proxy/metricool/top-posts', async (req, res) => {
+  const apiKey = req.headers['x-api-key-value'];
+  if (!apiKey) return res.status(400).json({ error: 'Missing API key' });
+  try {
+    const qs = new URLSearchParams(req.query).toString();
+    const result = await proxyRequest(
+      `https://app.metricool.com/api/v2/analytics/posts${qs ? '?' + qs : ''}`,
+      'GET',
+      { 'X-Mc-Auth': apiKey, 'Content-Type': 'application/json' }
+    );
+    res.status(result.status).json(result.data);
+  } catch (err) {
+    res.status(502).json({ error: err.message });
+  }
+});
+
 // ── Arcads Proxy ──
 app.post('/api/proxy/arcads/videos', async (req, res) => {
   const apiKey = req.headers['x-api-key-value'];
