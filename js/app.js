@@ -25,6 +25,21 @@
 
   // ─── State ───
   let queue = JSON.parse(localStorage.getItem(CONFIG.storageKeys.queue) || '[]');
+
+  // Cleanup: remove busted pending items that have no stitched video and no segment videos
+  const beforeCount = queue.length;
+  queue = queue.filter(item => {
+    if (item.status === 'pending' && !item.stitchedVideoUrl && (!item.segmentVideos || item.segmentVideos.length === 0)) {
+      console.log('[Cleanup] Removing busted queue item:', item.id, item.typeName);
+      return false;
+    }
+    return true;
+  });
+  if (queue.length < beforeCount) {
+    localStorage.setItem(CONFIG.storageKeys.queue, JSON.stringify(queue));
+    console.log(`[Cleanup] Removed ${beforeCount - queue.length} busted pending items from queue`);
+  }
+
   let apiKeys = JSON.parse(localStorage.getItem(CONFIG.storageKeys.apiKeys) || '{}');
   let currentRejectId = null;
   let currentApproveId = null;
@@ -49,7 +64,10 @@
   // ─── Navigation ───
   const viewMap = {
     dashboard: 'view-dashboard',
+    tracker: 'view-tracker',
     approval: 'view-approval',
+    approved: 'view-approved',
+    spend: 'view-spend',
     scheduled: 'view-scheduled',
     analytics: 'view-analytics',
     'sop-wiki': 'view-sop-wiki',
@@ -65,7 +83,10 @@
     if (navEl) navEl.classList.add('active');
     const titles = {
       dashboard: 'Dashboard',
+      tracker: 'Request Tracker',
       approval: 'Approval Queue',
+      approved: 'Approved Videos',
+      spend: 'Spend Tracker',
       scheduled: 'Scheduled Posts',
       analytics: 'Analytics',
       'sop-wiki': 'SOP Wiki',
@@ -76,6 +97,10 @@
     if (name === 'analytics' && typeof loadAnalytics === 'function' && !analyticsLoaded) {
       loadAnalytics();
     }
+    // Refresh views when navigating to them
+    if (name === 'tracker') renderTracker();
+    if (name === 'approved') renderApprovedVideos();
+    if (name === 'spend') renderSpendTracker();
   }
 
   $$('.nav-btn').forEach((btn) =>
@@ -122,29 +147,56 @@
     const approvals = relevantFeedback.filter((f) => f.action === 'approve');
     const rejections = relevantFeedback.filter((f) => f.action === 'reject');
 
-    const systemPrompt = `You are a video production AI assistant for MAJU, a wellness brand. You help generate optimized video briefs for AI avatar video tools like Higgsfield.
+    const systemPrompt = `You are a video production AI assistant for MAJU, a wellness brand. You generate optimized Higgsfield prompts for AI avatar videos.
 
-The video format is: ${videoType}
-Avatar: ${avatar}
-Product: ${product}
+Format: ${videoType}
+Avatar: ${avatar} (Patient Maya / Bree Alba)
+Product: ${product} (Maju's Black Seed Oil 8oz)
 
-Your job: Based on the user's notes and past feedback (what worked, what didn't), generate an optimized video brief/prompt that will produce the best possible video.
+This is the "Anti-Puffy Face Snack" Selfcare Snack Reel — red onion + Maju Black Seed Oil + salt. Total duration: 15 seconds, 9:16 vertical.
 
-The video follows a Selfcare Snack Reel SOP with these segments:
-1. Hook (0-3s) — attention-grabbing opener
-2. Reveal (3-8s) — product reveal
-3. Demo (8-18s) — application/usage demonstration
-4. Result + CTA (18-25s) — results and call to action
-5. End Card (25-30s) — branding/handle
+The video has exactly 5 segments with specific Higgsfield prompts:
+
+SEGMENT 1: HOOK (0-3s) — Stop the scroll
+Default prompt: "Medium close-up of a woman in a dark kitchen holding a whole red onion near her face, looking at it curiously then at camera with a confident smile. A bottle of black seed oil sits on the wooden counter beside her. Warm golden lighting from window. She slowly raises the onion. 9:16 vertical, 3 seconds, smooth motion."
+Text overlay: "de-puff your face snack" OR "wake up puffy? eat this"
+
+SEGMENT 2: THE REVEAL — Ingredients + Pour (3-6s) — Product placement money shot
+Default prompt: "Woman pouring black seed oil from a dark bottle onto a halved red onion on a wooden cutting board. Camera slightly wider, waist up. She looks down at the onion as she pours. The bottle label reading BLACK SEED OIL faces the camera. Warm kitchen lighting, dark moody background. Smooth satisfying pour motion. 9:16 vertical, 3 seconds."
+Text overlay: "1 red onion\\n+ black seed oil\\n+ salt"
+
+SEGMENT 3: THE DEMO — Eating the Snack (6-11s) — Viral hook, authentic reaction
+Default prompt: "Tight close-up of woman biting into a raw red onion half glistening with oil. She takes a big bite, chews with a slight grimace then settles into it and nods. A bottle of black seed oil is visible on the counter behind her. Warm golden kitchen lighting. Authentic, unpolished reaction. 9:16 vertical, 5 seconds, natural motion."
+Text overlay: NONE (let the visual do the work)
+
+SEGMENT 4: RESULT + BENEFITS (11-13s) — Educate on benefits
+Default prompt: "Woman holding a bitten red onion near her face, looking confidently at camera. She gently touches her cheek with her free hand. Black seed oil bottle visible on counter. Warm golden lighting. Calm, satisfied expression. 9:16 vertical, 2 seconds."
+Text overlay: "drains facial bloat\\nreduces water retention\\ntightens puffy skin"
+
+SEGMENT 5: THE GLOW — Result + CTA (13-15s) — Payoff beauty shot
+Default prompt: "Woman looking at herself in a mirror, gently touching her glowing face with both hands. Dewy, healthy skin. She looks serene and satisfied. A bottle of black seed oil is prominently placed in the foreground near the mirror. Warm, soft lighting emphasizes skin glow. 9:16 vertical, 2 seconds, slow smooth motion."
+Text overlay: "anti-puffy face snack\\n(onion + black seed oil + salt)" + CTA
+
+CRITICAL RULES:
+- Maju Black Seed Oil bottle MUST be visible in EVERY segment
+- Bottle label readable in at least Reveal + Glow segments
+- Kitchen: dark/moody (dark cabinets, warm wood), NOT bright/white
+- Lighting: warm golden-hour (3200-4000K), soft, flattering
+- Avatar: black tank top, hair in bun, minimal makeup, natural look
+- Eating reaction must be AUTHENTIC — slight grimace then acceptance, NOT polished
+- Movement: smooth, natural, never robotic
+
+For A/B testing, vary: hook text, pacing (15-18s), CTA ("save for later" / "link in bio" / "shop now"), and audio style.
 
 Return ONLY a JSON object with these fields:
-- "script": the avatar speaking script (30 seconds max)
-- "direction": visual/pacing/tone direction for the AI
+- "segments": array of 5 objects, each with { "name": segment name, "prompt": optimized Higgsfield prompt, "duration": seconds, "textOverlay": text to show or null }
+- "direction": overall visual/pacing/tone direction
 - "reasoning": 1 sentence explaining what you optimized based on feedback
-- "captions": array of 5 objects for each segment, each with { "text": "caption text shown on screen", "startTime": seconds, "endTime": seconds }
+- "captions": array of 5 objects for each segment with { "text": "caption text", "startTime": seconds, "endTime": seconds }
+- "hookVariant": which hook text variant this version uses
 
-Example captions:
-[{"text":"Wait you NEED to try this","startTime":0,"endTime":3},{"text":"Maju Black Seed Oil","startTime":3,"endTime":8},{"text":"Just a few drops daily","startTime":8,"endTime":18},{"text":"My skin has never been better","startTime":18,"endTime":25},{"text":"@majuwellness","startTime":25,"endTime":30}]`;
+Example:
+{"segments":[{"name":"hook","prompt":"Medium close-up of a woman...","duration":3,"textOverlay":"de-puff your face snack"},{"name":"reveal","prompt":"Woman pouring...","duration":3,"textOverlay":"1 red onion\\n+ black seed oil\\n+ salt"},{"name":"demo","prompt":"Tight close-up...","duration":5,"textOverlay":null},{"name":"result","prompt":"Woman holding...","duration":2,"textOverlay":"drains facial bloat\\nreduces water retention\\ntightens puffy skin"},{"name":"glow","prompt":"Woman looking...","duration":2,"textOverlay":"anti-puffy face snack"}],"direction":"Warm, moody kitchen. Authentic reactions.","reasoning":"Used default SOP prompts.","captions":[{"text":"de-puff your face snack","startTime":0,"endTime":3},{"text":"1 red onion + black seed oil + salt","startTime":3,"endTime":6},{"text":"","startTime":6,"endTime":11},{"text":"drains facial bloat, reduces water retention, tightens puffy skin","startTime":11,"endTime":13},{"text":"anti-puffy face snack","startTime":13,"endTime":15}],"hookVariant":"de-puff your face snack"}`;
 
     const feedbackContext = relevantFeedback.length
       ? `\n\nPast feedback for this format (${relevantFeedback.length} entries):
@@ -232,6 +284,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
 
     saveQueue();
     renderQueue();
+    renderTracker();
     renderActivity();
     updateBadge();
     showPipeline();
@@ -265,6 +318,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     }
 
     // If no Higgsfield key, simulate the whole pipeline
+    console.log('[Pipeline] apiKeys.higgsfield =', apiKeys.higgsfield ? '(set)' : '(empty)', '| All keys:', Object.keys(apiKeys).filter(k => apiKeys[k]));
     if (!apiKeys.higgsfield) {
       let stage = 0;
       const sim = [
@@ -275,7 +329,17 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       function advanceSim() {
         setStage(stage, sim[stage]);
         stage++;
-        if (stage < sim.length) setTimeout(advanceSim, 1800);
+        if (stage < sim.length) {
+          setTimeout(advanceSim, 1800);
+        } else {
+          // Simulation complete — move items into the approval queue
+          const simItems = queue.filter(q => q.pipelineStage === 'generate');
+          simItems.forEach(item => { item.pipelineStage = 'queue'; });
+          saveQueue();
+          renderQueue();
+          renderTracker();
+          updateBadge();
+        }
       }
       advanceSim();
       return;
@@ -285,75 +349,139 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     runRealPipeline(steps, msg, setStage);
   }
 
-  async function runRealPipeline(steps, msg, setStage) {
-    // Stage 0: Generate via Higgsfield
-    setStage(0, 'Sending to Higgsfield for generation…');
+  // SOP v2.0 default Higgsfield prompts for each segment
+  const DEFAULT_SEGMENT_PROMPTS = [
+    { name: 'hook', duration: 3, prompt: 'Medium close-up of a woman in a dark kitchen holding a whole red onion near her face, looking at it curiously then at camera with a confident smile. A bottle of black seed oil sits on the wooden counter beside her. Warm golden lighting from window. She slowly raises the onion. 9:16 vertical, 3 seconds, smooth motion.', textOverlay: 'de-puff your face snack' },
+    { name: 'reveal', duration: 3, prompt: 'Woman pouring black seed oil from a dark bottle onto a halved red onion on a wooden cutting board. Camera slightly wider, waist up. She looks down at the onion as she pours. The bottle label reading BLACK SEED OIL faces the camera. Warm kitchen lighting, dark moody background. Smooth satisfying pour motion. 9:16 vertical, 3 seconds.', textOverlay: '1 red onion\n+ black seed oil\n+ salt' },
+    { name: 'demo', duration: 5, prompt: 'Tight close-up of woman biting into a raw red onion half glistening with oil. She takes a big bite, chews with a slight grimace then settles into it and nods. A bottle of black seed oil is visible on the counter behind her. Warm golden kitchen lighting. Authentic, unpolished reaction. 9:16 vertical, 5 seconds, natural motion.', textOverlay: null },
+    { name: 'result', duration: 2, prompt: 'Woman holding a bitten red onion near her face, looking confidently at camera. She gently touches her cheek with her free hand. Black seed oil bottle visible on counter. Warm golden lighting. Calm, satisfied expression. 9:16 vertical, 2 seconds.', textOverlay: 'drains facial bloat\nreduces water retention\ntightens puffy skin' },
+    { name: 'glow', duration: 2, prompt: 'Woman looking at herself in a mirror, gently touching her glowing face with both hands. Dewy, healthy skin. She looks serene and satisfied. A bottle of black seed oil is prominently placed in the foreground near the mirror. Warm, soft lighting emphasizes skin glow. 9:16 vertical, 2 seconds, slow smooth motion.', textOverlay: 'anti-puffy face snack\n(onion + black seed oil + salt)' },
+  ];
 
-    // Get the most recent queue items (just generated)
+  // Helper: generate a single image via Seedream and poll until done
+  async function generateSegmentImage(seg, segLabel, itemVersion) {
+    if (seg.image_url) return seg.image_url;
+    const imgResult = await API.higgsfield.generateImage({ prompt: seg.prompt, aspect_ratio: '9:16' });
+    console.log(`[Pipeline] Image submit for ${segLabel}:`, imgResult.ok, 'id:', imgResult.id);
+    if (!imgResult.ok || !imgResult.id) return null;
+    for (let attempt = 0; attempt < 60; attempt++) {
+      await new Promise(r => setTimeout(r, 2000));
+      const imgStatus = await API.higgsfield.getImageStatus(imgResult.id);
+      const st = (imgStatus.status || '').toLowerCase();
+      if (attempt % 5 === 0) console.log(`[Pipeline] ${segLabel} poll #${attempt}: status=${st}`);
+      if (st === 'completed' || st === 'done') return imgStatus.url;
+      if (st === 'failed' || st === 'error' || st === 'nsfw' || st === 'cancelled') return null;
+    }
+    console.warn(`[Pipeline] ${segLabel} timed out after 120s`);
+    return null; // timed out
+  }
+
+  // Helper: animate an image via DoP and poll until done
+  async function animateSegmentVideo(seg, imageUrl) {
+    const result = await API.higgsfield.generateVideo({
+      prompt: seg.prompt,
+      image_url: imageUrl,
+      duration: seg.duration || 5,
+      model: seg.model || 'dop-turbo',
+      motion_id: seg.motion_id,
+    });
+    if (!result.ok || !result.id) return null;
+    for (let attempt = 0; attempt < 120; attempt++) {
+      await new Promise(r => setTimeout(r, 3000));
+      const status = await API.higgsfield.getStatus(result.id);
+      if (status.status === 'completed' || status.status === 'done') {
+        return status.video_url || status.url || status.output_url || null;
+      }
+      if (status.status === 'failed' || status.status === 'error') return null;
+    }
+    return null; // timed out
+  }
+
+  // Helper: run async tasks with a concurrency limit
+  function runWithConcurrency(tasks, limit) {
+    const results = new Array(tasks.length);
+    let next = 0;
+    let active = 0;
+    return new Promise(resolve => {
+      function launch() {
+        while (active < limit && next < tasks.length) {
+          const idx = next++;
+          active++;
+          tasks[idx]().then(val => { results[idx] = val; }).catch(() => { results[idx] = null; }).finally(() => {
+            active--;
+            if (next >= tasks.length && active === 0) resolve(results);
+            else launch();
+          });
+        }
+      }
+      if (tasks.length === 0) resolve(results);
+      else launch();
+    });
+  }
+
+  async function runRealPipeline(steps, msg, setStage) {
+    // Stage 0: Generate each segment via Higgsfield
+    setStage(0, 'Generating video segments via Higgsfield…');
+
     const newItems = queue.filter(q => q.pipelineStage === 'generate');
-    const videoIds = [];
+    const allSegmentVideos = []; // { url, label } for stitching
 
     for (const item of newItems) {
-      const params = {};
-      if (item.aiPrompt && item.aiPrompt.direction) {
-        params.prompt = item.aiPrompt.direction;
-      } else if (item.notes) {
-        params.prompt = item.notes;
+      const segments = (item.aiPrompt && item.aiPrompt.segments) || DEFAULT_SEGMENT_PROMPTS;
+
+      // Step 1: Generate ALL images in parallel (no concurrency limit — Seedream is separate from DoP)
+      msg.textContent = `v${item.version}: Generating ${segments.length} images in parallel… [Seedream]`;
+      updateSegmentStatus('hook', 'Generating images…', false);
+      const imageUrls = await Promise.all(
+        segments.map((seg, si) => generateSegmentImage(seg, `${seg.name} (${si + 1}/${segments.length})`, item.version))
+      );
+
+      // Update status after images
+      const imageCount = imageUrls.filter(Boolean).length;
+      msg.textContent = `v${item.version}: ${imageCount}/${segments.length} images ready — animating videos… [DoP]`;
+
+      // Step 2: Animate images into videos — max 4 concurrent (DoP limit)
+      const DOP_CONCURRENCY = 4;
+      const videoTasks = segments.map((seg, si) => () => {
+        if (!imageUrls[si]) return Promise.resolve(null);
+        updateSegmentStatus(seg.name, 'Animating…', false);
+        return animateSegmentVideo(seg, imageUrls[si]);
+      });
+      const videoUrls = await runWithConcurrency(videoTasks, DOP_CONCURRENCY);
+
+      // Collect results (preserve segment order)
+      const segmentResults = [];
+      for (let si = 0; si < segments.length; si++) {
+        if (videoUrls[si]) {
+          segmentResults.push({ url: videoUrls[si], label: segments[si].name, textOverlay: segments[si].textOverlay });
+          updateSegmentStatus(segments[si].name, 'Done ✓', true);
+        } else {
+          updateSegmentStatus(segments[si].name, imageUrls[si] ? 'Video failed' : 'Image failed', false);
+        }
       }
 
-      const result = await API.higgsfield.generateVideo(params);
-      if (result.ok && result.id) {
-        item.higgsVideoId = result.id;
-        videoIds.push({ item, videoId: result.id });
-        msg.textContent = `Higgsfield generating… (${videoIds.length}/${newItems.length} submitted)`;
+      // Store segment results on the item
+      item.segmentVideos = segmentResults;
+      if (segmentResults.length > 0) {
+        item.videoUrl = segmentResults[0].url; // preview = first segment
+        item.pipelineStage = 'stitch';
+        allSegmentVideos.push(...segmentResults.map(s => ({ url: s.url, label: `${item.typeName} - ${s.label}` })));
+        msg.textContent = `v${item.version}: ${segmentResults.length}/${segments.length} segments rendered!`;
       } else {
-        msg.textContent = `⚠️ Higgsfield error: ${result.error || 'Unknown error'}. Videos added to queue as pending.`;
-        item.pipelineStage = 'queue';
+        item.pipelineStage = 'failed';
+        item.status = 'failed';
+        msg.textContent = `⚠️ v${item.version}: No segments rendered successfully.`;
       }
       saveQueue();
     }
 
-    if (!videoIds.length) {
-      setStage(2, '✓ Videos added to approval queue.');
-      return;
-    }
-
-    // Poll Higgsfield for completion
-    msg.textContent = 'Waiting for Higgsfield to render videos…';
-    const completedVideos = [];
-
-    for (const { item, videoId } of videoIds) {
-      let done = false;
-      let attempts = 0;
-      while (!done && attempts < 120) { // max ~6 min polling
-        await new Promise(r => setTimeout(r, 3000));
-        attempts++;
-        const status = await API.higgsfield.getStatus(videoId);
-        if (status.status === 'completed' || status.status === 'done') {
-          done = true;
-          const videoUrl = status.video_url || status.url || status.output_url;
-          if (videoUrl) {
-            completedVideos.push({ url: videoUrl, label: item.typeName });
-            item.videoUrl = videoUrl;
-          }
-          item.pipelineStage = 'stitch';
-          msg.textContent = `Rendered ${completedVideos.length}/${videoIds.length} videos…`;
-        } else if (status.status === 'failed' || status.status === 'error') {
-          done = true;
-          item.pipelineStage = 'queue';
-          msg.textContent = `⚠️ Video ${item.typeName} failed to render.`;
-        } else {
-          msg.textContent = `Rendering… (${status.status || 'processing'}) — ${completedVideos.length}/${videoIds.length} done`;
-        }
-        saveQueue();
-      }
-    }
+    const completedVideos = allSegmentVideos;
 
     // Stage 1: Auto-stitch via FFmpeg with captions
-    if (completedVideos.length > 0 && apiKeys.backendUrl) {
+    let stitchPassed = false;
+    if (completedVideos.length > 0 && (apiKeys.backendUrl || DEFAULT_BACKEND)) {
       setStage(1, `FFmpeg auto-stitching ${completedVideos.length} clips with captions…`);
 
-      // Get captions from the AI brief if available
       const stitchOptions = {};
       const firstItem = newItems[0];
       if (firstItem && firstItem.aiPrompt && firstItem.aiPrompt.captions) {
@@ -363,7 +491,6 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       try {
         const stitchResult = await API.backend.autoStitch(completedVideos, stitchOptions);
         if (stitchResult.jobId) {
-          // Poll stitch job
           let stitchDone = false;
           while (!stitchDone) {
             await new Promise(r => setTimeout(r, 1500));
@@ -373,10 +500,10 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
             if (st.status === 'done') {
               stitchDone = true;
               const dlUrl = API.backend.downloadUrl(stitchResult.jobId);
-              // Store stitch result on the first queue item
               newItems[0].stitchJobId = stitchResult.jobId;
               newItems[0].stitchedVideoUrl = dlUrl;
               msg.textContent = 'Stitch complete!';
+              stitchPassed = true;
             } else if (st.status === 'error') {
               stitchDone = true;
               msg.textContent = `⚠️ Stitch error: ${st.error}`;
@@ -386,25 +513,42 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       } catch (err) {
         msg.textContent = `⚠️ Stitch error: ${err.message}`;
       }
-    } else if (completedVideos.length > 0) {
-      setStage(1, 'Stitch skipped — no backend URL set. Individual videos available.');
-    } else {
+    } else if (completedVideos.length === 0) {
       setStage(1, 'Stitch skipped — no completed videos.');
+    } else {
+      setStage(1, 'Stitch skipped — no backend URL set.');
     }
 
-    // Stage 2: Queue
-    newItems.forEach(item => { item.pipelineStage = 'queue'; });
-    saveQueue();
-    renderQueue();
-    updateBadge();
-    setStage(2, '✓ Pipeline complete — videos in approval queue.');
+    // Audit check: only send to approval if stitch produced a real video
+    if (stitchPassed && newItems[0].stitchedVideoUrl) {
+      newItems.forEach(item => { item.pipelineStage = 'queue'; });
+      saveQueue();
+      renderQueue();
+      renderTracker();
+      updateBadge();
+      setStage(2, '✓ Pipeline complete — video ready for approval.');
+    } else if (completedVideos.length > 0) {
+      // Segments rendered but stitch failed — keep in generate stage for retry, don't pollute approval queue
+      msg.textContent = '⚠️ Stitch failed — video not sent to approval. Check backend and retry.';
+      renderTracker();
+      setStage(2, '⚠️ Stitch failed — not queued for approval.');
+    } else {
+      // Nothing rendered at all — keep in generate stage so they don't pollute approval queue
+      newItems.forEach(item => { item.pipelineStage = 'failed'; item.status = 'failed'; });
+      saveQueue();
+      renderTracker();
+      updateBadge();
+      setStage(2, '⚠️ No videos generated — check Higgsfield API key and retry.');
+    }
   }
 
   // ─── Queue Rendering ───
   function renderQueue(filter = 'all') {
     const list = $('#queue-list');
+    // Only show items that have reached the approval queue (not still generating/stitching)
+    const readyForApproval = queue.filter(q => q.pipelineStage === 'queue' || q.pipelineStage === 'post');
     const filtered =
-      filter === 'all' ? queue : queue.filter((q) => q.status === filter);
+      filter === 'all' ? readyForApproval : readyForApproval.filter((q) => q.status === filter);
 
     if (!filtered.length) {
       list.innerHTML =
@@ -416,7 +560,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       .map(
         (item) => `
       <div class="queue-item status-${item.status}" data-id="${item.id}">
-        ${item.videoUrl ? `<div class="queue-video"><video src="${item.videoUrl}" controls preload="metadata" playsinline></video></div>` : item.stitchedVideoUrl ? `<div class="queue-video"><video src="${item.stitchedVideoUrl}" controls preload="metadata" playsinline></video></div>` : '<div class="queue-video queue-video-placeholder"><span>Video generating…</span></div>'}
+        ${item.stitchedVideoUrl ? `<div class="queue-video"><video src="${item.stitchedVideoUrl}" controls preload="metadata" playsinline></video></div>` : item.videoUrl ? `<div class="queue-video"><video src="${item.videoUrl}" controls preload="metadata" playsinline></video></div>` : '<div class="queue-video queue-video-placeholder"><span>Video generating…</span></div>'}
         <div class="queue-info">
           <h4>${item.typeName} — v${item.version}/${item.totalVersions}</h4>
           <p>${item.productName} · ${item.avatarName}</p>
@@ -508,6 +652,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
 
       saveQueue();
       renderQueue(getActiveFilter());
+      renderTracker();
       renderActivity();
       updateBadge();
 
@@ -561,6 +706,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
 
       saveQueue();
       renderQueue(getActiveFilter());
+      renderTracker();
       renderActivity();
       updateBadge();
 
@@ -608,11 +754,198 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
   // ─── Badge ───
   function updateBadge() {
     const pending = queue.filter(
-      (q) => q.status === 'pending' || q.status === 'revision'
+      (q) => (q.status === 'pending' || q.status === 'revision') && (q.pipelineStage === 'queue' || q.pipelineStage === 'post')
     ).length;
     const badge = $('#queue-badge');
     badge.textContent = pending;
     badge.style.display = pending > 0 ? '' : 'none';
+
+    // Tracker badge: count of all active (non-posted, non-failed) items
+    const active = queue.filter(q => q.status !== 'failed' && q.pipelineStage !== 'post').length;
+    const trackerBadge = $('#tracker-badge');
+    if (trackerBadge) {
+      trackerBadge.textContent = active;
+      trackerBadge.style.display = active > 0 ? '' : 'none';
+    }
+  }
+
+  // ─── Request Tracker ───
+  const PIPELINE_STAGES = [
+    { key: 'generate', label: 'Generating', icon: '🎬' },
+    { key: 'stitch', label: 'Stitching', icon: '🧵' },
+    { key: 'queue', label: 'Awaiting Approval', icon: '⏳' },
+    { key: 'post', label: 'Posted', icon: '✅' },
+  ];
+
+  function getStageIndex(item) {
+    if (item.status === 'approved' && item.pipelineStage === 'post') return 3;
+    const idx = PIPELINE_STAGES.findIndex(s => s.key === item.pipelineStage);
+    return idx >= 0 ? idx : 0;
+  }
+
+  function renderTracker() {
+    const list = $('#tracker-list');
+    if (!list) return;
+
+    if (!queue.length) {
+      list.innerHTML = '<p class="empty-state">No active requests. Generate videos from the Dashboard.</p>';
+      return;
+    }
+
+    // Sort: active items first (generate, stitch, queue), then completed (post)
+    const sorted = [...queue].sort((a, b) => {
+      const aIdx = getStageIndex(a);
+      const bIdx = getStageIndex(b);
+      if (aIdx === bIdx) return new Date(b.createdAt) - new Date(a.createdAt);
+      return aIdx - bIdx;
+    });
+
+    list.innerHTML = sorted.map(item => {
+      const currentStage = getStageIndex(item);
+      const isRevision = item.status === 'revision';
+      const isFailed = item.status === 'failed';
+
+      const stagesHtml = PIPELINE_STAGES.map((stage, idx) => {
+        let cls = 'tracker-stage';
+        if (idx < currentStage) cls += ' completed';
+        else if (idx === currentStage) cls += ' active';
+        if (isFailed && idx === currentStage) cls += ' failed';
+        if (isRevision && idx === 0) cls += ' revision';
+        return `<div class="${cls}">
+          <div class="tracker-stage-dot">${idx < currentStage ? '✓' : stage.icon}</div>
+          <div class="tracker-stage-label">${stage.label}</div>
+        </div>`;
+      }).join('<div class="tracker-stage-connector"></div>');
+
+      const progressPct = Math.round(((currentStage + (currentStage < 3 ? 0.5 : 1)) / PIPELINE_STAGES.length) * 100);
+
+      return `<div class="tracker-item ${isFailed ? 'tracker-failed' : ''} ${isRevision ? 'tracker-revision' : ''}">
+        <div class="tracker-header">
+          <div class="tracker-title">
+            <strong>${item.typeName || 'Video'} — v${item.version}/${item.totalVersions}</strong>
+            <span class="tracker-meta">${item.productName} · ${item.avatarName}</span>
+          </div>
+          <div class="tracker-progress-badge">${isFailed ? 'Failed' : isRevision ? 'In Revision' : progressPct + '%'}</div>
+        </div>
+        <div class="tracker-pipeline">${stagesHtml}</div>
+        <div class="tracker-footer">
+          <span class="tracker-meta">Created ${formatDate(item.createdAt)}</span>
+          ${item.postMode === 'asap' ? '<span class="tracker-meta">Post ASAP</span>' : `<span class="tracker-meta">Scheduled: ${formatDate(item.schedDate)}</span>`}
+          ${(item.revisionCount || 0) > 0 ? `<span class="tracker-meta tracker-rev-count">Revision ${item.revisionCount}</span>` : ''}
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // ─── Approved Videos ───
+  function renderApprovedVideos() {
+    const list = $('#approved-list');
+    if (!list) return;
+
+    const approved = queue.filter(q => q.status === 'approved');
+    if (!approved.length) {
+      list.innerHTML = '<p class="empty-state">No approved videos yet.</p>';
+      return;
+    }
+
+    // Most recently approved first
+    const sorted = [...approved].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    list.innerHTML = sorted.map(item => {
+      const videoSrc = item.stitchedVideoUrl || item.videoUrl;
+      return `<div class="approved-card">
+        ${videoSrc ? `<video src="${videoSrc}" controls preload="metadata" playsinline></video>` : '<div class="queue-video-placeholder" style="height:180px"><span>No video</span></div>'}
+        <div class="approved-card-info">
+          <h4>${item.typeName || 'Video'} — v${item.version}</h4>
+          <p>${item.productName} · ${item.avatarName}</p>
+          <p>${formatDate(item.createdAt)}</p>
+          ${item.postMode === 'asap' ? '<p>Post ASAP</p>' : `<p>Scheduled: ${formatDate(item.schedDate)}</p>`}
+          ${item.metricoolId ? '<p style="color:var(--success)">Posted to Metricool</p>' : ''}
+          ${(item.approvalNotes || []).map(n => `<div class="approved-card-notes">${n}</div>`).join('')}
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // ─── Spend Tracker ───
+  // Higgsfield pricing estimates (per API call)
+  const COST_ESTIMATES = {
+    seedream_image: 0.03,    // V2 Seedream image generation
+    dop_video: 0.10,         // V1 DoP video animation (per segment)
+    dop_turbo: 0.10,
+    'dop-turbo': 0.10,
+    'dop-lite': 0.05,
+    'dop-preview': 0.08,
+  };
+
+  function renderSpendTracker() {
+    const summaryEl = $('#spend-summary');
+    const tableEl = $('#spend-table-wrap');
+    if (!summaryEl || !tableEl) return;
+
+    // Build spend log from queue items
+    const spendRows = [];
+    for (const item of queue) {
+      const segments = (item.aiPrompt && item.aiPrompt.segments) || DEFAULT_SEGMENT_PROMPTS;
+      const segCount = item.segmentVideos ? item.segmentVideos.length : 0;
+      const imageCount = segCount > 0 ? segments.length : 0; // images attempted = total segments
+      const videoCount = segCount;
+      const model = (segments[0] && segments[0].model) || 'dop-turbo';
+      const imageCost = imageCount * COST_ESTIMATES.seedream_image;
+      const videoCost = videoCount * (COST_ESTIMATES[model] || COST_ESTIMATES.dop_video);
+      const totalCost = imageCost + videoCost;
+
+      spendRows.push({
+        id: item.id,
+        date: item.createdAt,
+        name: `${item.typeName || 'Video'} — v${item.version}`,
+        product: item.productName,
+        images: imageCount,
+        videos: videoCount,
+        model: model,
+        imageCost,
+        videoCost,
+        totalCost,
+        status: item.status,
+      });
+    }
+
+    if (!spendRows.length) {
+      summaryEl.innerHTML = '';
+      tableEl.innerHTML = '<p class="empty-state">No generation history yet.</p>';
+      return;
+    }
+
+    // Sort by date descending
+    spendRows.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    const totalSpend = spendRows.reduce((s, r) => s + r.totalCost, 0);
+    const totalImages = spendRows.reduce((s, r) => s + r.images, 0);
+    const totalVideos = spendRows.reduce((s, r) => s + r.videos, 0);
+    const totalRequests = spendRows.length;
+
+    summaryEl.innerHTML = `
+      <div class="spend-stat"><div class="stat-value">$${totalSpend.toFixed(2)}</div><div class="stat-label">Est. Total Spend</div></div>
+      <div class="spend-stat"><div class="stat-value">${totalRequests}</div><div class="stat-label">Requests</div></div>
+      <div class="spend-stat"><div class="stat-value">${totalImages}</div><div class="stat-label">Images Generated</div></div>
+      <div class="spend-stat"><div class="stat-value">${totalVideos}</div><div class="stat-label">Videos Rendered</div></div>
+    `;
+
+    tableEl.innerHTML = `<table class="spend-table">
+      <thead><tr>
+        <th>Date</th><th>Request</th><th>Product</th><th>Images</th><th>Videos</th><th>Model</th><th>Est. Cost</th><th>Status</th>
+      </tr></thead>
+      <tbody>${spendRows.map(r => `<tr>
+        <td class="spend-date">${formatDate(r.date)}</td>
+        <td>${r.name}</td>
+        <td>${r.product || '—'}</td>
+        <td>${r.images}</td>
+        <td>${r.videos}</td>
+        <td>${r.model}</td>
+        <td class="spend-amount">$${r.totalCost.toFixed(2)}</td>
+        <td>${r.status}</td>
+      </tr>`).join('')}</tbody>
+    </table>`;
   }
 
   // ─── Scheduled Posts (Metricool) ───
@@ -651,7 +984,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     try {
       const res = await fetch(`sops/${name}.md`);
       if (!res.ok) throw new Error('Not found');
-      const md = await res.text();h
+      const md = await res.text();
       el.innerHTML = renderMarkdown(md);
     } catch {
       el.innerHTML = '<p class="empty-state">Could not load SOP.</p>';
@@ -702,7 +1035,10 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       const res = await fetch(backendUrl('/api/config'));
       if (res.ok) {
         const remote = await res.json();
-        if (remote && Object.keys(remote).length) {
+        const hasRemoteKeys = remote && Object.keys(remote).filter(k => remote[k]).length > 0;
+        const hasLocalKeys = Object.keys(apiKeys).filter(k => apiKeys[k]).length > 0;
+
+        if (hasRemoteKeys) {
           // Merge: remote keys fill in anything missing locally
           apiKeys = { ...remote, ...apiKeys };
           // If local was empty, remote wins completely
@@ -712,6 +1048,10 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
           localStorage.setItem(CONFIG.storageKeys.apiKeys, JSON.stringify(apiKeys));
           loadApiKeys();
           console.log('[Config] Synced keys from backend');
+        } else if (hasLocalKeys) {
+          // Backend has no keys (e.g. after redeploy) — push local keys up
+          console.log('[Config] Backend empty after redeploy — pushing local keys');
+          pushKeysToBackend();
         }
       }
     } catch { /* backend not reachable, use localStorage */ }
@@ -788,7 +1128,15 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
 
   // ─── API Integrations (Live) ───
 
-  const DEFAULT_BACKEND = 'https://vekraapzv3.us-east-1.awsapprunner.com';
+  let DEFAULT_BACKEND = '';
+
+  // Auto-load backend URL from backend-url.json (written by CI deploy)
+  fetch('backend-url.json').then(r => r.ok ? r.json() : null).then(cfg => {
+    if (cfg && cfg.url) {
+      DEFAULT_BACKEND = cfg.url.replace(/\/+$/, '');
+      checkBackendStatus();
+    }
+  }).catch(() => {});
 
   function backendUrl(path) {
     const base = (apiKeys.backendUrl || DEFAULT_BACKEND).replace(/\/+$/, '');
@@ -802,22 +1150,54 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     // API: https://platform.higgsfield.ai
     // Auth: Key KEY_ID:KEY_SECRET
     higgsfield: {
+      // DoP (Diffusion-on-Prompt) image-to-video via V1 API
+      // Models: dop-turbo (fast), dop-lite (budget), dop-preview (experimental)
+      // Max 4 concurrent requests, 1 input image per request
       async generateVideo(params) {
-        console.log('[Higgsfield] Generate video:', params);
+        console.log('[Higgsfield DoP] Generate video:', params);
         if (!apiKeys.higgsfield) return { ok: false, error: 'No Higgsfield API key set — add in Settings' };
-        // Higgsfield subscribe API
+        // DoP V1 body format
         const body = {
-          endpoint: 'v1/image2video/dop',
-          input: {
+          params: {
             prompt: params.prompt || '',
-            aspect_ratio: '9:16',
-            duration: 5,
-            resolution: '720p',
-            camera_fixed: false,
+            input_images: [{ type: 'image_url', image_url: params.image_url }],
+            model: params.model || 'dop-turbo',
+            aspect_ratio: params.aspect_ratio || '9:16',
+            duration: params.duration || 5,
           },
         };
-        // Add image_url if provided
-        if (params.image_url) body.input.image_url = params.image_url;
+        // Optional motion preset
+        if (params.motion_id) {
+          body.params.motion_id = params.motion_id;
+        }
+        try {
+          const res = await fetch(backendUrl('/api/proxy/higgsfield/v1/generate'), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-api-key-value': apiKeys.higgsfield },
+            body: JSON.stringify(body),
+          });
+          const data = await res.json();
+          console.log('[Higgsfield DoP] Generate response:', data);
+          // V1 returns { id, type, jobs: [{ id, status }] }
+          return { ok: res.ok, id: data.id, ...data };
+        } catch (err) {
+          console.error('[Higgsfield DoP] Error:', err);
+          return { ok: false, error: err.message };
+        }
+      },
+
+      async generateImage(params) {
+        console.log('[Higgsfield] Generate image (V2 Seedream):', params);
+        if (!apiKeys.higgsfield) return { ok: false, error: 'No Higgsfield API key set — add in Settings' };
+        // V2 image generation (Seedream/Flux) — uses Authorization: Key header
+        const body = {
+          endpoint: 'flux-pro/kontext/max/text-to-image',
+          input: {
+            prompt: params.prompt || '',
+            aspect_ratio: params.aspect_ratio || '9:16',
+            safety_tolerance: 2,
+          },
+        };
         try {
           const res = await fetch(backendUrl('/api/proxy/higgsfield/generate'), {
             method: 'POST',
@@ -825,59 +1205,83 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
             body: JSON.stringify(body),
           });
           const data = await res.json();
-          console.log('[Higgsfield] Generate response:', data);
-          // Returns { request_id, jobs: [...] }
+          console.log('[Higgsfield] Image response:', data);
           return { ok: res.ok, id: data.request_id || data.id, ...data };
         } catch (err) {
-          console.error('[Higgsfield] Error:', err);
+          console.error('[Higgsfield] Image error:', err);
           return { ok: false, error: err.message };
         }
       },
 
       async reviseVideo(videoId, notes) {
         if (!apiKeys.higgsfield) return { ok: false, error: 'No Higgsfield API key set' };
-        const body = {
-          endpoint: 'v1/image2video/dop',
-          input: {
-            prompt: `Revision — feedback: ${notes}`,
-            aspect_ratio: '9:16',
-            duration: 5,
-            resolution: '720p',
-          },
-        };
-        try {
-          const res = await fetch(backendUrl('/api/proxy/higgsfield/revise'), {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'x-api-key-value': apiKeys.higgsfield },
-            body: JSON.stringify(body),
-          });
-          const data = await res.json();
-          return { ok: res.ok, id: data.request_id || data.id, ...data };
-        } catch (err) {
-          return { ok: false, error: err.message };
-        }
+        // For revisions, we re-generate with updated prompt (DoP is image-based)
+        // The caller should provide image_url from the original generation
+        return this.generateVideo({
+          prompt: `Revision — feedback: ${notes}`,
+          image_url: videoId, // videoId doubles as image_url for revisions
+          model: 'dop-turbo',
+        });
       },
 
-      async getStatus(requestId) {
+      // V1 DoP status polling (for video generation)
+      async getStatus(generationId) {
         if (!apiKeys.higgsfield) return { ok: false, error: 'No Higgsfield API key set' };
         try {
-          const res = await fetch(backendUrl(`/api/proxy/higgsfield/status/${encodeURIComponent(requestId)}`), {
+          const res = await fetch(backendUrl(`/api/proxy/higgsfield/v1/status/${encodeURIComponent(generationId)}`), {
             headers: { 'x-api-key-value': apiKeys.higgsfield },
           });
           const data = await res.json();
-          // Higgsfield status: queued, in_progress, completed, failed, nsfw
-          // Normalize for pipeline
+          // V1 DoP: jobs[0].status = queued | in_progress | completed | failed
+          // Video URLs in jobs[0].results.raw.url / jobs[0].results.min.url
           const job = (data.jobs && data.jobs[0]) || {};
-          const videoUrl = (job.results && (job.results.raw?.url || job.results.min?.url)) || (data.video && data.video.url) || data.video_url || data.url;
+          const jobStatus = (job.status || data.status || 'unknown').toLowerCase();
+          const videoUrl = (job.results && (job.results.raw?.url || job.results.min?.url)) || data.video_url || data.images?.[0]?.url || data.url;
           return {
             ok: res.ok,
-            status: data.status,
+            status: jobStatus,
             video_url: videoUrl,
             progress: data.progress,
             ...data,
           };
         } catch (err) {
           return { ok: false, error: err.message };
+        }
+      },
+
+      // V2 status polling (for image generation via Seedream/Flux)
+      async getImageStatus(requestId) {
+        if (!apiKeys.higgsfield) return { ok: false, error: 'No Higgsfield API key set' };
+        try {
+          const res = await fetch(backendUrl(`/api/proxy/higgsfield/status/${encodeURIComponent(requestId)}`), {
+            headers: { 'x-api-key-value': apiKeys.higgsfield },
+          });
+          const data = await res.json();
+          // V2 returns: { status, output: { images: [{ url }] } }
+          // Higgsfield API returns title-case statuses: Queued, InProgress, Completed, Failed, NSFW, Cancelled
+          const imageUrl = (data.output && data.output.images && data.output.images[0]?.url) || data.images?.[0]?.url || data.url;
+          const normalizedStatus = (data.status || '').toLowerCase();
+          return {
+            ok: res.ok,
+            status: normalizedStatus,
+            url: imageUrl,
+            ...data,
+          };
+        } catch (err) {
+          return { ok: false, error: err.message };
+        }
+      },
+
+      async getMotions() {
+        if (!apiKeys.higgsfield) return [];
+        try {
+          const res = await fetch(backendUrl('/api/proxy/higgsfield/v1/motions'), {
+            headers: { 'x-api-key-value': apiKeys.higgsfield },
+          });
+          return await res.json();
+        } catch (err) {
+          console.error('[Higgsfield] Motions error:', err);
+          return [];
         }
       },
     },
@@ -1064,18 +1468,30 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
   window.MAJU_CONFIG = CONFIG;
 
   // ─── Backend Status Check ───
-  async function checkBackendStatus() {
+  async function checkBackendStatus(retries = 3) {
     const el = $('#backend-status');
-    try {
-      const status = await API.backend.health();
-      if (status.status === 'ok') {
-        el.innerHTML = `<span class="status-dot connected"></span><span>Backend: Connected${status.ffmpeg ? ' (FFmpeg ready)' : ' (FFmpeg not found!)'}</span>`;
-      } else {
-        el.innerHTML = '<span class="status-dot disconnected"></span><span>Backend: Not connected</span>';
+    el.innerHTML = '<span class="status-dot connecting"></span><span>Backend: Connecting…</span>';
+
+    for (let i = 0; i < retries; i++) {
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 30000);
+        const res = await fetch(backendUrl('/api/health'), { signal: controller.signal });
+        clearTimeout(timeout);
+        const status = await res.json();
+        if (status.status === 'ok') {
+          el.innerHTML = `<span class="status-dot connected"></span><span>Backend: Connected${status.ffmpeg ? ' (FFmpeg ready)' : ' (FFmpeg not found!)'}</span>`;
+          return;
+        }
+      } catch {
+        // Backend may be cold-starting, retry
+        if (i < retries - 1) {
+          el.innerHTML = `<span class="status-dot connecting"></span><span>Backend: Waking up… (attempt ${i + 2}/${retries})</span>`;
+          await new Promise(r => setTimeout(r, 5000));
+        }
       }
-    } catch {
-      el.innerHTML = '<span class="status-dot disconnected"></span><span>Backend: Not connected — set URL in <a href="#" data-goto="settings">Settings</a></span>';
     }
+    el.innerHTML = '<span class="status-dot disconnected"></span><span>Backend: Not connected — set your backend URL in <a href="#" data-goto="settings">Settings</a></span>';
   }
 
   // ─── Auto-Stitch Segment Status Updates ───
@@ -1302,6 +1718,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     checkBackendStatus();
   });
   renderQueue();
+  renderTracker();
   renderActivity();
   updateBadge();
   renderScheduledPosts();
