@@ -521,15 +521,21 @@ app.post('/api/proxy/claude/messages', async (req, res) => {
 app.post('/api/proxy/higgsfield/generate', async (req, res) => {
   const apiKey = req.headers['x-api-key-value'];
   if (!apiKey) return res.status(400).json({ error: 'Missing Higgsfield API key' });
-  debugLog('hf-generate-req', { endpoint: req.body.endpoint, hasKey: !!apiKey, keyPrefix: apiKey?.slice(0, 8) });
+  // Higgsfield SDK posts directly to the endpoint path (not /v1/subscribe)
+  // Frontend sends { endpoint, input } -- we route to the endpoint and send only input as body
+  const endpoint = req.body.endpoint || '';
+  const input = req.body.input || req.body;
+  const formattedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  const targetUrl = `https://platform.higgsfield.ai${formattedEndpoint}`;
+  debugLog('hf-generate-req', { endpoint: formattedEndpoint, targetUrl, hasKey: !!apiKey, keyPrefix: apiKey?.slice(0, 8), inputKeys: Object.keys(input) });
   try {
     const result = await proxyRequest(
-      'https://platform.higgsfield.ai/v1/subscribe',
+      targetUrl,
       'POST',
       { 'Authorization': `Key ${apiKey}`, 'Content-Type': 'application/json' },
-      req.body
+      input
     );
-    debugLog('hf-generate-res', { status: result.status, data: JSON.stringify(result.data).slice(0, 300) });
+    debugLog('hf-generate-res', { status: result.status, data: JSON.stringify(result.data).slice(0, 500) });
     res.status(result.status).json(result.data);
   } catch (err) {
     debugLog('hf-generate-err', { error: err.message });
@@ -541,15 +547,22 @@ app.post('/api/proxy/higgsfield/revise', async (req, res) => {
   const apiKey = req.headers['x-api-key-value'];
   if (!apiKey) return res.status(400).json({ error: 'Missing Higgsfield API key' });
   try {
-    // Revise = new generation with revision context
+    // Revise = new generation with revision context -- same routing as generate
+    const endpoint = req.body.endpoint || '';
+    const input = req.body.input || req.body;
+    const formattedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+    const targetUrl = `https://platform.higgsfield.ai${formattedEndpoint}`;
+    debugLog('hf-revise-req', { endpoint: formattedEndpoint, targetUrl });
     const result = await proxyRequest(
-      'https://platform.higgsfield.ai/v1/subscribe',
+      targetUrl,
       'POST',
       { 'Authorization': `Key ${apiKey}`, 'Content-Type': 'application/json' },
-      req.body
+      input
     );
+    debugLog('hf-revise-res', { status: result.status, data: JSON.stringify(result.data).slice(0, 500) });
     res.status(result.status).json(result.data);
   } catch (err) {
+    debugLog('hf-revise-err', { error: err.message });
     res.status(502).json({ error: err.message });
   }
 });
@@ -759,3 +772,4 @@ app.listen(PORT, () => {
   console.log(`  /api/proxy/arcads/*      — Arcads proxy`);
   console.log(`  /api/proxy/creatify/*    — Creatify proxy`);
 });
+formattedEndpoint
