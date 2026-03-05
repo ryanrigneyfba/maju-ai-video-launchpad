@@ -71,6 +71,20 @@ function writeConfig(data) {
   fs.writeFileSync(CONFIG_PATH, JSON.stringify(data, null, 2));
 }
 
+// ─── Debug Log (in-memory ring buffer) ───
+const DEBUG_LOG = [];
+const DEBUG_MAX = 200;
+function debugLog(tag, data) {
+  const entry = { t: new Date().toISOString(), tag, ...data };
+  DEBUG_LOG.push(entry);
+  if (DEBUG_LOG.length > DEBUG_MAX) DEBUG_LOG.shift();
+  console.log(`[${tag}]`, JSON.stringify(data).slice(0, 500));
+}
+
+app.get('/api/debug/log', (req, res) => {
+  res.json(DEBUG_LOG.slice(-(parseInt(req.query.n) || 50)));
+});
+
 // ─── Routes ───
 
 // Get stored API keys
@@ -506,6 +520,7 @@ app.post('/api/proxy/claude/messages', async (req, res) => {
 app.post('/api/proxy/higgsfield/generate', async (req, res) => {
   const apiKey = req.headers['x-api-key-value'];
   if (!apiKey) return res.status(400).json({ error: 'Missing Higgsfield API key' });
+  debugLog('hf-generate-req', { endpoint: req.body.endpoint, hasKey: !!apiKey, keyPrefix: apiKey?.slice(0, 8) });
   try {
     const result = await proxyRequest(
       'https://platform.higgsfield.ai/v1/subscribe',
@@ -513,8 +528,10 @@ app.post('/api/proxy/higgsfield/generate', async (req, res) => {
       { 'Authorization': `Key ${apiKey}`, 'Content-Type': 'application/json' },
       req.body
     );
+    debugLog('hf-generate-res', { status: result.status, data: JSON.stringify(result.data).slice(0, 300) });
     res.status(result.status).json(result.data);
   } catch (err) {
+    debugLog('hf-generate-err', { error: err.message });
     res.status(502).json({ error: err.message });
   }
 });
@@ -545,8 +562,10 @@ app.get('/api/proxy/higgsfield/status/:requestId', async (req, res) => {
       'GET',
       { 'Authorization': `Key ${apiKey}` }
     );
+    debugLog('hf-status-res', { requestId: req.params.requestId, status: result.status, data: JSON.stringify(result.data).slice(0, 300) });
     res.status(result.status).json(result.data);
   } catch (err) {
+    debugLog('hf-status-err', { requestId: req.params.requestId, error: err.message });
     res.status(502).json({ error: err.message });
   }
 });
