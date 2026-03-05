@@ -788,7 +788,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
 
   // ─── API Integrations (Live) ───
 
-  const DEFAULT_BACKEND = 'https://maju-backend.onrender.com';
+  const DEFAULT_BACKEND = 'https://vekraapzv3.us-east-1.awsapprunner.com';
 
   function backendUrl(path) {
     const base = (apiKeys.backendUrl || DEFAULT_BACKEND).replace(/\/+$/, '');
