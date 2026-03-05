@@ -107,3 +107,14 @@ jobs:
 
           echo "## Deploy Complete" >> $GITHUB_STEP_SUMMARY
           echo "Backend URL: https://${SERVICE_URL}" >> $GITHUB_STEP_SUMMARY
+
+          # Write backend URL to config so frontend auto-discovers it
+          echo "{\"url\": \"https://${SERVICE_URL}\"}" > backend-url.json
+
+      - name: Commit backend URL
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add backend-url.json
+          git diff --cached --quiet || git commit -m "Auto-update backend URL from deploy"
+          git push

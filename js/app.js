@@ -788,7 +788,15 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
 
   // ─── API Integrations (Live) ───
 
-  const DEFAULT_BACKEND = ''; // Set your backend URL in Settings after deploying
+  let DEFAULT_BACKEND = '';
+
+  // Auto-load backend URL from backend-url.json (written by CI deploy)
+  fetch('backend-url.json').then(r => r.ok ? r.json() : null).then(cfg => {
+    if (cfg && cfg.url) {
+      DEFAULT_BACKEND = cfg.url.replace(/\/+$/, '');
+      checkBackendStatus();
+    }
+  }).catch(() => {});
 
   function backendUrl(path) {
     const base = (apiKeys.backendUrl || DEFAULT_BACKEND).replace(/\/+$/, '');
