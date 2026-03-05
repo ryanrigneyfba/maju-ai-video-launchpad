@@ -385,16 +385,28 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       model: seg.model || 'dop-turbo',
       motion_id: seg.motion_id,
     });
-    if (!result.ok || !result.id) return null;
+    console.log(`[Pipeline] DoP generate result for ${seg.name}:`, JSON.stringify(result).slice(0, 300));
+    if (!result.ok || !result.id) {
+      console.error(`[Pipeline] DoP generate failed for ${seg.name}: ok=${result.ok}, id=${result.id}, error=${result.error || result.message || 'unknown'}`);
+      return null;
+    }
     for (let attempt = 0; attempt < 120; attempt++) {
       await new Promise(r => setTimeout(r, 3000));
       const status = await API.higgsfield.getStatus(result.id);
-      if (status.status === 'completed' || status.status === 'done') {
-        return status.video_url || status.url || status.output_url || null;
+      const st = (status.status || '').toLowerCase();
+      if (attempt % 5 === 0) console.log(`[Pipeline] DoP ${seg.name} poll #${attempt}: status=${st}`);
+      if (st === 'completed' || st === 'done') {
+        const url = status.video_url || status.url || status.output_url || null;
+        console.log(`[Pipeline] DoP ${seg.name} completed: ${url ? url.slice(0, 80) : 'NO URL'}`);
+        return url;
       }
-      if (status.status === 'failed' || status.status === 'error') return null;
+      if (st === 'failed' || st === 'error') {
+        console.error(`[Pipeline] DoP ${seg.name} failed:`, JSON.stringify(status).slice(0, 300));
+        return null;
+      }
     }
-    return null; // timed out
+    console.warn(`[Pipeline] DoP ${seg.name} timed out after 360s`);
+    return null;
   }
 
   // Helper: run async tasks with a concurrency limit
@@ -1178,8 +1190,8 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
           });
           const data = await res.json();
           console.log('[Higgsfield DoP] Generate response:', data);
-          // V1 returns { id, type, jobs: [{ id, status }] }
-          return { ok: res.ok, id: data.id, ...data };
+          // Higgsfield returns request_id (V2) or id (V1 DoP)
+          return { ok: res.ok, id: data.request_id || data.id, ...data };
         } catch (err) {
           console.error('[Higgsfield DoP] Error:', err);
           return { ok: false, error: err.message };
@@ -1275,7 +1287,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       async getMotions() {
         if (!apiKeys.higgsfield) return [];
         try {
-          const res = await fetch(backendUrl('/api/proxy/higgsfield/v1/motions'), {
+          const res = await fetch(backendUrl('/api/proxy/higgsfield/motions'), {
             headers: { 'x-api-key-value': apiKeys.higgsfield },
           });
           return await res.json();
