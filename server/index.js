@@ -532,7 +532,7 @@ app.post('/api/proxy/higgsfield/generate', async (req, res) => {
     const result = await proxyRequest(
       targetUrl,
       'POST',
-      { 'Authorization': `Key ${apiKey}`, 'Content-Type': 'application/json' },
+      { 'hf-api-key': apiKey, 'Content-Type': 'application/json' },
       input
     );
     debugLog('hf-generate-res', { status: result.status, data: JSON.stringify(result.data).slice(0, 500) });
@@ -556,7 +556,7 @@ app.post('/api/proxy/higgsfield/revise', async (req, res) => {
     const result = await proxyRequest(
       targetUrl,
       'POST',
-      { 'Authorization': `Key ${apiKey}`, 'Content-Type': 'application/json' },
+      { 'hf-api-key': apiKey, 'Content-Type': 'application/json' },
       input
     );
     debugLog('hf-revise-res', { status: result.status, data: JSON.stringify(result.data).slice(0, 500) });
@@ -574,7 +574,7 @@ app.get('/api/proxy/higgsfield/status/:requestId', async (req, res) => {
     const result = await proxyRequest(
       `https://platform.higgsfield.ai/v1/requests/${encodeURIComponent(req.params.requestId)}/status`,
       'GET',
-      { 'Authorization': `Key ${apiKey}` }
+      { 'hf-api-key': apiKey }
     );
     debugLog('hf-status-res', { requestId: req.params.requestId, status: result.status, data: JSON.stringify(result.data).slice(0, 300) });
     res.status(result.status).json(result.data);
