@@ -1050,9 +1050,17 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
   // ─── API Settings ───
   // Load saved keys into form fields
   function loadApiKeys() {
+    // Migrate old KEY_ID:KEY_SECRET combined format to separate fields
+    if (apiKeys.higgsfield && apiKeys.higgsfield.includes(':') && !apiKeys.higgsfieldSecret) {
+      const [key, secret] = apiKeys.higgsfield.split(':');
+      apiKeys.higgsfield = key;
+      apiKeys.higgsfieldSecret = secret;
+      localStorage.setItem(CONFIG.storageKeys.apiKeys, JSON.stringify(apiKeys));
+    }
     if (apiKeys.backendUrl) $('#api-backend-url').value = apiKeys.backendUrl;
     if (apiKeys.claude) $('#api-claude').value = apiKeys.claude;
     if (apiKeys.higgsfield) $('#api-higgsfield').value = apiKeys.higgsfield;
+    if (apiKeys.higgsfieldSecret) $('#api-higgsfield-secret').value = apiKeys.higgsfieldSecret;
     if (apiKeys.metricool) $('#api-metricool').value = apiKeys.metricool;
     if (apiKeys.arcads) $('#api-arcads').value = apiKeys.arcads;
     if (apiKeys.creatify) $('#api-creatify').value = apiKeys.creatify;
@@ -1118,6 +1126,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       backendUrl: $('#api-backend-url').value.trim(),
       claude: $('#api-claude').value.trim(),
       higgsfield: $('#api-higgsfield').value.trim(),
+      higgsfieldSecret: $('#api-higgsfield-secret').value.trim(),
       metricool: $('#api-metricool').value.trim(),
       arcads: $('#api-arcads').value.trim(),
       creatify: $('#api-creatify').value.trim(),
@@ -1185,26 +1194,26 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       async generateVideo(params) {
         console.log('[Higgsfield DoP] Generate video:', params);
         if (!apiKeys.higgsfield) return { ok: false, error: 'No Higgsfield API key set — add in Settings' };
-        // DoP V2 subscribe format
-        const input = {
+        // DoP API body uses { params: { ... } } wrapper
+        const dopParams = {
+          model: params.model || 'dop-turbo',
           prompt: params.prompt || '',
           input_images: [{ type: 'image_url', image_url: params.image_url }],
-          model: params.model || 'dop-turbo',
-          aspect_ratio: params.aspect_ratio || '9:16',
-          duration: params.duration || 5,
+          enhance_prompt: true,
+          input_images_end: [],
+          motions: [],
         };
-        // Optional motion preset
         if (params.motion_id) {
-          input.motion_id = params.motion_id;
+          dopParams.motions = [{ motion_id: params.motion_id }];
         }
         const body = {
           endpoint: '/v1/image2video/dop',
-          input,
+          input: { params: dopParams },
         };
         try {
           const res = await fetch(backendUrl('/api/proxy/higgsfield/generate'), {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'x-api-key-value': apiKeys.higgsfield },
+            headers: { 'Content-Type': 'application/json', 'x-api-key-value': apiKeys.higgsfield, 'x-api-secret-value': apiKeys.higgsfieldSecret || '' },
             body: JSON.stringify(body),
           });
           const data = await res.json();
@@ -1218,20 +1227,20 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       },
 
       async generateImage(params) {
-        console.log('[Higgsfield] Generate image (V2 Seedream):', params);
+        console.log('[Higgsfield] Generate image (Flux Kontext Max):', params);
         if (!apiKeys.higgsfield) return { ok: false, error: 'No Higgsfield API key set — add in Settings' };
-        // V2 image generation (Seedream) — uses Authorization: Key header
         const body = {
           endpoint: 'flux-pro/kontext/max/text-to-image',
           input: {
             prompt: params.prompt || '',
             aspect_ratio: params.aspect_ratio || '9:16',
+            safety_tolerance: 6,
           },
         };
         try {
           const res = await fetch(backendUrl('/api/proxy/higgsfield/generate'), {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'x-api-key-value': apiKeys.higgsfield },
+            headers: { 'Content-Type': 'application/json', 'x-api-key-value': apiKeys.higgsfield, 'x-api-secret-value': apiKeys.higgsfieldSecret || '' },
             body: JSON.stringify(body),
           });
           const data = await res.json();
@@ -1259,10 +1268,10 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
         if (!apiKeys.higgsfield) return { ok: false, error: 'No Higgsfield API key set' };
         try {
           const res = await fetch(backendUrl(`/api/proxy/higgsfield/status/${encodeURIComponent(generationId)}`), {
-            headers: { 'x-api-key-value': apiKeys.higgsfield },
+            headers: { 'x-api-key-value': apiKeys.higgsfield, 'x-api-secret-value': apiKeys.higgsfieldSecret || '' },
           });
           const data = await res.json();
-          // V1 DoP: jobs[0].status = queued | in_progress | completed | failed
+          // DoP: jobs[0].status = queued | in_progress | completed | failed
           // Video URLs in jobs[0].results.raw.url / jobs[0].results.min.url
           const job = (data.jobs && data.jobs[0]) || {};
           const jobStatus = (job.status || data.status || 'unknown').toLowerCase();
@@ -1284,7 +1293,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
         if (!apiKeys.higgsfield) return { ok: false, error: 'No Higgsfield API key set' };
         try {
           const res = await fetch(backendUrl(`/api/proxy/higgsfield/status/${encodeURIComponent(requestId)}`), {
-            headers: { 'x-api-key-value': apiKeys.higgsfield },
+            headers: { 'x-api-key-value': apiKeys.higgsfield, 'x-api-secret-value': apiKeys.higgsfieldSecret || '' },
           });
           const data = await res.json();
           // V2 returns: { status, output: { images: [{ url }] } }
@@ -1306,7 +1315,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
         if (!apiKeys.higgsfield) return [];
         try {
           const res = await fetch(backendUrl('/api/proxy/higgsfield/motions'), {
-            headers: { 'x-api-key-value': apiKeys.higgsfield },
+            headers: { 'x-api-key-value': apiKeys.higgsfield, 'x-api-secret-value': apiKeys.higgsfieldSecret || '' },
           });
           return await res.json();
         } catch (err) {
