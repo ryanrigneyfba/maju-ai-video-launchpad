@@ -92,6 +92,9 @@ app.get('/api/health', (req, res) => {
   // Check if ffmpeg is available
   const ffcheck = spawn('ffmpeg', ['-version']);
   let found = false;
+  const staticDir = path.join(__dirname, '..');
+  const hasIndex = fs.existsSync(path.join(staticDir, 'index.html'));
+  const hasJs = fs.existsSync(path.join(staticDir, 'js', 'app.js'));
   ffcheck.on('close', (code) => {
     if (!found) {
       found = true;
@@ -99,6 +102,10 @@ app.get('/api/health', (req, res) => {
         status: 'ok',
         ffmpeg: code === 0,
         jobs: jobs.size,
+        staticDir,
+        hasIndex,
+        hasJs,
+        dirname: __dirname,
       });
     }
   });
