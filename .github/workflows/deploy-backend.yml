@@ -78,6 +78,16 @@ jobs:
           EXISTING=$(aws apprunner list-services --query "ServiceSummaryList[?ServiceName=='${APP_RUNNER_SERVICE}'].ServiceArn" --output text 2>/dev/null || echo "")
 
           if [ -n "$EXISTING" ] && [ "$EXISTING" != "None" ]; then
+            # Wait for any in-progress operation to finish first
+            echo "Checking if service is ready for update..."
+            for i in $(seq 1 30); do
+              STATUS=$(aws apprunner describe-service --service-arn "$EXISTING" --query 'Service.Status' --output text)
+              echo "  Current status: $STATUS"
+              if [ "$STATUS" = "RUNNING" ] || [ "$STATUS" = "CREATE_FAILED" ] || [ "$STATUS" = "DELETED" ]; then break; fi
+              echo "  Waiting for previous operation to complete (attempt $i/30)..."
+              sleep 15
+            done
+
             echo "Updating App Runner service with image ${IMAGE_URI}..."
             aws apprunner update-service \
               --service-arn "$EXISTING" \
@@ -92,10 +102,10 @@ jobs:
             # Wait for the deployment to start
             echo "Waiting for deployment to begin..."
             sleep 10
-            # Wait for service to become active (up to 5 min)
-            for i in $(seq 1 30); do
+            # Wait for service to become active (up to 8 min)
+            for i in $(seq 1 48); do
               STATUS=$(aws apprunner describe-service --service-arn "$EXISTING" --query 'Service.Status' --output text)
-              echo "  Service status: $STATUS (attempt $i/30)"
+              echo "  Service status: $STATUS (attempt $i/48)"
               if [ "$STATUS" = "RUNNING" ]; then break; fi
               sleep 10
             done
