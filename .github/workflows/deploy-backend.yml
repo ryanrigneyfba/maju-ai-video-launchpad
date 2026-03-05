@@ -6,6 +6,7 @@ on:
     paths:
       - 'server/**'
       - '.github/workflows/deploy-backend.yml'
+  workflow_dispatch:
 
 env:
   AWS_REGION: us-east-1
