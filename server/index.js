@@ -139,10 +139,10 @@ async function runHiggsDebugTests(apiKey) {
     { ep: '/v1/text-to-video/dop', method: 'POST', headers: v1h, body: dopT2v, label: 'V1: text-to-video/dop' },
     { ep: '/v1/video/dop', method: 'POST', headers: v1h, body: dopT2v, label: 'V1: video/dop' },
     { ep: '/v1/generate/dop', method: 'POST', headers: v1h, body: dopT2v, label: 'V1: generate/dop' },
-    // ── API docs ──
-    { ep: '/docs', method: 'GET', headers: h, body: undefined, label: 'DOCS: /docs' },
-    { ep: '/openapi.json', method: 'GET', headers: h, body: undefined, label: 'DOCS: /openapi.json' },
-    // ── Other V2 models for pattern discovery ──
+    // ── API docs (405 on GET, try POST) ──
+    { ep: '/openapi.json', method: 'POST', headers: h, body: {}, label: 'DOCS: POST /openapi.json' },
+    { ep: '/docs', method: 'POST', headers: h, body: {}, label: 'DOCS: POST /docs' },
+    // ── Other V2 models ──
     { ep: '/flux-pro/kontext/max/text-to-image', method: 'POST', headers: h, body: { prompt: 'test' }, label: 'V2: flux-pro/kontext/max' },
   ];
   const results = [];
