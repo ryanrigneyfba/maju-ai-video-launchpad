@@ -1171,7 +1171,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
           body.params.motion_id = params.motion_id;
         }
         try {
-          const res = await fetch(backendUrl('/api/proxy/higgsfield/v1/generate'), {
+          const res = await fetch(backendUrl('/api/proxy/higgsfield/generate'), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'x-api-key-value': apiKeys.higgsfield },
             body: JSON.stringify(body),
