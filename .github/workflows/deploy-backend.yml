@@ -5,6 +5,10 @@ on:
     branches: [claude/maju-video-launchpad-v1.1-ULGEX]
     paths:
       - 'server/**'
+      - 'js/**'
+      - 'css/**'
+      - 'index.html'
+      - 'backend-url.json'
       - '.github/workflows/deploy-backend.yml'
   workflow_dispatch:
 
