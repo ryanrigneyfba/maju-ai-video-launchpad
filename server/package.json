@@ -1,6 +1,6 @@
 {
   "name": "maju-video-backend",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "MAJU AI Video Launchpad — FFmpeg stitching backend",
   "main": "index.js",
   "scripts": {
