@@ -1191,10 +1191,11 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
         if (!apiKeys.higgsfield) return { ok: false, error: 'No Higgsfield API key set — add in Settings' };
         // V2 image generation (Seedream/Flux) — uses Authorization: Key header
         const body = {
-          endpoint: 'bytedance/seedream/v4/text-to-image',
+          endpoint: 'flux-pro/kontext/max/text-to-image',
           input: {
             prompt: params.prompt || '',
             aspect_ratio: params.aspect_ratio || '9:16',
+            safety_tolerance: 2,
           },
         };
         try {
@@ -1235,7 +1236,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
           // Video URLs in jobs[0].results.raw.url / jobs[0].results.min.url
           const job = (data.jobs && data.jobs[0]) || {};
           const jobStatus = (job.status || data.status || 'unknown').toLowerCase();
-          const videoUrl = (job.results && (job.results.raw?.url || job.results.min?.url)) || data.video_url || data.url;
+          const videoUrl = (job.results && (job.results.raw?.url || job.results.min?.url)) || data.video_url || data.images?.[0]?.url || data.url;
           return {
             ok: res.ok,
             status: jobStatus,
@@ -1258,7 +1259,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
           const data = await res.json();
           // V2 returns: { status, output: { images: [{ url }] } }
           // Higgsfield API returns title-case statuses: Queued, InProgress, Completed, Failed, NSFW, Cancelled
-          const imageUrl = (data.output && data.output.images && data.output.images[0]?.url) || data.url;
+          const imageUrl = (data.output && data.output.images && data.output.images[0]?.url) || data.images?.[0]?.url || data.url;
           const normalizedStatus = (data.status || '').toLowerCase();
           return {
             ok: res.ok,
