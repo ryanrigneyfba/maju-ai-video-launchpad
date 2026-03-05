@@ -507,11 +507,15 @@ app.post('/api/proxy/higgsfield/generate', async (req, res) => {
   const apiKey = req.headers['x-api-key-value'];
   if (!apiKey) return res.status(400).json({ error: 'Missing Higgsfield API key' });
   try {
+    // endpoint comes from the frontend (e.g. 'kling-v3.0-pro-text-to-video')
+    // The Higgsfield API uses the endpoint as the URL path, with input as the body
+    const { endpoint, input } = req.body;
+    const apiPath = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
     const result = await proxyRequest(
-      'https://platform.higgsfield.ai/v1/subscribe',
+      `https://platform.higgsfield.ai${apiPath}`,
       'POST',
       { 'Authorization': `Key ${apiKey}`, 'Content-Type': 'application/json' },
-      req.body
+      input || req.body
     );
     res.status(result.status).json(result.data);
   } catch (err) {
@@ -523,12 +527,13 @@ app.post('/api/proxy/higgsfield/revise', async (req, res) => {
   const apiKey = req.headers['x-api-key-value'];
   if (!apiKey) return res.status(400).json({ error: 'Missing Higgsfield API key' });
   try {
-    // Revise = new generation with revision context
+    const { endpoint, input } = req.body;
+    const apiPath = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
     const result = await proxyRequest(
-      'https://platform.higgsfield.ai/v1/subscribe',
+      `https://platform.higgsfield.ai${apiPath}`,
       'POST',
       { 'Authorization': `Key ${apiKey}`, 'Content-Type': 'application/json' },
-      req.body
+      input || req.body
     );
     res.status(result.status).json(result.data);
   } catch (err) {
