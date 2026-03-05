@@ -120,32 +120,32 @@ app.get('/api/debug/higgsfield-endpoints', async (req, res) => {
 
   const [keyId, keySecret] = apiKey.includes(':') ? apiKey.split(':') : [apiKey, ''];
 
-  // V2 Auth: Authorization: Key KEY_ID:KEY_SECRET
+  // Auth variants to test
   const v2Headers = { 'Authorization': `Key ${apiKey}`, 'Content-Type': 'application/json' };
-  // V1 Auth: hf-api-key + hf-secret as separate headers
   const v1Headers = { 'hf-api-key': keyId, 'hf-secret': keySecret, 'Content-Type': 'application/json' };
+  const bearerHeaders = { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' };
+  const bearerIdHeaders = { 'Authorization': `Bearer ${keyId}`, 'Content-Type': 'application/json' };
 
   const v2Body = { prompt: 'A black seed oil bottle on a white background', aspect_ratio: '9:16', duration: 5 };
   const v1Body = { params: { prompt: 'A black seed oil bottle', aspect_ratio: '9:16', duration: 5 } };
 
   const tests = [
-    // ── V2 API: flat endpoint names (third-party models) ──
-    { ep: '/kling-v3.0-pro-text-to-video', method: 'POST', headers: v2Headers, body: v2Body, label: 'V2: kling-v3.0-pro-text-to-video' },
-    { ep: '/kling-v3.0-standard-text-to-video', method: 'POST', headers: v2Headers, body: v2Body, label: 'V2: kling-v3.0-standard-text-to-video' },
-    { ep: '/kling-o1-text-to-video', method: 'POST', headers: v2Headers, body: v2Body, label: 'V2: kling-o1-text-to-video' },
-    { ep: '/nano-banana-pro', method: 'POST', headers: v2Headers, body: { prompt: 'A black seed oil bottle', aspect_ratio: '9:16' }, label: 'V2: nano-banana-pro' },
-    { ep: '/bytedance/seedream/v4/text-to-image', method: 'POST', headers: v2Headers, body: { prompt: 'A black seed oil bottle' }, label: 'V2: bytedance/seedream (control)' },
-    // ── V1 API: legacy endpoints with hf-api-key/hf-secret auth ──
+    // ── Test auth on known endpoint (bytedance/seedream from SDK docs) ──
+    { ep: '/bytedance/seedream/v4/text-to-image', method: 'POST', headers: v2Headers, body: { prompt: 'test' }, label: 'Auth:Key - seedream' },
+    { ep: '/bytedance/seedream/v4/text-to-image', method: 'POST', headers: bearerHeaders, body: { prompt: 'test' }, label: 'Auth:Bearer(full) - seedream' },
+    { ep: '/bytedance/seedream/v4/text-to-image', method: 'POST', headers: bearerIdHeaders, body: { prompt: 'test' }, label: 'Auth:Bearer(id) - seedream' },
+    { ep: '/bytedance/seedream/v4/text-to-image', method: 'POST', headers: v1Headers, body: { prompt: 'test' }, label: 'Auth:V1headers - seedream' },
+    // ── V2 Kling endpoints (flat names from Open-Higgsfield) ──
+    { ep: '/kling-v3.0-pro-text-to-video', method: 'POST', headers: v2Headers, body: v2Body, label: 'V2: kling-v3.0-pro-t2v' },
+    { ep: '/nano-banana-pro', method: 'POST', headers: v2Headers, body: { prompt: 'test' }, label: 'V2: nano-banana-pro' },
+    // ── V1 legacy endpoints ──
     { ep: '/v1/image2video/dop', method: 'POST', headers: v1Headers, body: v1Body, label: 'V1: image2video/dop' },
     { ep: '/v1/text2image/soul', method: 'POST', headers: v1Headers, body: v1Body, label: 'V1: text2image/soul' },
-    { ep: '/v1/motions', method: 'GET', headers: v1Headers, body: undefined, label: 'V1: motions (list)' },
-    // ── Discovery endpoints ──
-    { ep: '/v1/models', method: 'GET', headers: v2Headers, body: undefined, label: 'Discovery: /v1/models' },
-    { ep: '/models', method: 'GET', headers: v2Headers, body: undefined, label: 'Discovery: /models' },
-    { ep: '/schemas', method: 'GET', headers: v2Headers, body: undefined, label: 'Discovery: /schemas' },
-    { ep: '/applications', method: 'GET', headers: v2Headers, body: undefined, label: 'Discovery: /applications' },
-    // ── V1 endpoints with V2 auth (in case key format works for both) ──
-    { ep: '/v1/image2video/dop', method: 'POST', headers: v2Headers, body: v1Body, label: 'V1+V2auth: image2video/dop' },
+    // ── Discovery: POST instead of GET (405 = method not allowed on GET) ──
+    { ep: '/v1/models', method: 'POST', headers: v2Headers, body: {}, label: 'Discovery POST: /v1/models' },
+    { ep: '/models', method: 'POST', headers: v2Headers, body: {}, label: 'Discovery POST: /models' },
+    { ep: '/schemas', method: 'POST', headers: v2Headers, body: {}, label: 'Discovery POST: /schemas' },
+    { ep: '/applications', method: 'POST', headers: v2Headers, body: {}, label: 'Discovery POST: /applications' },
   ];
 
   const results = [];
