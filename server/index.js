@@ -113,49 +113,28 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Shared debug test runner
+// Debug: validate Higgsfield API key (no generations — just checks auth via motions list)
 async function runHiggsDebugTests(apiKey) {
   const colonIdx = apiKey.indexOf(':');
   const keyId = colonIdx > -1 ? apiKey.substring(0, colonIdx) : apiKey;
   const keySecret = colonIdx > -1 ? apiKey.substring(colonIdx + 1) : '';
   const keyInfo = { length: apiKey.length, hasColon: apiKey.includes(':'), keyIdLength: keyId.length, keySecretLength: keySecret.length };
-  const h = { 'Authorization': `Key ${apiKey}`, 'Content-Type': 'application/json' };
-  const b = { prompt: 'test', aspect_ratio: '9:16', duration: 5 };
-  // V1 auth: hf-api-key (UUID) + hf-secret as separate headers
-  const v1h = { 'hf-api-key': keyId, 'hf-secret': keySecret, 'Content-Type': 'application/json' };
-  const imgUrl = 'https://placehold.co/512x512.png';
-  const img = { type: 'image_url', image_url: imgUrl };
-  const tests = [
-    // ── CORRECT FORMAT: should return 200/queued ──
-    { ep: '/v1/image2video/dop', method: 'POST', headers: v1h, label: 'FINAL: dop-turbo 9:16 5s',
-      body: { params: { prompt: 'A bottle rotating slowly', input_images: [img], aspect_ratio: '9:16', duration: 5, model: 'dop-turbo' } } },
-    { ep: '/v1/image2video/dop', method: 'POST', headers: v1h, label: 'FINAL: dop-lite 9:16 5s',
-      body: { params: { prompt: 'A bottle rotating slowly', input_images: [img], aspect_ratio: '9:16', duration: 5, model: 'dop-lite' } } },
-    { ep: '/v1/image2video/dop', method: 'POST', headers: v1h, label: 'FINAL: dop-preview 9:16 5s',
-      body: { params: { prompt: 'A bottle rotating slowly', input_images: [img], aspect_ratio: '9:16', duration: 5, model: 'dop-preview' } } },
-    // ── With motion_id ──
-    { ep: '/v1/image2video/dop', method: 'POST', headers: v1h, label: 'FINAL: dop-turbo+General motion',
-      body: { params: { prompt: 'A bottle rotating slowly', input_images: [img], aspect_ratio: '9:16', duration: 5, model: 'dop-turbo', motion_id: '31177282-bde3-4870-b283-1135ca0a201a' } } },
-    // ── 2 images (start+end frame) ──
-    { ep: '/v1/image2video/dop', method: 'POST', headers: v1h, label: 'FINAL: 2 imgs start+end',
-      body: { params: { prompt: 'A bottle rotating slowly', input_images: [img, img], aspect_ratio: '9:16', duration: 5, model: 'dop-turbo' } } },
-    // ── Other durations ──
-    { ep: '/v1/image2video/dop', method: 'POST', headers: v1h, label: 'FINAL: duration=10',
-      body: { params: { prompt: 'A bottle rotating slowly', input_images: [img], aspect_ratio: '9:16', duration: 10, model: 'dop-turbo' } } },
-    // ── Other aspect ratios ──
-    { ep: '/v1/image2video/dop', method: 'POST', headers: v1h, label: 'FINAL: ratio=16:9',
-      body: { params: { prompt: 'A bottle rotating slowly', input_images: [img], aspect_ratio: '16:9', duration: 5, model: 'dop-turbo' } } },
-    { ep: '/v1/image2video/dop', method: 'POST', headers: v1h, label: 'FINAL: ratio=1:1',
-      body: { params: { prompt: 'A bottle rotating slowly', input_images: [img], aspect_ratio: '1:1', duration: 5, model: 'dop-turbo' } } },
-  ];
   const results = [];
-  for (const t of tests) {
-    try {
-      const result = await proxyRequest(`https://platform.higgsfield.ai${t.ep}`, t.method, t.headers, t.body);
-      results.push({ label: t.label, endpoint: t.ep, status: result.status, data: result.data });
-    } catch (err) { results.push({ label: t.label, endpoint: t.ep, error: err.message }); }
-  }
-  return { keyInfo, results };
+  // V1 auth test — motions list (read-only, no credits used)
+  try {
+    const v1 = await proxyRequest('https://platform.higgsfield.ai/v1/motions', 'GET', higgsV1Headers(apiKey));
+    results.push({ label: 'V1 Auth (motions)', status: v1.status, motionCount: Array.isArray(v1.data) ? v1.data.length : 0 });
+  } catch (err) { results.push({ label: 'V1 Auth', error: err.message }); }
+  // V2 auth test — seedream (will queue but confirms V2 works)
+  try {
+    const v2 = await proxyRequest('https://platform.higgsfield.ai/bytedance/seedream/v4/text-to-image', 'POST',
+      { 'Authorization': `Key ${apiKey}`, 'Content-Type': 'application/json' }, { prompt: 'test' });
+    results.push({ label: 'V2 Auth (seedream)', status: v2.status, id: v2.data?.request_id });
+  } catch (err) { results.push({ label: 'V2 Auth', error: err.message }); }
+  return { keyInfo, results, apiSpec: {
+    v1: { endpoint: 'POST /v1/image2video/dop', models: ['dop-turbo', 'dop-lite', 'dop-preview'], auth: 'hf-api-key + hf-secret headers', maxConcurrent: 4, maxImages: 1 },
+    v2: { endpoint: 'POST /<model>/text-to-image', auth: 'Authorization: Key KEY_ID:KEY_SECRET' },
+  }};
 }
 
 // POST handler (safer for keys with special chars)
@@ -577,10 +556,71 @@ app.post('/api/proxy/claude/messages', async (req, res) => {
 });
 
 // ── Higgsfield Proxy ──
-// API: https://platform.higgsfield.ai
-// Auth: Authorization: Key KEY_ID:KEY_SECRET
-// Status polling: /requests/{request_id}/status
+// V1 API (DoP): https://platform.higgsfield.ai/v1/
+// Auth: hf-api-key (UUID) + hf-secret (64-char) as separate headers
+// V2 API (Seedream, Flux): Authorization: Key KEY_ID:KEY_SECRET
 
+// Helper: split "KEY_ID:KEY_SECRET" into V1 auth headers
+function higgsV1Headers(apiKey) {
+  const colonIdx = apiKey.indexOf(':');
+  return {
+    'hf-api-key': colonIdx > -1 ? apiKey.substring(0, colonIdx) : apiKey,
+    'hf-secret': colonIdx > -1 ? apiKey.substring(colonIdx + 1) : '',
+    'Content-Type': 'application/json',
+  };
+}
+
+// ── V1 DoP: Generate image-to-video ──
+app.post('/api/proxy/higgsfield/v1/generate', async (req, res) => {
+  const apiKey = req.headers['x-api-key-value'];
+  if (!apiKey) return res.status(400).json({ error: 'Missing Higgsfield API key' });
+  try {
+    const result = await proxyRequest(
+      'https://platform.higgsfield.ai/v1/image2video/dop',
+      'POST',
+      higgsV1Headers(apiKey),
+      req.body
+    );
+    res.status(result.status).json(result.data);
+  } catch (err) {
+    res.status(502).json({ error: err.message });
+  }
+});
+
+// ── V1 DoP: Poll generation status ──
+app.get('/api/proxy/higgsfield/v1/status/:generationId', async (req, res) => {
+  const apiKey = req.headers['x-api-key-value'];
+  if (!apiKey) return res.status(400).json({ error: 'Missing Higgsfield API key' });
+  try {
+    // Try the generation endpoint directly (returns updated jobs array)
+    const result = await proxyRequest(
+      `https://platform.higgsfield.ai/v1/image2video/${encodeURIComponent(req.params.generationId)}`,
+      'GET',
+      higgsV1Headers(apiKey)
+    );
+    res.status(result.status).json(result.data);
+  } catch (err) {
+    res.status(502).json({ error: err.message });
+  }
+});
+
+// ── V1: List available motions ──
+app.get('/api/proxy/higgsfield/v1/motions', async (req, res) => {
+  const apiKey = req.headers['x-api-key-value'];
+  if (!apiKey) return res.status(400).json({ error: 'Missing Higgsfield API key' });
+  try {
+    const result = await proxyRequest(
+      'https://platform.higgsfield.ai/v1/motions',
+      'GET',
+      higgsV1Headers(apiKey)
+    );
+    res.status(result.status).json(result.data);
+  } catch (err) {
+    res.status(502).json({ error: err.message });
+  }
+});
+
+// ── V2 (legacy): Generate via arbitrary endpoint ──
 app.post('/api/proxy/higgsfield/generate', async (req, res) => {
   const apiKey = req.headers['x-api-key-value'];
   if (!apiKey) return res.status(400).json({ error: 'Missing Higgsfield API key' });

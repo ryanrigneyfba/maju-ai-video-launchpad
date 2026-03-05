@@ -337,11 +337,44 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       for (let si = 0; si < segments.length; si++) {
         const seg = segments[si];
         const segLabel = `${seg.name} (${si + 1}/${segments.length})`;
-        msg.textContent = `v${item.version}: Generating ${segLabel}… [Kling 3.0]`;
 
+        // Step 1: Generate a still image for this segment (V2 Seedream)
+        let imageUrl = seg.image_url; // allow pre-set image URLs
+        if (!imageUrl) {
+          msg.textContent = `v${item.version}: Generating image for ${segLabel}… [Seedream]`;
+          const imgResult = await API.higgsfield.generateImage({ prompt: seg.prompt, aspect_ratio: '9:16' });
+          if (imgResult.ok && imgResult.id) {
+            // Poll V2 image status (uses different endpoint than V1 video)
+            let imgDone = false;
+            let imgAttempts = 0;
+            while (!imgDone && imgAttempts < 60) {
+              await new Promise(r => setTimeout(r, 2000));
+              imgAttempts++;
+              const imgStatus = await API.higgsfield.getImageStatus(imgResult.id);
+              if (imgStatus.status === 'completed' || imgStatus.status === 'done') {
+                imgDone = true;
+                imageUrl = imgStatus.url;
+              } else if (imgStatus.status === 'failed' || imgStatus.status === 'error') {
+                imgDone = true;
+                msg.textContent = `⚠️ v${item.version}: Image for ${segLabel} failed`;
+              }
+            }
+          }
+        }
+
+        if (!imageUrl) {
+          msg.textContent = `⚠️ v${item.version}: No image for ${segLabel}, skipping video`;
+          continue;
+        }
+
+        // Step 2: Animate the image with DoP video generation
+        msg.textContent = `v${item.version}: Animating ${segLabel}… [DoP]`;
         const result = await API.higgsfield.generateVideo({
           prompt: seg.prompt,
+          image_url: imageUrl,
           duration: seg.duration || 5,
+          model: seg.model || 'dop-turbo',
+          motion_id: seg.motion_id,
         });
 
         if (result.ok && result.id) {
@@ -847,48 +880,51 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     // API: https://platform.higgsfield.ai
     // Auth: Key KEY_ID:KEY_SECRET
     higgsfield: {
+      // DoP (Diffusion-on-Prompt) image-to-video via V1 API
+      // Models: dop-turbo (fast), dop-lite (budget), dop-preview (experimental)
+      // Max 4 concurrent requests, 1 input image per request
       async generateVideo(params) {
-        console.log('[Higgsfield] Generate video:', params);
+        console.log('[Higgsfield DoP] Generate video:', params);
         if (!apiKeys.higgsfield) return { ok: false, error: 'No Higgsfield API key set — add in Settings' };
-        // Higgsfield subscribe API — Kling 3.0 Pro text-to-video
+        // DoP V1 body format
         const body = {
-          endpoint: 'kling-v3.0-pro-text-to-video',
-          input: {
+          params: {
             prompt: params.prompt || '',
-            aspect_ratio: '9:16',
+            input_images: [{ type: 'image_url', image_url: params.image_url }],
+            model: params.model || 'dop-turbo',
+            aspect_ratio: params.aspect_ratio || '9:16',
             duration: params.duration || 5,
           },
         };
-        // If image provided, use Kling image-to-video instead
-        if (params.image_url) {
-          body.endpoint = 'kling-v3.0-pro-image-to-video';
-          body.input.image_url = params.image_url;
+        // Optional motion preset
+        if (params.motion_id) {
+          body.params.motion_id = params.motion_id;
         }
         try {
-          const res = await fetch(backendUrl('/api/proxy/higgsfield/generate'), {
+          const res = await fetch(backendUrl('/api/proxy/higgsfield/v1/generate'), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'x-api-key-value': apiKeys.higgsfield },
             body: JSON.stringify(body),
           });
           const data = await res.json();
-          console.log('[Higgsfield] Generate response:', data);
-          // Returns { request_id, jobs: [...] }
-          return { ok: res.ok, id: data.request_id || data.id, ...data };
+          console.log('[Higgsfield DoP] Generate response:', data);
+          // V1 returns { id, type, jobs: [{ id, status }] }
+          return { ok: res.ok, id: data.id, ...data };
         } catch (err) {
-          console.error('[Higgsfield] Error:', err);
+          console.error('[Higgsfield DoP] Error:', err);
           return { ok: false, error: err.message };
         }
       },
 
       async generateImage(params) {
-        console.log('[Higgsfield] Generate image (Nano Banana Pro):', params);
+        console.log('[Higgsfield] Generate image (V2 Seedream):', params);
         if (!apiKeys.higgsfield) return { ok: false, error: 'No Higgsfield API key set — add in Settings' };
+        // V2 image generation (Seedream/Flux) — uses Authorization: Key header
         const body = {
-          endpoint: 'nano-banana-pro',
+          endpoint: 'bytedance/seedream/v4/text-to-image',
           input: {
             prompt: params.prompt || '',
             aspect_ratio: params.aspect_ratio || '9:16',
-            resolution: params.resolution || '2k',
           },
         };
         try {
@@ -908,47 +944,71 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
 
       async reviseVideo(videoId, notes) {
         if (!apiKeys.higgsfield) return { ok: false, error: 'No Higgsfield API key set' };
-        const body = {
-          endpoint: 'kling-v3.0-pro-text-to-video',
-          input: {
-            prompt: `Revision — feedback: ${notes}`,
-            aspect_ratio: '9:16',
-            duration: 5,
-          },
-        };
-        try {
-          const res = await fetch(backendUrl('/api/proxy/higgsfield/revise'), {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'x-api-key-value': apiKeys.higgsfield },
-            body: JSON.stringify(body),
-          });
-          const data = await res.json();
-          return { ok: res.ok, id: data.request_id || data.id, ...data };
-        } catch (err) {
-          return { ok: false, error: err.message };
-        }
+        // For revisions, we re-generate with updated prompt (DoP is image-based)
+        // The caller should provide image_url from the original generation
+        return this.generateVideo({
+          prompt: `Revision — feedback: ${notes}`,
+          image_url: videoId, // videoId doubles as image_url for revisions
+          model: 'dop-turbo',
+        });
       },
 
-      async getStatus(requestId) {
+      // V1 DoP status polling (for video generation)
+      async getStatus(generationId) {
         if (!apiKeys.higgsfield) return { ok: false, error: 'No Higgsfield API key set' };
         try {
-          const res = await fetch(backendUrl(`/api/proxy/higgsfield/status/${encodeURIComponent(requestId)}`), {
+          const res = await fetch(backendUrl(`/api/proxy/higgsfield/v1/status/${encodeURIComponent(generationId)}`), {
             headers: { 'x-api-key-value': apiKeys.higgsfield },
           });
           const data = await res.json();
-          // Higgsfield status: queued, in_progress, completed, failed, nsfw
-          // Normalize for pipeline
+          // V1 DoP: jobs[0].status = queued | in_progress | completed | failed
+          // Video URLs in jobs[0].results.raw.url / jobs[0].results.min.url
           const job = (data.jobs && data.jobs[0]) || {};
+          const jobStatus = job.status || data.status || 'unknown';
           const videoUrl = (job.results && (job.results.raw?.url || job.results.min?.url)) || data.video_url || data.url;
           return {
             ok: res.ok,
-            status: data.status,
+            status: jobStatus,
             video_url: videoUrl,
             progress: data.progress,
             ...data,
           };
         } catch (err) {
           return { ok: false, error: err.message };
+        }
+      },
+
+      // V2 status polling (for image generation via Seedream/Flux)
+      async getImageStatus(requestId) {
+        if (!apiKeys.higgsfield) return { ok: false, error: 'No Higgsfield API key set' };
+        try {
+          const res = await fetch(backendUrl(`/api/proxy/higgsfield/status/${encodeURIComponent(requestId)}`), {
+            headers: { 'x-api-key-value': apiKeys.higgsfield },
+          });
+          const data = await res.json();
+          // V2 returns: { status, output: { images: [{ url }] } }
+          const imageUrl = (data.output && data.output.images && data.output.images[0]?.url) || data.url;
+          return {
+            ok: res.ok,
+            status: data.status === 'completed' || data.status === 'COMPLETED' ? 'completed' : data.status,
+            url: imageUrl,
+            ...data,
+          };
+        } catch (err) {
+          return { ok: false, error: err.message };
+        }
+      },
+
+      async getMotions() {
+        if (!apiKeys.higgsfield) return [];
+        try {
+          const res = await fetch(backendUrl('/api/proxy/higgsfield/v1/motions'), {
+            headers: { 'x-api-key-value': apiKeys.higgsfield },
+          });
+          return await res.json();
+        } catch (err) {
+          console.error('[Higgsfield] Motions error:', err);
+          return [];
         }
       },
     },
