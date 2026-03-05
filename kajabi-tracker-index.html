@@ -997,7 +997,7 @@
 
                     {/* Tab Navigation */}
                     <div className="fade-in flex items-center gap-2 mb-6">
-                        <button onClick={() => setActiveTab("dashboard")}
+                        <button onClick={() => { setActiveTab("dashboard"); setRange("today"); }}
                             className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 ${
                                 activeTab === "dashboard"
                                     ? "bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg shadow-cyan-500/25"
@@ -1006,7 +1006,7 @@
                             <Icons.chart />
                             Business Dashboard
                         </button>
-                        <button onClick={() => setActiveTab("agency")}
+                        <button onClick={() => { setActiveTab("agency"); setRange("all"); }}
                             className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 ${
                                 activeTab === "agency"
                                     ? "bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-lg shadow-pink-500/25"
