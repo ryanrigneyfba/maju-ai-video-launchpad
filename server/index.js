@@ -524,7 +524,7 @@ app.post('/api/proxy/higgsfield/generate', async (req, res) => {
   // Frontend sends { endpoint, input } — endpoint is the URL path, input is the body
   const { endpoint, input } = req.body;
   const urlPath = (endpoint || '').replace(/^\/+/, '');
-  debugLog('hf-generate-req', { endpoint: urlPath, hasKey: !!apiKey, keyPrefix: apiKey?.slice(0, 8), input: JSON.stringify(input).slice(0, 200) });
+  debugLog('hf-generate-req', { url: `https://platform.higgsfield.ai/${urlPath}`, authHeader: `Key ${apiKey?.slice(0, 12)}...`, keyLen: apiKey?.length, hasColon: apiKey?.includes(':'), body: JSON.stringify(input).slice(0, 300) });
   try {
     const result = await proxyRequest(
       `https://platform.higgsfield.ai/${urlPath}`,
