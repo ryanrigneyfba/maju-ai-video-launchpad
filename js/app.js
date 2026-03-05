@@ -302,13 +302,18 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
         params.prompt = item.notes;
       }
 
-      const result = await API.higgsfield.generateVideo(params);
+      // Use Nano Banana Pro for static segments (end cards, thumbnails)
+      const isStatic = item.aiPrompt && item.aiPrompt.static;
+      const result = isStatic
+        ? await API.higgsfield.generateImage(params)
+        : await API.higgsfield.generateVideo(params);
       if (result.ok && result.id) {
         item.higgsVideoId = result.id;
+        item.isStatic = isStatic;
         videoIds.push({ item, videoId: result.id });
-        msg.textContent = `Higgsfield generating… (${videoIds.length}/${newItems.length} submitted)`;
+        msg.textContent = `Generating… (${videoIds.length}/${newItems.length} submitted) [${isStatic ? 'Nano Banana Pro' : 'Kling 3.0'}]`;
       } else {
-        msg.textContent = `⚠️ Higgsfield error: ${result.error || 'Unknown error'}. Videos added to queue as pending.`;
+        msg.textContent = `⚠️ Generation error: ${result.error || JSON.stringify(result.detail || 'Unknown error')}. Videos added to queue as pending.`;
         item.pipelineStage = 'queue';
       }
       saveQueue();
@@ -814,19 +819,20 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       async generateVideo(params) {
         console.log('[Higgsfield] Generate video:', params);
         if (!apiKeys.higgsfield) return { ok: false, error: 'No Higgsfield API key set — add in Settings' };
-        // Higgsfield subscribe API
+        // Higgsfield subscribe API — Kling 3.0 Pro text-to-video
         const body = {
-          endpoint: 'v1/image2video/dop',
+          endpoint: 'kling-v3.0-pro-text-to-video',
           input: {
             prompt: params.prompt || '',
             aspect_ratio: '9:16',
             duration: 5,
-            resolution: '720p',
-            camera_fixed: false,
           },
         };
-        // Add image_url if provided
-        if (params.image_url) body.input.image_url = params.image_url;
+        // If image provided, use Kling image-to-video instead
+        if (params.image_url) {
+          body.endpoint = 'kling-v3.0-pro-image-to-video';
+          body.input.image_url = params.image_url;
+        }
         try {
           const res = await fetch(backendUrl('/api/proxy/higgsfield/generate'), {
             method: 'POST',
@@ -843,15 +849,40 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
         }
       },
 
+      async generateImage(params) {
+        console.log('[Higgsfield] Generate image (Nano Banana Pro):', params);
+        if (!apiKeys.higgsfield) return { ok: false, error: 'No Higgsfield API key set — add in Settings' };
+        const body = {
+          endpoint: 'nano-banana-pro',
+          input: {
+            prompt: params.prompt || '',
+            aspect_ratio: params.aspect_ratio || '9:16',
+            resolution: params.resolution || '2k',
+          },
+        };
+        try {
+          const res = await fetch(backendUrl('/api/proxy/higgsfield/generate'), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-api-key-value': apiKeys.higgsfield },
+            body: JSON.stringify(body),
+          });
+          const data = await res.json();
+          console.log('[Higgsfield] Image response:', data);
+          return { ok: res.ok, id: data.request_id || data.id, ...data };
+        } catch (err) {
+          console.error('[Higgsfield] Image error:', err);
+          return { ok: false, error: err.message };
+        }
+      },
+
       async reviseVideo(videoId, notes) {
         if (!apiKeys.higgsfield) return { ok: false, error: 'No Higgsfield API key set' };
         const body = {
-          endpoint: 'v1/image2video/dop',
+          endpoint: 'kling-v3.0-pro-text-to-video',
           input: {
             prompt: `Revision — feedback: ${notes}`,
             aspect_ratio: '9:16',
             duration: 5,
-            resolution: '720p',
           },
         };
         try {
