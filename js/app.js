@@ -1031,7 +1031,10 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       const res = await fetch(backendUrl('/api/config'));
       if (res.ok) {
         const remote = await res.json();
-        if (remote && Object.keys(remote).length) {
+        const hasRemoteKeys = remote && Object.keys(remote).filter(k => remote[k]).length > 0;
+        const hasLocalKeys = Object.keys(apiKeys).filter(k => apiKeys[k]).length > 0;
+
+        if (hasRemoteKeys) {
           // Merge: remote keys fill in anything missing locally
           apiKeys = { ...remote, ...apiKeys };
           // If local was empty, remote wins completely
@@ -1041,6 +1044,10 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
           localStorage.setItem(CONFIG.storageKeys.apiKeys, JSON.stringify(apiKeys));
           loadApiKeys();
           console.log('[Config] Synced keys from backend');
+        } else if (hasLocalKeys) {
+          // Backend has no keys (e.g. after redeploy) — push local keys up
+          console.log('[Config] Backend empty after redeploy — pushing local keys');
+          pushKeysToBackend();
         }
       }
     } catch { /* backend not reachable, use localStorage */ }
