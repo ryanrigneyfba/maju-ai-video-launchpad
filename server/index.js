@@ -113,85 +113,51 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Debug: test Higgsfield endpoints - POST to avoid URL-encoding issues with keys
-// Usage: POST /api/debug/higgsfield-endpoints with JSON body { "key": "KEY_ID:KEY_SECRET" }
-// Or GET with ?key=... (but POST is safer for keys with special chars)
-app.post('/api/debug/higgsfield-endpoints', express.json(), async (req, res) => {
-  const apiKey = req.body?.key;
-  if (!apiKey) return res.status(400).json({ error: 'POST JSON body: { "key": "KEY_ID:KEY_SECRET" }' });
-
-  // Log key format (redacted) to help debug
-  const keyInfo = {
-    length: apiKey.length,
-    hasColon: apiKey.includes(':'),
-    colonCount: (apiKey.match(/:/g) || []).length,
-    firstCharAfterColon: apiKey.includes(':') ? apiKey.split(':')[1]?.[0] || 'EMPTY' : 'N/A',
-    keyIdLength: apiKey.includes(':') ? apiKey.split(':')[0].length : apiKey.length,
-    keySecretLength: apiKey.includes(':') ? apiKey.split(':').slice(1).join(':').length : 0,
-  };
-
-  // Split on FIRST colon only (secret might contain colons)
+// Shared debug test runner
+async function runHiggsDebugTests(apiKey) {
   const colonIdx = apiKey.indexOf(':');
   const keyId = colonIdx > -1 ? apiKey.substring(0, colonIdx) : apiKey;
   const keySecret = colonIdx > -1 ? apiKey.substring(colonIdx + 1) : '';
-
-  // Auth variants
-  const v2Headers = { 'Authorization': `Key ${apiKey}`, 'Content-Type': 'application/json' };
-  const bearerHeaders = { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' };
-  const v1Headers = { 'hf-api-key': keyId, 'hf-secret': keySecret, 'Content-Type': 'application/json' };
-
-  const body = { prompt: 'test', aspect_ratio: '9:16', duration: 5 };
+  const keyInfo = { length: apiKey.length, hasColon: apiKey.includes(':'), keyIdLength: keyId.length, keySecretLength: keySecret.length };
+  const h = { 'Authorization': `Key ${apiKey}`, 'Content-Type': 'application/json' };
+  const b = { prompt: 'test', aspect_ratio: '9:16', duration: 5 };
   const tests = [
-    // ── Confirmed working (control) ──
-    { ep: '/bytedance/seedream/v4/text-to-image', method: 'POST', headers: v2Headers, body: { prompt: 'test' }, label: 'CONTROL: seedream (should be 200)' },
-    // ── Kling path patterns: vendor/model/version/task ──
-    { ep: '/kuaishou/kling/v3.0/text-to-video', method: 'POST', headers: v2Headers, body, label: 'kuaishou/kling/v3.0/t2v' },
-    { ep: '/kuaishou/kling/v3/text-to-video', method: 'POST', headers: v2Headers, body, label: 'kuaishou/kling/v3/t2v' },
-    { ep: '/kuaishou/kling/3.0/text-to-video', method: 'POST', headers: v2Headers, body, label: 'kuaishou/kling/3.0/t2v' },
-    { ep: '/kling/v3.0/text-to-video', method: 'POST', headers: v2Headers, body, label: 'kling/v3.0/t2v' },
-    { ep: '/kling/v3/text-to-video', method: 'POST', headers: v2Headers, body, label: 'kling/v3/t2v' },
-    { ep: '/kling/3.0/text-to-video', method: 'POST', headers: v2Headers, body, label: 'kling/3.0/t2v' },
-    { ep: '/kling/text-to-video', method: 'POST', headers: v2Headers, body, label: 'kling/t2v' },
-    // ── model-family/variant/version/task pattern (like flux-pro/kontext/max/t2i) ──
-    { ep: '/kling/v3.0-pro/text-to-video', method: 'POST', headers: v2Headers, body, label: 'kling/v3.0-pro/t2v' },
-    { ep: '/kling/v3.0-standard/text-to-video', method: 'POST', headers: v2Headers, body, label: 'kling/v3.0-standard/t2v' },
-    { ep: '/kling/pro/v3.0/text-to-video', method: 'POST', headers: v2Headers, body, label: 'kling/pro/v3.0/t2v' },
-    { ep: '/kling-ai/v3.0/text-to-video', method: 'POST', headers: v2Headers, body, label: 'kling-ai/v3.0/t2v' },
-    // ── Older Kling versions ──
-    { ep: '/kuaishou/kling/v2.0/text-to-video', method: 'POST', headers: v2Headers, body, label: 'kuaishou/kling/v2.0/t2v' },
-    { ep: '/kling/v2.0/text-to-video', method: 'POST', headers: v2Headers, body, label: 'kling/v2.0/t2v' },
-    { ep: '/kuaishou/kling/v1.6/text-to-video', method: 'POST', headers: v2Headers, body, label: 'kuaishou/kling/v1.6/t2v' },
+    { ep: '/bytedance/seedream/v4/text-to-image', method: 'POST', headers: h, body: { prompt: 'test' }, label: 'CONTROL: seedream' },
+    { ep: '/kuaishou/kling/v3.0/text-to-video', method: 'POST', headers: h, body: b, label: 'kuaishou/kling/v3.0/t2v' },
+    { ep: '/kuaishou/kling/v3/text-to-video', method: 'POST', headers: h, body: b, label: 'kuaishou/kling/v3/t2v' },
+    { ep: '/kuaishou/kling/3.0/text-to-video', method: 'POST', headers: h, body: b, label: 'kuaishou/kling/3.0/t2v' },
+    { ep: '/kling/v3.0/text-to-video', method: 'POST', headers: h, body: b, label: 'kling/v3.0/t2v' },
+    { ep: '/kling/v3/text-to-video', method: 'POST', headers: h, body: b, label: 'kling/v3/t2v' },
+    { ep: '/kling/3.0/text-to-video', method: 'POST', headers: h, body: b, label: 'kling/3.0/t2v' },
+    { ep: '/kling/text-to-video', method: 'POST', headers: h, body: b, label: 'kling/t2v' },
+    { ep: '/kling/v3.0-pro/text-to-video', method: 'POST', headers: h, body: b, label: 'kling/v3.0-pro/t2v' },
+    { ep: '/kling/v3.0-standard/text-to-video', method: 'POST', headers: h, body: b, label: 'kling/v3.0-standard/t2v' },
+    { ep: '/kling/pro/v3.0/text-to-video', method: 'POST', headers: h, body: b, label: 'kling/pro/v3.0/t2v' },
+    { ep: '/kling-ai/v3.0/text-to-video', method: 'POST', headers: h, body: b, label: 'kling-ai/v3.0/t2v' },
+    { ep: '/kuaishou/kling/v2.0/text-to-video', method: 'POST', headers: h, body: b, label: 'kuaishou/kling/v2.0/t2v' },
+    { ep: '/kling/v2.0/text-to-video', method: 'POST', headers: h, body: b, label: 'kling/v2.0/t2v' },
+    { ep: '/kuaishou/kling/v1.6/text-to-video', method: 'POST', headers: h, body: b, label: 'kuaishou/kling/v1.6/t2v' },
   ];
-
   const results = [];
   for (const t of tests) {
     try {
-      const result = await proxyRequest(
-        `https://platform.higgsfield.ai${t.ep}`,
-        t.method,
-        t.headers,
-        t.body
-      );
-      results.push({ label: t.label, endpoint: t.ep, method: t.method, status: result.status, data: result.data });
-    } catch (err) {
-      results.push({ label: t.label, endpoint: t.ep, error: err.message });
-    }
+      const result = await proxyRequest(`https://platform.higgsfield.ai${t.ep}`, t.method, t.headers, t.body);
+      results.push({ label: t.label, endpoint: t.ep, status: result.status, data: result.data });
+    } catch (err) { results.push({ label: t.label, endpoint: t.ep, error: err.message }); }
   }
-  res.json({ keyInfo, results });
+  return { keyInfo, results };
+}
+
+// POST handler (safer for keys with special chars)
+app.post('/api/debug/higgsfield-endpoints', express.json(), async (req, res) => {
+  const apiKey = req.body?.key;
+  if (!apiKey) return res.status(400).json({ error: 'POST JSON body: { "key": "KEY_ID:KEY_SECRET" }' });
+  res.json(await runHiggsDebugTests(apiKey));
 });
-// Simple UI + GET fallback that forwards to POST handler logic
-app.get('/api/debug/higgsfield-endpoints', (req, res) => {
-  // If key provided in query, forward to POST handler
+// GET handler
+app.get('/api/debug/higgsfield-endpoints', async (req, res) => {
   if (req.query.key) {
-    req.body = { key: req.query.key };
-    // Find and call the POST handler
-    const postRoute = app._router.stack.find(layer =>
-      layer.route && layer.route.path === '/api/debug/higgsfield-endpoints' && layer.route.methods.post
-    );
-    if (postRoute) {
-      return postRoute.route.stack[1].handle(req, res);
-    }
-    return res.status(500).json({ error: 'POST handler not found' });
+    return res.json(await runHiggsDebugTests(req.query.key));
   }
   // Otherwise show a simple form
   res.send(`<!DOCTYPE html><html><body style="font-family:monospace;max-width:800px;margin:40px auto">
