@@ -850,7 +850,7 @@ app.use(express.static(path.join(__dirname, '..'), {
 
 // ─── Start ───
 app.listen(PORT, () => {
-  console.log(`MAJU Backend running on http://localhost:${PORT}`);
+  console.log(`MAJU Backend v1.1.1 running on http://localhost:${PORT}`);
   console.log(`  Frontend:  http://localhost:${PORT} (serves index.html)`);
   console.log(`  POST /api/upload         — Upload clips`);
   console.log(`  POST /api/stitch         — Stitch clips into final video`);
