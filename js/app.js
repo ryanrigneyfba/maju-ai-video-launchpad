@@ -25,6 +25,21 @@
 
   // ─── State ───
   let queue = JSON.parse(localStorage.getItem(CONFIG.storageKeys.queue) || '[]');
+
+  // Cleanup: remove busted pending items that have no stitched video and no segment videos
+  const beforeCount = queue.length;
+  queue = queue.filter(item => {
+    if (item.status === 'pending' && !item.stitchedVideoUrl && (!item.segmentVideos || item.segmentVideos.length === 0)) {
+      console.log('[Cleanup] Removing busted queue item:', item.id, item.typeName);
+      return false;
+    }
+    return true;
+  });
+  if (queue.length < beforeCount) {
+    localStorage.setItem(CONFIG.storageKeys.queue, JSON.stringify(queue));
+    console.log(`[Cleanup] Removed ${beforeCount - queue.length} busted pending items from queue`);
+  }
+
   let apiKeys = JSON.parse(localStorage.getItem(CONFIG.storageKeys.apiKeys) || '{}');
   let currentRejectId = null;
   let currentApproveId = null;
@@ -322,6 +337,63 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     { name: 'glow', duration: 2, prompt: 'Woman looking at herself in a mirror, gently touching her glowing face with both hands. Dewy, healthy skin. She looks serene and satisfied. A bottle of black seed oil is prominently placed in the foreground near the mirror. Warm, soft lighting emphasizes skin glow. 9:16 vertical, 2 seconds, slow smooth motion.', textOverlay: 'anti-puffy face snack\n(onion + black seed oil + salt)' },
   ];
 
+  // Helper: generate a single image via Seedream and poll until done
+  async function generateSegmentImage(seg, segLabel, itemVersion) {
+    if (seg.image_url) return seg.image_url;
+    const imgResult = await API.higgsfield.generateImage({ prompt: seg.prompt, aspect_ratio: '9:16' });
+    if (!imgResult.ok || !imgResult.id) return null;
+    for (let attempt = 0; attempt < 60; attempt++) {
+      await new Promise(r => setTimeout(r, 2000));
+      const imgStatus = await API.higgsfield.getImageStatus(imgResult.id);
+      if (imgStatus.status === 'completed' || imgStatus.status === 'done') return imgStatus.url;
+      if (imgStatus.status === 'failed' || imgStatus.status === 'error') return null;
+    }
+    return null; // timed out
+  }
+
+  // Helper: animate an image via DoP and poll until done
+  async function animateSegmentVideo(seg, imageUrl) {
+    const result = await API.higgsfield.generateVideo({
+      prompt: seg.prompt,
+      image_url: imageUrl,
+      duration: seg.duration || 5,
+      model: seg.model || 'dop-turbo',
+      motion_id: seg.motion_id,
+    });
+    if (!result.ok || !result.id) return null;
+    for (let attempt = 0; attempt < 120; attempt++) {
+      await new Promise(r => setTimeout(r, 3000));
+      const status = await API.higgsfield.getStatus(result.id);
+      if (status.status === 'completed' || status.status === 'done') {
+        return status.video_url || status.url || status.output_url || null;
+      }
+      if (status.status === 'failed' || status.status === 'error') return null;
+    }
+    return null; // timed out
+  }
+
+  // Helper: run async tasks with a concurrency limit
+  function runWithConcurrency(tasks, limit) {
+    const results = new Array(tasks.length);
+    let next = 0;
+    let active = 0;
+    return new Promise(resolve => {
+      function launch() {
+        while (active < limit && next < tasks.length) {
+          const idx = next++;
+          active++;
+          tasks[idx]().then(val => { results[idx] = val; }).catch(() => { results[idx] = null; }).finally(() => {
+            active--;
+            if (next >= tasks.length && active === 0) resolve(results);
+            else launch();
+          });
+        }
+      }
+      if (tasks.length === 0) resolve(results);
+      else launch();
+    });
+  }
+
   async function runRealPipeline(steps, msg, setStage) {
     // Stage 0: Generate each segment via Higgsfield
     setStage(0, 'Generating video segments via Higgsfield…');
@@ -330,77 +402,36 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     const allSegmentVideos = []; // { url, label } for stitching
 
     for (const item of newItems) {
-      // Get segment prompts from Claude AI output or use SOP defaults
       const segments = (item.aiPrompt && item.aiPrompt.segments) || DEFAULT_SEGMENT_PROMPTS;
+
+      // Step 1: Generate ALL images in parallel (no concurrency limit — Seedream is separate from DoP)
+      msg.textContent = `v${item.version}: Generating ${segments.length} images in parallel… [Seedream]`;
+      updateSegmentStatus('hook', 'Generating images…', false);
+      const imageUrls = await Promise.all(
+        segments.map((seg, si) => generateSegmentImage(seg, `${seg.name} (${si + 1}/${segments.length})`, item.version))
+      );
+
+      // Update status after images
+      const imageCount = imageUrls.filter(Boolean).length;
+      msg.textContent = `v${item.version}: ${imageCount}/${segments.length} images ready — animating videos… [DoP]`;
+
+      // Step 2: Animate images into videos — max 4 concurrent (DoP limit)
+      const DOP_CONCURRENCY = 4;
+      const videoTasks = segments.map((seg, si) => () => {
+        if (!imageUrls[si]) return Promise.resolve(null);
+        updateSegmentStatus(seg.name, 'Animating…', false);
+        return animateSegmentVideo(seg, imageUrls[si]);
+      });
+      const videoUrls = await runWithConcurrency(videoTasks, DOP_CONCURRENCY);
+
+      // Collect results (preserve segment order)
       const segmentResults = [];
-
       for (let si = 0; si < segments.length; si++) {
-        const seg = segments[si];
-        const segLabel = `${seg.name} (${si + 1}/${segments.length})`;
-
-        // Step 1: Generate a still image for this segment (V2 Seedream)
-        let imageUrl = seg.image_url; // allow pre-set image URLs
-        if (!imageUrl) {
-          msg.textContent = `v${item.version}: Generating image for ${segLabel}… [Seedream]`;
-          const imgResult = await API.higgsfield.generateImage({ prompt: seg.prompt, aspect_ratio: '9:16' });
-          if (imgResult.ok && imgResult.id) {
-            // Poll V2 image status (uses different endpoint than V1 video)
-            let imgDone = false;
-            let imgAttempts = 0;
-            while (!imgDone && imgAttempts < 60) {
-              await new Promise(r => setTimeout(r, 2000));
-              imgAttempts++;
-              const imgStatus = await API.higgsfield.getImageStatus(imgResult.id);
-              if (imgStatus.status === 'completed' || imgStatus.status === 'done') {
-                imgDone = true;
-                imageUrl = imgStatus.url;
-              } else if (imgStatus.status === 'failed' || imgStatus.status === 'error') {
-                imgDone = true;
-                msg.textContent = `⚠️ v${item.version}: Image for ${segLabel} failed`;
-              }
-            }
-          }
-        }
-
-        if (!imageUrl) {
-          msg.textContent = `⚠️ v${item.version}: No image for ${segLabel}, skipping video`;
-          continue;
-        }
-
-        // Step 2: Animate the image with DoP video generation
-        msg.textContent = `v${item.version}: Animating ${segLabel}… [DoP]`;
-        const result = await API.higgsfield.generateVideo({
-          prompt: seg.prompt,
-          image_url: imageUrl,
-          duration: seg.duration || 5,
-          model: seg.model || 'dop-turbo',
-          motion_id: seg.motion_id,
-        });
-
-        if (result.ok && result.id) {
-          // Poll for this segment's completion
-          let done = false;
-          let attempts = 0;
-          while (!done && attempts < 120) {
-            await new Promise(r => setTimeout(r, 3000));
-            attempts++;
-            const status = await API.higgsfield.getStatus(result.id);
-            if (status.status === 'completed' || status.status === 'done') {
-              done = true;
-              const videoUrl = status.video_url || status.url || status.output_url;
-              if (videoUrl) {
-                segmentResults.push({ url: videoUrl, label: seg.name, textOverlay: seg.textOverlay });
-                msg.textContent = `v${item.version}: ${segLabel} rendered!`;
-              }
-            } else if (status.status === 'failed' || status.status === 'error') {
-              done = true;
-              msg.textContent = `⚠️ v${item.version}: ${segLabel} failed to render.`;
-            } else {
-              msg.textContent = `v${item.version}: Rendering ${segLabel}… (${status.status || 'processing'})`;
-            }
-          }
+        if (videoUrls[si]) {
+          segmentResults.push({ url: videoUrls[si], label: segments[si].name, textOverlay: segments[si].textOverlay });
+          updateSegmentStatus(segments[si].name, 'Done ✓', true);
         } else {
-          msg.textContent = `⚠️ v${item.version}: ${segLabel} error: ${result.error || JSON.stringify(result.detail || 'Unknown')}`;
+          updateSegmentStatus(segments[si].name, imageUrls[si] ? 'Video failed' : 'Image failed', false);
         }
       }
 
@@ -410,6 +441,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
         item.videoUrl = segmentResults[0].url; // preview = first segment
         item.pipelineStage = 'stitch';
         allSegmentVideos.push(...segmentResults.map(s => ({ url: s.url, label: `${item.typeName} - ${s.label}` })));
+        msg.textContent = `v${item.version}: ${segmentResults.length}/${segments.length} segments rendered!`;
       } else {
         item.pipelineStage = 'queue';
         msg.textContent = `⚠️ v${item.version}: No segments rendered successfully.`;
@@ -420,10 +452,10 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     const completedVideos = allSegmentVideos;
 
     // Stage 1: Auto-stitch via FFmpeg with captions
+    let stitchPassed = false;
     if (completedVideos.length > 0 && (apiKeys.backendUrl || DEFAULT_BACKEND)) {
       setStage(1, `FFmpeg auto-stitching ${completedVideos.length} clips with captions…`);
 
-      // Get captions from the AI brief if available
       const stitchOptions = {};
       const firstItem = newItems[0];
       if (firstItem && firstItem.aiPrompt && firstItem.aiPrompt.captions) {
@@ -433,7 +465,6 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       try {
         const stitchResult = await API.backend.autoStitch(completedVideos, stitchOptions);
         if (stitchResult.jobId) {
-          // Poll stitch job
           let stitchDone = false;
           while (!stitchDone) {
             await new Promise(r => setTimeout(r, 1500));
@@ -443,10 +474,10 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
             if (st.status === 'done') {
               stitchDone = true;
               const dlUrl = API.backend.downloadUrl(stitchResult.jobId);
-              // Store stitch result on the first queue item
               newItems[0].stitchJobId = stitchResult.jobId;
               newItems[0].stitchedVideoUrl = dlUrl;
               msg.textContent = 'Stitch complete!';
+              stitchPassed = true;
             } else if (st.status === 'error') {
               stitchDone = true;
               msg.textContent = `⚠️ Stitch error: ${st.error}`;
@@ -456,18 +487,31 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       } catch (err) {
         msg.textContent = `⚠️ Stitch error: ${err.message}`;
       }
-    } else if (completedVideos.length > 0) {
-      setStage(1, 'Stitch skipped — no backend URL set. Individual videos available.');
-    } else {
+    } else if (completedVideos.length === 0) {
       setStage(1, 'Stitch skipped — no completed videos.');
+    } else {
+      setStage(1, 'Stitch skipped — no backend URL set.');
     }
 
-    // Stage 2: Queue
-    newItems.forEach(item => { item.pipelineStage = 'queue'; });
-    saveQueue();
-    renderQueue();
-    updateBadge();
-    setStage(2, '✓ Pipeline complete — videos in approval queue.');
+    // Audit check: only send to approval if stitch produced a real video
+    if (stitchPassed && newItems[0].stitchedVideoUrl) {
+      newItems.forEach(item => { item.pipelineStage = 'queue'; });
+      saveQueue();
+      renderQueue();
+      updateBadge();
+      setStage(2, '✓ Pipeline complete — video ready for approval.');
+    } else if (completedVideos.length > 0) {
+      // Segments rendered but stitch failed — keep in generate stage for retry, don't pollute approval queue
+      msg.textContent = '⚠️ Stitch failed — video not sent to approval. Check backend and retry.';
+      setStage(2, '⚠️ Stitch failed — not queued for approval.');
+    } else {
+      // Nothing rendered at all
+      newItems.forEach(item => { item.pipelineStage = 'queue'; item.status = 'failed'; });
+      saveQueue();
+      renderQueue();
+      updateBadge();
+      setStage(2, '⚠️ No videos generated — check Higgsfield API key and retry.');
+    }
   }
 
   // ─── Queue Rendering ───
