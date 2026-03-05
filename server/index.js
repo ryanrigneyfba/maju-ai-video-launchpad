@@ -532,7 +532,7 @@ app.post('/api/proxy/higgsfield/generate', async (req, res) => {
     const result = await proxyRequest(
       targetUrl,
       'POST',
-      { 'hf-api-key': apiKey, 'Content-Type': 'application/json' },
+      (() => { const [k, ...s] = apiKey.split(':'); return { 'hf-api-key': k, 'hf-secret': s.join(':'), 'Content-Type': 'application/json' }; })(),
       input
     );
     debugLog('hf-generate-res', { status: result.status, data: JSON.stringify(result.data).slice(0, 500) });
@@ -556,7 +556,7 @@ app.post('/api/proxy/higgsfield/revise', async (req, res) => {
     const result = await proxyRequest(
       targetUrl,
       'POST',
-      { 'hf-api-key': apiKey, 'Content-Type': 'application/json' },
+      (() => { const [k, ...s] = apiKey.split(':'); return { 'hf-api-key': k, 'hf-secret': s.join(':'), 'Content-Type': 'application/json' }; })(),
       input
     );
     debugLog('hf-revise-res', { status: result.status, data: JSON.stringify(result.data).slice(0, 500) });
@@ -572,9 +572,9 @@ app.get('/api/proxy/higgsfield/status/:requestId', async (req, res) => {
   if (!apiKey) return res.status(400).json({ error: 'Missing Higgsfield API key' });
   try {
     const result = await proxyRequest(
-      `https://platform.higgsfield.ai/v1/requests/${encodeURIComponent(req.params.requestId)}/status`,
+      `https://platform.higgsfield.ai/requests/${encodeURIComponent(req.params.requestId)}/status`,
       'GET',
-      { 'hf-api-key': apiKey }
+      (() => { const [k, ...s] = apiKey.split(':'); return { 'hf-api-key': k, 'hf-secret': s.join(':') }; })()
     );
     debugLog('hf-status-res', { requestId: req.params.requestId, status: result.status, data: JSON.stringify(result.data).slice(0, 300) });
     res.status(result.status).json(result.data);
