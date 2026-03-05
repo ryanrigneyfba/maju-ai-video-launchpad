@@ -265,6 +265,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     }
 
     // If no Higgsfield key, simulate the whole pipeline
+    console.log('[Pipeline] apiKeys.higgsfield =', apiKeys.higgsfield ? '(set)' : '(empty)', '| All keys:', Object.keys(apiKeys).filter(k => apiKeys[k]));
     if (!apiKeys.higgsfield) {
       let stage = 0;
       const sim = [
@@ -350,7 +351,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     }
 
     // Stage 1: Auto-stitch via FFmpeg with captions
-    if (completedVideos.length > 0 && apiKeys.backendUrl) {
+    if (completedVideos.length > 0 && (apiKeys.backendUrl || DEFAULT_BACKEND)) {
       setStage(1, `FFmpeg auto-stitching ${completedVideos.length} clips with captions…`);
 
       // Get captions from the AI brief if available
