@@ -113,6 +113,45 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Debug: test multiple Higgsfield endpoint patterns to find the right one
+app.get('/api/debug/higgsfield-endpoints', async (req, res) => {
+  const apiKey = req.query.key;
+  if (!apiKey) return res.status(400).json({ error: 'Pass ?key=KEY_ID:KEY_SECRET' });
+
+  const endpoints = [
+    '/v1/text2video/kling-3.0-pro',
+    '/v1/text2video/kling-3.0',
+    '/v1/text2video/kling',
+    '/v1/text2video/kling3_0',
+    '/kuaishou/kling/v3.0-pro/text-to-video',
+    '/kuaishou/kling/v3.0/text-to-video',
+    '/kling/v3.0-pro/text-to-video',
+    '/kling/v3.0/text-to-video',
+    '/kling-v3.0-pro-text-to-video',
+    '/v1/subscribe',
+  ];
+
+  const body = { prompt: 'A black seed oil bottle on a white background', aspect_ratio: '9:16', duration: 5 };
+  const subscribeBody = { endpoint: 'kling-v3.0-pro-text-to-video', input: body };
+
+  const results = [];
+  for (const ep of endpoints) {
+    try {
+      const sendBody = ep === '/v1/subscribe' ? subscribeBody : body;
+      const result = await proxyRequest(
+        `https://platform.higgsfield.ai${ep}`,
+        'POST',
+        { 'Authorization': `Key ${apiKey}`, 'Content-Type': 'application/json' },
+        sendBody
+      );
+      results.push({ endpoint: ep, status: result.status, data: result.data });
+    } catch (err) {
+      results.push({ endpoint: ep, error: err.message });
+    }
+  }
+  res.json({ results });
+});
+
 // Get SOP segment definitions
 app.get('/api/sop/:name/segments', (req, res) => {
   const sop = SOP_SEGMENTS[req.params.name];
