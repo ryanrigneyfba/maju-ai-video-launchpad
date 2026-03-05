@@ -1228,7 +1228,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       async getStatus(generationId) {
         if (!apiKeys.higgsfield) return { ok: false, error: 'No Higgsfield API key set' };
         try {
-          const res = await fetch(backendUrl(`/api/proxy/higgsfield/v1/status/${encodeURIComponent(generationId)}`), {
+          const res = await fetch(backendUrl(`/api/proxy/higgsfield/status/${encodeURIComponent(generationId)}`), {
             headers: { 'x-api-key-value': apiKeys.higgsfield },
           });
           const data = await res.json();
@@ -1236,7 +1236,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
           // Video URLs in jobs[0].results.raw.url / jobs[0].results.min.url
           const job = (data.jobs && data.jobs[0]) || {};
           const jobStatus = (job.status || data.status || 'unknown').toLowerCase();
-          const videoUrl = (job.results && (job.results.raw?.url || job.results.min?.url)) || data.video_url || data.images?.[0]?.url || data.url;
+          const videoUrl = (job.results && (job.results.raw?.url || job.results.min?.url)) || data.video?.url || data.video_url || data.images?.[0]?.url || data.url;
           return {
             ok: res.ok,
             status: jobStatus,
