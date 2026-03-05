@@ -521,13 +521,16 @@ app.post('/api/proxy/claude/messages', async (req, res) => {
 app.post('/api/proxy/higgsfield/generate', async (req, res) => {
   const apiKey = req.headers['x-api-key-value'];
   if (!apiKey) return res.status(400).json({ error: 'Missing Higgsfield API key' });
-  debugLog('hf-generate-req', { endpoint: req.body.endpoint, hasKey: !!apiKey, keyPrefix: apiKey?.slice(0, 8) });
+  // The frontend sends { endpoint, input } — endpoint is the URL path, input is the body
+  const { endpoint, input } = req.body;
+  const urlPath = (endpoint || '').replace(/^\/+/, '');
+  debugLog('hf-generate-req', { endpoint: urlPath, hasKey: !!apiKey, keyPrefix: apiKey?.slice(0, 8), input: JSON.stringify(input).slice(0, 200) });
   try {
     const result = await proxyRequest(
-      'https://platform.higgsfield.ai/v1/subscribe',
+      `https://platform.higgsfield.ai/${urlPath}`,
       'POST',
       { 'Authorization': `Key ${apiKey}`, 'Content-Type': 'application/json' },
-      req.body
+      input || {}
     );
     debugLog('hf-generate-res', { status: result.status, data: JSON.stringify(result.data).slice(0, 300) });
     res.status(result.status).json(result.data);
@@ -541,12 +544,13 @@ app.post('/api/proxy/higgsfield/revise', async (req, res) => {
   const apiKey = req.headers['x-api-key-value'];
   if (!apiKey) return res.status(400).json({ error: 'Missing Higgsfield API key' });
   try {
-    // Revise = new generation with revision context
+    const { endpoint, input } = req.body;
+    const urlPath = (endpoint || '').replace(/^\/+/, '');
     const result = await proxyRequest(
-      'https://platform.higgsfield.ai/v1/subscribe',
+      `https://platform.higgsfield.ai/${urlPath}`,
       'POST',
       { 'Authorization': `Key ${apiKey}`, 'Content-Type': 'application/json' },
-      req.body
+      input || {}
     );
     res.status(result.status).json(result.data);
   } catch (err) {
@@ -559,7 +563,7 @@ app.get('/api/proxy/higgsfield/status/:requestId', async (req, res) => {
   if (!apiKey) return res.status(400).json({ error: 'Missing Higgsfield API key' });
   try {
     const result = await proxyRequest(
-      `https://platform.higgsfield.ai/v1/requests/${encodeURIComponent(req.params.requestId)}/status`,
+      `https://platform.higgsfield.ai/requests/${encodeURIComponent(req.params.requestId)}/status`,
       'GET',
       { 'Authorization': `Key ${apiKey}` }
     );
