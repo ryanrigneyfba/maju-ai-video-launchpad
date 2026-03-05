@@ -124,32 +124,29 @@ async function runHiggsDebugTests(apiKey) {
   // V1 auth: hf-api-key (UUID) + hf-secret as separate headers
   const v1h = { 'hf-api-key': keyId, 'hf-secret': keySecret, 'Content-Type': 'application/json' };
   const imgUrl = 'https://placehold.co/512x512.png';
-  // Test different dict formats for input_images
+  const img = { type: 'image_url', image_url: imgUrl };
   const tests = [
-    // ── input_images as [{url: "..."}] ──
-    { ep: '/v1/image2video/dop', method: 'POST', headers: v1h, label: 'i2v: {url}',
-      body: { params: { prompt: 'A bottle rotating', input_images: [{ url: imgUrl }], aspect_ratio: '9:16', duration: 5, model: 'dop-turbo' } } },
-    // ── input_images as [{image_url: "..."}] ──
-    { ep: '/v1/image2video/dop', method: 'POST', headers: v1h, label: 'i2v: {image_url}',
-      body: { params: { prompt: 'A bottle rotating', input_images: [{ image_url: imgUrl }], aspect_ratio: '9:16', duration: 5, model: 'dop-turbo' } } },
-    // ── input_images as [{src: "..."}] ──
-    { ep: '/v1/image2video/dop', method: 'POST', headers: v1h, label: 'i2v: {src}',
-      body: { params: { prompt: 'A bottle rotating', input_images: [{ src: imgUrl }], aspect_ratio: '9:16', duration: 5, model: 'dop-turbo' } } },
-    // ── input_images as [{image: "..."}] (url string in image field) ──
-    { ep: '/v1/image2video/dop', method: 'POST', headers: v1h, label: 'i2v: {image}',
-      body: { params: { prompt: 'A bottle rotating', input_images: [{ image: imgUrl }], aspect_ratio: '9:16', duration: 5, model: 'dop-turbo' } } },
-    // ── input_images as [{type:"url", url:"..."}] ──
-    { ep: '/v1/image2video/dop', method: 'POST', headers: v1h, label: 'i2v: {type+url}',
-      body: { params: { prompt: 'A bottle rotating', input_images: [{ type: 'url', url: imgUrl }], aspect_ratio: '9:16', duration: 5, model: 'dop-turbo' } } },
-    // ── Also test with motion_id (from motions list) ──
-    { ep: '/v1/image2video/dop', method: 'POST', headers: v1h, label: 'i2v: {url}+motion',
-      body: { params: { prompt: 'A bottle rotating', input_images: [{ url: imgUrl }], aspect_ratio: '9:16', duration: 5, model: 'dop-turbo', motion_id: '31177282-bde3-4870-b283-1135ca0a201a' } } },
-    // ── Test other models: dop-standard, dop ──
-    { ep: '/v1/image2video/dop', method: 'POST', headers: v1h, label: 'i2v: model=dop',
-      body: { params: { prompt: 'A bottle rotating', input_images: [{ url: imgUrl }], aspect_ratio: '9:16', duration: 5, model: 'dop' } } },
-    // ── V1 status/polling endpoint patterns ──
-    { ep: '/v1/requests', method: 'GET', headers: v1h, body: undefined, label: 'V1: GET /v1/requests' },
-    { ep: '/v1/generations', method: 'GET', headers: v1h, body: undefined, label: 'V1: GET /v1/generations' },
+    // ── CORRECT FORMAT: should return 200/queued ──
+    { ep: '/v1/image2video/dop', method: 'POST', headers: v1h, label: 'FINAL: dop-turbo 9:16 5s',
+      body: { params: { prompt: 'A bottle rotating slowly', input_images: [img], aspect_ratio: '9:16', duration: 5, model: 'dop-turbo' } } },
+    { ep: '/v1/image2video/dop', method: 'POST', headers: v1h, label: 'FINAL: dop-lite 9:16 5s',
+      body: { params: { prompt: 'A bottle rotating slowly', input_images: [img], aspect_ratio: '9:16', duration: 5, model: 'dop-lite' } } },
+    { ep: '/v1/image2video/dop', method: 'POST', headers: v1h, label: 'FINAL: dop-preview 9:16 5s',
+      body: { params: { prompt: 'A bottle rotating slowly', input_images: [img], aspect_ratio: '9:16', duration: 5, model: 'dop-preview' } } },
+    // ── With motion_id ──
+    { ep: '/v1/image2video/dop', method: 'POST', headers: v1h, label: 'FINAL: dop-turbo+General motion',
+      body: { params: { prompt: 'A bottle rotating slowly', input_images: [img], aspect_ratio: '9:16', duration: 5, model: 'dop-turbo', motion_id: '31177282-bde3-4870-b283-1135ca0a201a' } } },
+    // ── 2 images (start+end frame) ──
+    { ep: '/v1/image2video/dop', method: 'POST', headers: v1h, label: 'FINAL: 2 imgs start+end',
+      body: { params: { prompt: 'A bottle rotating slowly', input_images: [img, img], aspect_ratio: '9:16', duration: 5, model: 'dop-turbo' } } },
+    // ── Other durations ──
+    { ep: '/v1/image2video/dop', method: 'POST', headers: v1h, label: 'FINAL: duration=10',
+      body: { params: { prompt: 'A bottle rotating slowly', input_images: [img], aspect_ratio: '9:16', duration: 10, model: 'dop-turbo' } } },
+    // ── Other aspect ratios ──
+    { ep: '/v1/image2video/dop', method: 'POST', headers: v1h, label: 'FINAL: ratio=16:9',
+      body: { params: { prompt: 'A bottle rotating slowly', input_images: [img], aspect_ratio: '16:9', duration: 5, model: 'dop-turbo' } } },
+    { ep: '/v1/image2video/dop', method: 'POST', headers: v1h, label: 'FINAL: ratio=1:1',
+      body: { params: { prompt: 'A bottle rotating slowly', input_images: [img], aspect_ratio: '1:1', duration: 5, model: 'dop-turbo' } } },
   ];
   const results = [];
   for (const t of tests) {
