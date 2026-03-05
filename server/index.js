@@ -568,7 +568,7 @@ app.get('/api/proxy/higgsfield/status/:requestId', async (req, res) => {
     const result = await proxyRequest(
       `https://platform.higgsfield.ai/requests/${encodeURIComponent(req.params.requestId)}/status`,
       'GET',
-      { 'hf-api-key': apiKey }
+      { 'Authorization': `Key ${apiKey}` }
     );
     debugLog('hf-status-res', { requestId: req.params.requestId, status: result.status, data: JSON.stringify(result.data).slice(0, 300) });
     res.status(result.status).json(result.data);
