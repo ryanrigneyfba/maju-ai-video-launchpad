@@ -1,6 +1,7 @@
 /* ═══════════════════════════════════════════
    MAJU AI Video Launchpad — Backend Server
    FFmpeg stitching + job management
+   v1.2.2 — redeploy
    ═══════════════════════════════════════════ */
 
 const express = require('express');
