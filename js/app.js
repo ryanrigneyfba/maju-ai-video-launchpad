@@ -122,29 +122,56 @@
     const approvals = relevantFeedback.filter((f) => f.action === 'approve');
     const rejections = relevantFeedback.filter((f) => f.action === 'reject');
 
-    const systemPrompt = `You are a video production AI assistant for MAJU, a wellness brand. You help generate optimized video briefs for AI avatar video tools like Higgsfield.
+    const systemPrompt = `You are a video production AI assistant for MAJU, a wellness brand. You generate optimized Higgsfield prompts for AI avatar videos.
 
-The video format is: ${videoType}
-Avatar: ${avatar}
-Product: ${product}
+Format: ${videoType}
+Avatar: ${avatar} (Patient Maya / Bree Alba)
+Product: ${product} (Maju's Black Seed Oil 8oz)
 
-Your job: Based on the user's notes and past feedback (what worked, what didn't), generate an optimized video brief/prompt that will produce the best possible video.
+This is the "Anti-Puffy Face Snack" Selfcare Snack Reel — red onion + Maju Black Seed Oil + salt. Total duration: 15 seconds, 9:16 vertical.
 
-The video follows a Selfcare Snack Reel SOP with these segments:
-1. Hook (0-3s) — attention-grabbing opener
-2. Reveal (3-8s) — product reveal
-3. Demo (8-18s) — application/usage demonstration
-4. Result + CTA (18-25s) — results and call to action
-5. End Card (25-30s) — branding/handle
+The video has exactly 5 segments with specific Higgsfield prompts:
+
+SEGMENT 1: HOOK (0-3s) — Stop the scroll
+Default prompt: "Medium close-up of a woman in a dark kitchen holding a whole red onion near her face, looking at it curiously then at camera with a confident smile. A bottle of black seed oil sits on the wooden counter beside her. Warm golden lighting from window. She slowly raises the onion. 9:16 vertical, 3 seconds, smooth motion."
+Text overlay: "de-puff your face snack" OR "wake up puffy? eat this"
+
+SEGMENT 2: THE REVEAL — Ingredients + Pour (3-6s) — Product placement money shot
+Default prompt: "Woman pouring black seed oil from a dark bottle onto a halved red onion on a wooden cutting board. Camera slightly wider, waist up. She looks down at the onion as she pours. The bottle label reading BLACK SEED OIL faces the camera. Warm kitchen lighting, dark moody background. Smooth satisfying pour motion. 9:16 vertical, 3 seconds."
+Text overlay: "1 red onion\\n+ black seed oil\\n+ salt"
+
+SEGMENT 3: THE DEMO — Eating the Snack (6-11s) — Viral hook, authentic reaction
+Default prompt: "Tight close-up of woman biting into a raw red onion half glistening with oil. She takes a big bite, chews with a slight grimace then settles into it and nods. A bottle of black seed oil is visible on the counter behind her. Warm golden kitchen lighting. Authentic, unpolished reaction. 9:16 vertical, 5 seconds, natural motion."
+Text overlay: NONE (let the visual do the work)
+
+SEGMENT 4: RESULT + BENEFITS (11-13s) — Educate on benefits
+Default prompt: "Woman holding a bitten red onion near her face, looking confidently at camera. She gently touches her cheek with her free hand. Black seed oil bottle visible on counter. Warm golden lighting. Calm, satisfied expression. 9:16 vertical, 2 seconds."
+Text overlay: "drains facial bloat\\nreduces water retention\\ntightens puffy skin"
+
+SEGMENT 5: THE GLOW — Result + CTA (13-15s) — Payoff beauty shot
+Default prompt: "Woman looking at herself in a mirror, gently touching her glowing face with both hands. Dewy, healthy skin. She looks serene and satisfied. A bottle of black seed oil is prominently placed in the foreground near the mirror. Warm, soft lighting emphasizes skin glow. 9:16 vertical, 2 seconds, slow smooth motion."
+Text overlay: "anti-puffy face snack\\n(onion + black seed oil + salt)" + CTA
+
+CRITICAL RULES:
+- Maju Black Seed Oil bottle MUST be visible in EVERY segment
+- Bottle label readable in at least Reveal + Glow segments
+- Kitchen: dark/moody (dark cabinets, warm wood), NOT bright/white
+- Lighting: warm golden-hour (3200-4000K), soft, flattering
+- Avatar: black tank top, hair in bun, minimal makeup, natural look
+- Eating reaction must be AUTHENTIC — slight grimace then acceptance, NOT polished
+- Movement: smooth, natural, never robotic
+
+For A/B testing, vary: hook text, pacing (15-18s), CTA ("save for later" / "link in bio" / "shop now"), and audio style.
 
 Return ONLY a JSON object with these fields:
-- "script": the avatar speaking script (30 seconds max)
-- "direction": visual/pacing/tone direction for the AI
+- "segments": array of 5 objects, each with { "name": segment name, "prompt": optimized Higgsfield prompt, "duration": seconds, "textOverlay": text to show or null }
+- "direction": overall visual/pacing/tone direction
 - "reasoning": 1 sentence explaining what you optimized based on feedback
-- "captions": array of 5 objects for each segment, each with { "text": "caption text shown on screen", "startTime": seconds, "endTime": seconds }
+- "captions": array of 5 objects for each segment with { "text": "caption text", "startTime": seconds, "endTime": seconds }
+- "hookVariant": which hook text variant this version uses
 
-Example captions:
-[{"text":"Wait you NEED to try this","startTime":0,"endTime":3},{"text":"Maju Black Seed Oil","startTime":3,"endTime":8},{"text":"Just a few drops daily","startTime":8,"endTime":18},{"text":"My skin has never been better","startTime":18,"endTime":25},{"text":"@majuwellness","startTime":25,"endTime":30}]`;
+Example:
+{"segments":[{"name":"hook","prompt":"Medium close-up of a woman...","duration":3,"textOverlay":"de-puff your face snack"},{"name":"reveal","prompt":"Woman pouring...","duration":3,"textOverlay":"1 red onion\\n+ black seed oil\\n+ salt"},{"name":"demo","prompt":"Tight close-up...","duration":5,"textOverlay":null},{"name":"result","prompt":"Woman holding...","duration":2,"textOverlay":"drains facial bloat\\nreduces water retention\\ntightens puffy skin"},{"name":"glow","prompt":"Woman looking...","duration":2,"textOverlay":"anti-puffy face snack"}],"direction":"Warm, moody kitchen. Authentic reactions.","reasoning":"Used default SOP prompts.","captions":[{"text":"de-puff your face snack","startTime":0,"endTime":3},{"text":"1 red onion + black seed oil + salt","startTime":3,"endTime":6},{"text":"","startTime":6,"endTime":11},{"text":"drains facial bloat, reduces water retention, tightens puffy skin","startTime":11,"endTime":13},{"text":"anti-puffy face snack","startTime":13,"endTime":15}],"hookVariant":"de-puff your face snack"}`;
 
     const feedbackContext = relevantFeedback.length
       ? `\n\nPast feedback for this format (${relevantFeedback.length} entries):
@@ -286,74 +313,78 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     runRealPipeline(steps, msg, setStage);
   }
 
-  async function runRealPipeline(steps, msg, setStage) {
-    // Stage 0: Generate via Higgsfield
-    setStage(0, 'Sending to Higgsfield for generation…');
+  // SOP v2.0 default Higgsfield prompts for each segment
+  const DEFAULT_SEGMENT_PROMPTS = [
+    { name: 'hook', duration: 3, prompt: 'Medium close-up of a woman in a dark kitchen holding a whole red onion near her face, looking at it curiously then at camera with a confident smile. A bottle of black seed oil sits on the wooden counter beside her. Warm golden lighting from window. She slowly raises the onion. 9:16 vertical, 3 seconds, smooth motion.', textOverlay: 'de-puff your face snack' },
+    { name: 'reveal', duration: 3, prompt: 'Woman pouring black seed oil from a dark bottle onto a halved red onion on a wooden cutting board. Camera slightly wider, waist up. She looks down at the onion as she pours. The bottle label reading BLACK SEED OIL faces the camera. Warm kitchen lighting, dark moody background. Smooth satisfying pour motion. 9:16 vertical, 3 seconds.', textOverlay: '1 red onion\n+ black seed oil\n+ salt' },
+    { name: 'demo', duration: 5, prompt: 'Tight close-up of woman biting into a raw red onion half glistening with oil. She takes a big bite, chews with a slight grimace then settles into it and nods. A bottle of black seed oil is visible on the counter behind her. Warm golden kitchen lighting. Authentic, unpolished reaction. 9:16 vertical, 5 seconds, natural motion.', textOverlay: null },
+    { name: 'result', duration: 2, prompt: 'Woman holding a bitten red onion near her face, looking confidently at camera. She gently touches her cheek with her free hand. Black seed oil bottle visible on counter. Warm golden lighting. Calm, satisfied expression. 9:16 vertical, 2 seconds.', textOverlay: 'drains facial bloat\nreduces water retention\ntightens puffy skin' },
+    { name: 'glow', duration: 2, prompt: 'Woman looking at herself in a mirror, gently touching her glowing face with both hands. Dewy, healthy skin. She looks serene and satisfied. A bottle of black seed oil is prominently placed in the foreground near the mirror. Warm, soft lighting emphasizes skin glow. 9:16 vertical, 2 seconds, slow smooth motion.', textOverlay: 'anti-puffy face snack\n(onion + black seed oil + salt)' },
+  ];
 
-    // Get the most recent queue items (just generated)
+  async function runRealPipeline(steps, msg, setStage) {
+    // Stage 0: Generate each segment via Higgsfield
+    setStage(0, 'Generating video segments via Higgsfield…');
+
     const newItems = queue.filter(q => q.pipelineStage === 'generate');
-    const videoIds = [];
+    const allSegmentVideos = []; // { url, label } for stitching
 
     for (const item of newItems) {
-      const params = {};
-      if (item.aiPrompt && item.aiPrompt.direction) {
-        params.prompt = item.aiPrompt.direction;
-      } else if (item.notes) {
-        params.prompt = item.notes;
+      // Get segment prompts from Claude AI output or use SOP defaults
+      const segments = (item.aiPrompt && item.aiPrompt.segments) || DEFAULT_SEGMENT_PROMPTS;
+      const segmentResults = [];
+
+      for (let si = 0; si < segments.length; si++) {
+        const seg = segments[si];
+        const segLabel = `${seg.name} (${si + 1}/${segments.length})`;
+        msg.textContent = `v${item.version}: Generating ${segLabel}… [Kling 3.0]`;
+
+        const result = await API.higgsfield.generateVideo({
+          prompt: seg.prompt,
+          duration: seg.duration || 5,
+        });
+
+        if (result.ok && result.id) {
+          // Poll for this segment's completion
+          let done = false;
+          let attempts = 0;
+          while (!done && attempts < 120) {
+            await new Promise(r => setTimeout(r, 3000));
+            attempts++;
+            const status = await API.higgsfield.getStatus(result.id);
+            if (status.status === 'completed' || status.status === 'done') {
+              done = true;
+              const videoUrl = status.video_url || status.url || status.output_url;
+              if (videoUrl) {
+                segmentResults.push({ url: videoUrl, label: seg.name, textOverlay: seg.textOverlay });
+                msg.textContent = `v${item.version}: ${segLabel} rendered!`;
+              }
+            } else if (status.status === 'failed' || status.status === 'error') {
+              done = true;
+              msg.textContent = `⚠️ v${item.version}: ${segLabel} failed to render.`;
+            } else {
+              msg.textContent = `v${item.version}: Rendering ${segLabel}… (${status.status || 'processing'})`;
+            }
+          }
+        } else {
+          msg.textContent = `⚠️ v${item.version}: ${segLabel} error: ${result.error || JSON.stringify(result.detail || 'Unknown')}`;
+        }
       }
 
-      // Use Nano Banana Pro for static segments (end cards, thumbnails)
-      const isStatic = item.aiPrompt && item.aiPrompt.static;
-      const result = isStatic
-        ? await API.higgsfield.generateImage(params)
-        : await API.higgsfield.generateVideo(params);
-      if (result.ok && result.id) {
-        item.higgsVideoId = result.id;
-        item.isStatic = isStatic;
-        videoIds.push({ item, videoId: result.id });
-        msg.textContent = `Generating… (${videoIds.length}/${newItems.length} submitted) [${isStatic ? 'Nano Banana Pro' : 'Kling 3.0'}]`;
+      // Store segment results on the item
+      item.segmentVideos = segmentResults;
+      if (segmentResults.length > 0) {
+        item.videoUrl = segmentResults[0].url; // preview = first segment
+        item.pipelineStage = 'stitch';
+        allSegmentVideos.push(...segmentResults.map(s => ({ url: s.url, label: `${item.typeName} - ${s.label}` })));
       } else {
-        msg.textContent = `⚠️ Generation error: ${result.error || JSON.stringify(result.detail || 'Unknown error')}. Videos added to queue as pending.`;
         item.pipelineStage = 'queue';
+        msg.textContent = `⚠️ v${item.version}: No segments rendered successfully.`;
       }
       saveQueue();
     }
 
-    if (!videoIds.length) {
-      setStage(2, '✓ Videos added to approval queue.');
-      return;
-    }
-
-    // Poll Higgsfield for completion
-    msg.textContent = 'Waiting for Higgsfield to render videos…';
-    const completedVideos = [];
-
-    for (const { item, videoId } of videoIds) {
-      let done = false;
-      let attempts = 0;
-      while (!done && attempts < 120) { // max ~6 min polling
-        await new Promise(r => setTimeout(r, 3000));
-        attempts++;
-        const status = await API.higgsfield.getStatus(videoId);
-        if (status.status === 'completed' || status.status === 'done') {
-          done = true;
-          const videoUrl = status.video_url || status.url || status.output_url;
-          if (videoUrl) {
-            completedVideos.push({ url: videoUrl, label: item.typeName });
-            item.videoUrl = videoUrl;
-          }
-          item.pipelineStage = 'stitch';
-          msg.textContent = `Rendered ${completedVideos.length}/${videoIds.length} videos…`;
-        } else if (status.status === 'failed' || status.status === 'error') {
-          done = true;
-          item.pipelineStage = 'queue';
-          msg.textContent = `⚠️ Video ${item.typeName} failed to render.`;
-        } else {
-          msg.textContent = `Rendering… (${status.status || 'processing'}) — ${completedVideos.length}/${videoIds.length} done`;
-        }
-        saveQueue();
-      }
-    }
+    const completedVideos = allSegmentVideos;
 
     // Stage 1: Auto-stitch via FFmpeg with captions
     if (completedVideos.length > 0 && (apiKeys.backendUrl || DEFAULT_BACKEND)) {
@@ -825,7 +856,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
           input: {
             prompt: params.prompt || '',
             aspect_ratio: '9:16',
-            duration: 5,
+            duration: params.duration || 5,
           },
         };
         // If image provided, use Kling image-to-video instead

@@ -48,14 +48,14 @@ const upload = multer({
 const jobs = new Map();
 
 // ─── SOP Segment Definitions ───
-// Based on Selfcare Snack Reel SOP
+// Based on Selfcare Snack Reel SOP v2.0 — Anti-Puffy Face Snack Format
 const SOP_SEGMENTS = {
   'selfcare-snack-reel': [
     { name: 'hook', label: 'Hook (0-3s)', maxDuration: 3 },
-    { name: 'reveal', label: 'Reveal (3-8s)', maxDuration: 5 },
-    { name: 'demo', label: 'Application/Demo (8-18s)', maxDuration: 10 },
-    { name: 'result', label: 'Result + CTA (18-25s)', maxDuration: 7 },
-    { name: 'endcard', label: 'End Card (25-30s)', maxDuration: 5 },
+    { name: 'reveal', label: 'The Reveal — Pour (3-6s)', maxDuration: 3 },
+    { name: 'demo', label: 'The Demo — Eating (6-11s)', maxDuration: 5 },
+    { name: 'result', label: 'Result + Benefits (11-13s)', maxDuration: 2 },
+    { name: 'glow', label: 'The Glow — CTA (13-15s)', maxDuration: 2 },
   ],
 };
 
