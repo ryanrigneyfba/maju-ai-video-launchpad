@@ -179,33 +179,19 @@ app.post('/api/debug/higgsfield-endpoints', express.json(), async (req, res) => 
   }
   res.json({ keyInfo, results });
 });
-// Simple UI to test the debug endpoint without needing curl
+// Simple UI + GET fallback that forwards to POST handler logic
 app.get('/api/debug/higgsfield-endpoints', (req, res) => {
-  // If key provided in query, run tests directly
+  // If key provided in query, forward to POST handler
   if (req.query.key) {
-    const apiKey = req.query.key;
-    const colonIdx = apiKey.indexOf(':');
-    const keyId = colonIdx > -1 ? apiKey.substring(0, colonIdx) : apiKey;
-    const keySecret = colonIdx > -1 ? apiKey.substring(colonIdx + 1) : '';
-    const v2Headers = { 'Authorization': `Key ${apiKey}`, 'Content-Type': 'application/json' };
-    const bearerHeaders = { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' };
-    const tests = [
-      { ep: '/bytedance/seedream/v4/text-to-image', method: 'POST', headers: v2Headers, body: { prompt: 'test' }, label: 'Auth:Key' },
-      { ep: '/bytedance/seedream/v4/text-to-image', method: 'POST', headers: bearerHeaders, body: { prompt: 'test' }, label: 'Auth:Bearer' },
-      { ep: '/text-to-video', method: 'POST', headers: v2Headers, body: { model: 'kling-v3.0-pro', prompt: 'test', aspect_ratio: '9:16', duration: 5 }, label: 'Generic: /text-to-video' },
-      { ep: '/kling-v3.0-pro-text-to-video', method: 'POST', headers: v2Headers, body: { prompt: 'test', aspect_ratio: '9:16', duration: 5 }, label: 'Path: kling-v3.0-pro' },
-    ];
-    const runTests = async () => {
-      const results = [];
-      for (const t of tests) {
-        try {
-          const result = await proxyRequest(`https://platform.higgsfield.ai${t.ep}`, t.method, t.headers, t.body);
-          results.push({ label: t.label, status: result.status, data: result.data });
-        } catch (err) { results.push({ label: t.label, error: err.message }); }
-      }
-      res.json({ keyInfo: { length: apiKey.length, hasColon: apiKey.includes(':'), keyIdLength: keyId.length, keySecretLength: keySecret.length }, results });
-    };
-    return runTests();
+    req.body = { key: req.query.key };
+    // Find and call the POST handler
+    const postRoute = app._router.stack.find(layer =>
+      layer.route && layer.route.path === '/api/debug/higgsfield-endpoints' && layer.route.methods.post
+    );
+    if (postRoute) {
+      return postRoute.route.stack[1].handle(req, res);
+    }
+    return res.status(500).json({ error: 'POST handler not found' });
   }
   // Otherwise show a simple form
   res.send(`<!DOCTYPE html><html><body style="font-family:monospace;max-width:800px;margin:40px auto">
