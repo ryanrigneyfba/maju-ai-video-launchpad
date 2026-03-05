@@ -2,7 +2,9 @@ name: Auto PR + Merge for Claude branches
 
 on:
   push:
-    branches: ['claude/**']
+    branches:
+      - 'claude/**'
+      - 'claude/*'
   pull_request:
     types: [opened, synchronize]
 
