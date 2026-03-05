@@ -329,7 +329,17 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       function advanceSim() {
         setStage(stage, sim[stage]);
         stage++;
-        if (stage < sim.length) setTimeout(advanceSim, 1800);
+        if (stage < sim.length) {
+          setTimeout(advanceSim, 1800);
+        } else {
+          // Simulation complete — move items into the approval queue
+          const simItems = queue.filter(q => q.pipelineStage === 'generate');
+          simItems.forEach(item => { item.pipelineStage = 'queue'; });
+          saveQueue();
+          renderQueue();
+          renderTracker();
+          updateBadge();
+        }
       }
       advanceSim();
       return;
@@ -531,8 +541,10 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
   // ─── Queue Rendering ───
   function renderQueue(filter = 'all') {
     const list = $('#queue-list');
+    // Only show items that have reached the approval queue (not still generating/stitching)
+    const readyForApproval = queue.filter(q => q.pipelineStage === 'queue' || q.pipelineStage === 'post');
     const filtered =
-      filter === 'all' ? queue : queue.filter((q) => q.status === filter);
+      filter === 'all' ? readyForApproval : readyForApproval.filter((q) => q.status === filter);
 
     if (!filtered.length) {
       list.innerHTML =
@@ -738,7 +750,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
   // ─── Badge ───
   function updateBadge() {
     const pending = queue.filter(
-      (q) => q.status === 'pending' || q.status === 'revision'
+      (q) => (q.status === 'pending' || q.status === 'revision') && (q.pipelineStage === 'queue' || q.pipelineStage === 'post')
     ).length;
     const badge = $('#queue-badge');
     badge.textContent = pending;
