@@ -123,27 +123,33 @@ async function runHiggsDebugTests(apiKey) {
   const b = { prompt: 'test', aspect_ratio: '9:16', duration: 5 };
   // V1 auth: hf-api-key (UUID) + hf-secret as separate headers
   const v1h = { 'hf-api-key': keyId, 'hf-secret': keySecret, 'Content-Type': 'application/json' };
-  // V1 DoP body formats
-  const dopI2v = { params: { prompt: 'A bottle rotating slowly', input_images: ['https://placehold.co/512x512.png'], aspect_ratio: '9:16', duration: 5, model: 'dop-turbo' } };
-  const dopT2v = { params: { prompt: 'A bottle rotating slowly', aspect_ratio: '9:16', duration: 5, model: 'dop-turbo' } };
+  const imgUrl = 'https://placehold.co/512x512.png';
+  // Test different dict formats for input_images
   const tests = [
-    // ── Controls ──
-    { ep: '/bytedance/seedream/v4/text-to-image', method: 'POST', headers: h, body: { prompt: 'test' }, label: 'CONTROL V2: seedream (200?)' },
-    { ep: '/v1/motions', method: 'GET', headers: v1h, body: undefined, label: 'CONTROL V1: motions list' },
-    // ── V1 DoP image-to-video (known endpoint, with image) ──
-    { ep: '/v1/image2video/dop', method: 'POST', headers: v1h, body: dopI2v, label: 'V1: i2v/dop (with img)' },
-    // ── V1 DoP image-to-video without image (maybe falls back to t2v?) ──
-    { ep: '/v1/image2video/dop', method: 'POST', headers: v1h, body: dopT2v, label: 'V1: i2v/dop (no img)' },
-    // ── V1 text-to-video variants ──
-    { ep: '/v1/text2video/dop', method: 'POST', headers: v1h, body: dopT2v, label: 'V1: text2video/dop' },
-    { ep: '/v1/text-to-video/dop', method: 'POST', headers: v1h, body: dopT2v, label: 'V1: text-to-video/dop' },
-    { ep: '/v1/video/dop', method: 'POST', headers: v1h, body: dopT2v, label: 'V1: video/dop' },
-    { ep: '/v1/generate/dop', method: 'POST', headers: v1h, body: dopT2v, label: 'V1: generate/dop' },
-    // ── API docs (405 on GET, try POST) ──
-    { ep: '/openapi.json', method: 'POST', headers: h, body: {}, label: 'DOCS: POST /openapi.json' },
-    { ep: '/docs', method: 'POST', headers: h, body: {}, label: 'DOCS: POST /docs' },
-    // ── Other V2 models ──
-    { ep: '/flux-pro/kontext/max/text-to-image', method: 'POST', headers: h, body: { prompt: 'test' }, label: 'V2: flux-pro/kontext/max' },
+    // ── input_images as [{url: "..."}] ──
+    { ep: '/v1/image2video/dop', method: 'POST', headers: v1h, label: 'i2v: {url}',
+      body: { params: { prompt: 'A bottle rotating', input_images: [{ url: imgUrl }], aspect_ratio: '9:16', duration: 5, model: 'dop-turbo' } } },
+    // ── input_images as [{image_url: "..."}] ──
+    { ep: '/v1/image2video/dop', method: 'POST', headers: v1h, label: 'i2v: {image_url}',
+      body: { params: { prompt: 'A bottle rotating', input_images: [{ image_url: imgUrl }], aspect_ratio: '9:16', duration: 5, model: 'dop-turbo' } } },
+    // ── input_images as [{src: "..."}] ──
+    { ep: '/v1/image2video/dop', method: 'POST', headers: v1h, label: 'i2v: {src}',
+      body: { params: { prompt: 'A bottle rotating', input_images: [{ src: imgUrl }], aspect_ratio: '9:16', duration: 5, model: 'dop-turbo' } } },
+    // ── input_images as [{image: "..."}] (url string in image field) ──
+    { ep: '/v1/image2video/dop', method: 'POST', headers: v1h, label: 'i2v: {image}',
+      body: { params: { prompt: 'A bottle rotating', input_images: [{ image: imgUrl }], aspect_ratio: '9:16', duration: 5, model: 'dop-turbo' } } },
+    // ── input_images as [{type:"url", url:"..."}] ──
+    { ep: '/v1/image2video/dop', method: 'POST', headers: v1h, label: 'i2v: {type+url}',
+      body: { params: { prompt: 'A bottle rotating', input_images: [{ type: 'url', url: imgUrl }], aspect_ratio: '9:16', duration: 5, model: 'dop-turbo' } } },
+    // ── Also test with motion_id (from motions list) ──
+    { ep: '/v1/image2video/dop', method: 'POST', headers: v1h, label: 'i2v: {url}+motion',
+      body: { params: { prompt: 'A bottle rotating', input_images: [{ url: imgUrl }], aspect_ratio: '9:16', duration: 5, model: 'dop-turbo', motion_id: '31177282-bde3-4870-b283-1135ca0a201a' } } },
+    // ── Test other models: dop-standard, dop ──
+    { ep: '/v1/image2video/dop', method: 'POST', headers: v1h, label: 'i2v: model=dop',
+      body: { params: { prompt: 'A bottle rotating', input_images: [{ url: imgUrl }], aspect_ratio: '9:16', duration: 5, model: 'dop' } } },
+    // ── V1 status/polling endpoint patterns ──
+    { ep: '/v1/requests', method: 'GET', headers: v1h, body: undefined, label: 'V1: GET /v1/requests' },
+    { ep: '/v1/generations', method: 'GET', headers: v1h, body: undefined, label: 'V1: GET /v1/generations' },
   ];
   const results = [];
   for (const t of tests) {
