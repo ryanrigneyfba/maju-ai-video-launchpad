@@ -140,19 +140,27 @@ app.post('/api/debug/higgsfield-endpoints', express.json(), async (req, res) => 
   const bearerHeaders = { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' };
   const v1Headers = { 'hf-api-key': keyId, 'hf-secret': keySecret, 'Content-Type': 'application/json' };
 
+  const body = { prompt: 'test', aspect_ratio: '9:16', duration: 5 };
   const tests = [
-    // ── Auth tests on known endpoint (seedream from SDK docs) ──
-    { ep: '/bytedance/seedream/v4/text-to-image', method: 'POST', headers: v2Headers, body: { prompt: 'test' }, label: 'Auth:Key' },
-    { ep: '/bytedance/seedream/v4/text-to-image', method: 'POST', headers: bearerHeaders, body: { prompt: 'test' }, label: 'Auth:Bearer' },
-    // ── Generic endpoint + model in body (SDK pattern) ──
-    { ep: '/text-to-video', method: 'POST', headers: v2Headers, body: { model: 'kling-v3.0-pro', prompt: 'test', aspect_ratio: '9:16', duration: 5 }, label: 'Generic: /text-to-video' },
-    { ep: '/v1/text-to-video', method: 'POST', headers: v2Headers, body: { model: 'kling-v3.0-pro', prompt: 'test', aspect_ratio: '9:16', duration: 5 }, label: 'Generic: /v1/text-to-video' },
-    { ep: '/text-to-image', method: 'POST', headers: v2Headers, body: { model: 'bytedance/seedream/v4', prompt: 'test' }, label: 'Generic: /text-to-image' },
-    // ── Path-based Kling ──
-    { ep: '/kling-v3.0-pro-text-to-video', method: 'POST', headers: v2Headers, body: { prompt: 'test', aspect_ratio: '9:16', duration: 5 }, label: 'Path: kling-v3.0-pro' },
-    // ── Discovery ──
-    { ep: '/v1/models', method: 'POST', headers: v2Headers, body: {}, label: 'Discovery: /v1/models' },
-    { ep: '/applications', method: 'POST', headers: v2Headers, body: {}, label: 'Discovery: /applications' },
+    // ── Confirmed working (control) ──
+    { ep: '/bytedance/seedream/v4/text-to-image', method: 'POST', headers: v2Headers, body: { prompt: 'test' }, label: 'CONTROL: seedream (should be 200)' },
+    // ── Kling path patterns: vendor/model/version/task ──
+    { ep: '/kuaishou/kling/v3.0/text-to-video', method: 'POST', headers: v2Headers, body, label: 'kuaishou/kling/v3.0/t2v' },
+    { ep: '/kuaishou/kling/v3/text-to-video', method: 'POST', headers: v2Headers, body, label: 'kuaishou/kling/v3/t2v' },
+    { ep: '/kuaishou/kling/3.0/text-to-video', method: 'POST', headers: v2Headers, body, label: 'kuaishou/kling/3.0/t2v' },
+    { ep: '/kling/v3.0/text-to-video', method: 'POST', headers: v2Headers, body, label: 'kling/v3.0/t2v' },
+    { ep: '/kling/v3/text-to-video', method: 'POST', headers: v2Headers, body, label: 'kling/v3/t2v' },
+    { ep: '/kling/3.0/text-to-video', method: 'POST', headers: v2Headers, body, label: 'kling/3.0/t2v' },
+    { ep: '/kling/text-to-video', method: 'POST', headers: v2Headers, body, label: 'kling/t2v' },
+    // ── model-family/variant/version/task pattern (like flux-pro/kontext/max/t2i) ──
+    { ep: '/kling/v3.0-pro/text-to-video', method: 'POST', headers: v2Headers, body, label: 'kling/v3.0-pro/t2v' },
+    { ep: '/kling/v3.0-standard/text-to-video', method: 'POST', headers: v2Headers, body, label: 'kling/v3.0-standard/t2v' },
+    { ep: '/kling/pro/v3.0/text-to-video', method: 'POST', headers: v2Headers, body, label: 'kling/pro/v3.0/t2v' },
+    { ep: '/kling-ai/v3.0/text-to-video', method: 'POST', headers: v2Headers, body, label: 'kling-ai/v3.0/t2v' },
+    // ── Older Kling versions ──
+    { ep: '/kuaishou/kling/v2.0/text-to-video', method: 'POST', headers: v2Headers, body, label: 'kuaishou/kling/v2.0/t2v' },
+    { ep: '/kling/v2.0/text-to-video', method: 'POST', headers: v2Headers, body, label: 'kling/v2.0/t2v' },
+    { ep: '/kuaishou/kling/v1.6/text-to-video', method: 'POST', headers: v2Headers, body, label: 'kuaishou/kling/v1.6/t2v' },
   ];
 
   const results = [];
