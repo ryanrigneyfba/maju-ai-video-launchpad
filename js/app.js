@@ -365,7 +365,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     const imgResult = await API.higgsfield.generateImage({ prompt: seg.prompt, aspect_ratio: '9:16' });
     console.log(`[Pipeline] Image submit for ${segLabel}:`, imgResult.ok, 'id:', imgResult.id);
     if (!imgResult.ok || !imgResult.id) {
-      const errDetail = imgResult.error || imgResult.message || imgResult.detail || JSON.stringify(imgResult).slice(0, 200);
+
       debugPanel(`[${segLabel}] Submit failed: ${errDetail}`);
       return { url: null, error: `Submit: ${errDetail}` };
     }
@@ -395,7 +395,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     });
     console.log(`[Pipeline] DoP generate result for ${seg.name}:`, JSON.stringify(result).slice(0, 300));
     if (!result.ok || !result.id) {
-      const errDetail = result.error || result.message || result.detail || JSON.stringify(result).slice(0, 200);
+
       debugPanel(`[${seg.name}] DoP submit failed: ${errDetail}`);
       return { url: null, error: `Submit: ${errDetail}` };
     }
