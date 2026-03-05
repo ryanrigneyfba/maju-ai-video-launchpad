@@ -2,7 +2,7 @@ name: Deploy Backend to AWS App Runner
 
 on:
   push:
-    branches: [main]
+    branches: [claude/maju-video-launchpad-v1.1-ULGEX]
     paths:
       - 'server/**'
       - '.github/workflows/deploy-backend.yml'
