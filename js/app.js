@@ -530,7 +530,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       .map(
         (item) => `
       <div class="queue-item status-${item.status}" data-id="${item.id}">
-        ${item.videoUrl ? `<div class="queue-video"><video src="${item.videoUrl}" controls preload="metadata" playsinline></video></div>` : item.stitchedVideoUrl ? `<div class="queue-video"><video src="${item.stitchedVideoUrl}" controls preload="metadata" playsinline></video></div>` : '<div class="queue-video queue-video-placeholder"><span>Video generating…</span></div>'}
+        ${item.stitchedVideoUrl ? `<div class="queue-video"><video src="${item.stitchedVideoUrl}" controls preload="metadata" playsinline></video></div>` : item.videoUrl ? `<div class="queue-video"><video src="${item.videoUrl}" controls preload="metadata" playsinline></video></div>` : '<div class="queue-video queue-video-placeholder"><span>Video generating…</span></div>'}
         <div class="queue-info">
           <h4>${item.typeName} — v${item.version}/${item.totalVersions}</h4>
           <p>${item.productName} · ${item.avatarName}</p>
