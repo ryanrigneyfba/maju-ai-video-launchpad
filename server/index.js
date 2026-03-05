@@ -118,33 +118,40 @@ app.get('/api/debug/higgsfield-endpoints', async (req, res) => {
   const apiKey = req.query.key;
   if (!apiKey) return res.status(400).json({ error: 'Pass ?key=KEY_ID:KEY_SECRET' });
 
+  // Format: vendor/model/version/task (like bytedance/seedream/v4/text-to-image)
   const endpoints = [
-    '/v1/text2video/kling-3.0-pro',
-    '/v1/text2video/kling-3.0',
-    '/v1/text2video/kling',
-    '/v1/text2video/kling3_0',
-    '/kuaishou/kling/v3.0-pro/text-to-video',
+    // Kuaishou/Kling patterns (vendor/model/version/task)
     '/kuaishou/kling/v3.0/text-to-video',
-    '/kling/v3.0-pro/text-to-video',
-    '/kling/v3.0/text-to-video',
-    '/kling-v3.0-pro-text-to-video',
-    '/v1/subscribe',
+    '/kuaishou/kling/v3/text-to-video',
+    '/kuaishou/kling/v3.0-pro/text-to-video',
+    '/kuaishou/kling/3.0/text-to-video',
+    '/kuaishou/kling-video/v3.0/text-to-video',
+    '/kwaivgi/kling-video/v3.0/text-to-video',
+    // Known working format from SDK docs
+    '/bytedance/seedream/v4/text-to-image',
+    // Try listing/discovery endpoints
+    '/v1/models',
+    '/models',
+    '/api/models',
+    '/applications',
   ];
 
   const body = { prompt: 'A black seed oil bottle on a white background', aspect_ratio: '9:16', duration: 5 };
-  const subscribeBody = { endpoint: 'kling-v3.0-pro-text-to-video', input: body };
 
   const results = [];
   for (const ep of endpoints) {
     try {
-      const sendBody = ep === '/v1/subscribe' ? subscribeBody : body;
+      // Use GET for listing endpoints, POST for generation
+      const isListing = ep.includes('models') || ep.includes('applications');
+      const method = isListing ? 'GET' : 'POST';
+      const sendBody = isListing ? undefined : body;
       const result = await proxyRequest(
         `https://platform.higgsfield.ai${ep}`,
-        'POST',
+        method,
         { 'Authorization': `Key ${apiKey}`, 'Content-Type': 'application/json' },
         sendBody
       );
-      results.push({ endpoint: ep, status: result.status, data: result.data });
+      results.push({ endpoint: ep, method, status: result.status, data: result.data });
     } catch (err) {
       results.push({ endpoint: ep, error: err.message });
     }
