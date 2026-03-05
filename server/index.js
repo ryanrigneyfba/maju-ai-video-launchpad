@@ -123,20 +123,26 @@ async function runHiggsDebugTests(apiKey) {
   const b = { prompt: 'test', aspect_ratio: '9:16', duration: 5 };
   const tests = [
     { ep: '/bytedance/seedream/v4/text-to-image', method: 'POST', headers: h, body: { prompt: 'test' }, label: 'CONTROL: seedream' },
-    { ep: '/kuaishou/kling/v3.0/text-to-video', method: 'POST', headers: h, body: b, label: 'kuaishou/kling/v3.0/t2v' },
-    { ep: '/kuaishou/kling/v3/text-to-video', method: 'POST', headers: h, body: b, label: 'kuaishou/kling/v3/t2v' },
-    { ep: '/kuaishou/kling/3.0/text-to-video', method: 'POST', headers: h, body: b, label: 'kuaishou/kling/3.0/t2v' },
-    { ep: '/kling/v3.0/text-to-video', method: 'POST', headers: h, body: b, label: 'kling/v3.0/t2v' },
-    { ep: '/kling/v3/text-to-video', method: 'POST', headers: h, body: b, label: 'kling/v3/t2v' },
-    { ep: '/kling/3.0/text-to-video', method: 'POST', headers: h, body: b, label: 'kling/3.0/t2v' },
-    { ep: '/kling/text-to-video', method: 'POST', headers: h, body: b, label: 'kling/t2v' },
-    { ep: '/kling/v3.0-pro/text-to-video', method: 'POST', headers: h, body: b, label: 'kling/v3.0-pro/t2v' },
-    { ep: '/kling/v3.0-standard/text-to-video', method: 'POST', headers: h, body: b, label: 'kling/v3.0-standard/t2v' },
-    { ep: '/kling/pro/v3.0/text-to-video', method: 'POST', headers: h, body: b, label: 'kling/pro/v3.0/t2v' },
-    { ep: '/kling-ai/v3.0/text-to-video', method: 'POST', headers: h, body: b, label: 'kling-ai/v3.0/t2v' },
-    { ep: '/kuaishou/kling/v2.0/text-to-video', method: 'POST', headers: h, body: b, label: 'kuaishou/kling/v2.0/t2v' },
-    { ep: '/kling/v2.0/text-to-video', method: 'POST', headers: h, body: b, label: 'kling/v2.0/t2v' },
-    { ep: '/kuaishou/kling/v1.6/text-to-video', method: 'POST', headers: h, body: b, label: 'kuaishou/kling/v1.6/t2v' },
+    // Try fetching API docs / OpenAPI spec
+    { ep: '/docs', method: 'GET', headers: h, body: undefined, label: 'DOCS: /docs' },
+    { ep: '/openapi.json', method: 'GET', headers: h, body: undefined, label: 'DOCS: /openapi.json' },
+    // flux-pro style: model-family/sub/variant/task
+    { ep: '/kling/3.0/pro/text-to-video', method: 'POST', headers: h, body: b, label: 'kling/3.0/pro/t2v' },
+    { ep: '/kling/3.0/standard/text-to-video', method: 'POST', headers: h, body: b, label: 'kling/3.0/std/t2v' },
+    // Flat with dashes
+    { ep: '/kling-3.0-pro/text-to-video', method: 'POST', headers: h, body: b, label: 'kling-3.0-pro/t2v' },
+    { ep: '/kling-3.0/text-to-video', method: 'POST', headers: h, body: b, label: 'kling-3.0/t2v' },
+    // Maybe "video" not "text-to-video"
+    { ep: '/kling/3.0/pro/video', method: 'POST', headers: h, body: b, label: 'kling/3.0/pro/video' },
+    { ep: '/kling/v3.0/video', method: 'POST', headers: h, body: b, label: 'kling/v3.0/video' },
+    // V1 with V2 auth (UUID key works for both)
+    { ep: '/v1/text2video/kling', method: 'POST', headers: h, body: b, label: 'v1/text2video/kling' },
+    // Other known models to confirm pattern
+    { ep: '/flux-pro/kontext/max/text-to-image', method: 'POST', headers: h, body: { prompt: 'test' }, label: 'REF: flux-pro/kontext/max' },
+    { ep: '/wan/2.5/text-to-video', method: 'POST', headers: h, body: b, label: 'wan/2.5/t2v' },
+    { ep: '/wan-ai/2.5/text-to-video', method: 'POST', headers: h, body: b, label: 'wan-ai/2.5/t2v' },
+    { ep: '/veo/3.1/text-to-video', method: 'POST', headers: h, body: b, label: 'veo/3.1/t2v' },
+    { ep: '/google/veo/3.1/text-to-video', method: 'POST', headers: h, body: b, label: 'google/veo/3.1/t2v' },
   ];
   const results = [];
   for (const t of tests) {
