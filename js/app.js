@@ -359,24 +359,32 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
   ];
 
   // Helper: generate a single image via Seedream and poll until done
+  // Returns { url, error } object
   async function generateSegmentImage(seg, segLabel, itemVersion) {
-    if (seg.image_url) return seg.image_url;
+    if (seg.image_url) return { url: seg.image_url };
     const imgResult = await API.higgsfield.generateImage({ prompt: seg.prompt, aspect_ratio: '9:16' });
     console.log(`[Pipeline] Image submit for ${segLabel}:`, imgResult.ok, 'id:', imgResult.id);
-    if (!imgResult.ok || !imgResult.id) return null;
+    if (!imgResult.ok || !imgResult.id) {
+      const errDetail = imgResult.error || imgResult.message || imgResult.detail || JSON.stringify(imgResult).slice(0, 200);
+      debugPanel(`[${segLabel}] Submit failed: ${errDetail}`);
+      return { url: null, error: `Submit: ${errDetail}` };
+    }
     for (let attempt = 0; attempt < 60; attempt++) {
       await new Promise(r => setTimeout(r, 2000));
       const imgStatus = await API.higgsfield.getImageStatus(imgResult.id);
       const st = (imgStatus.status || '').toLowerCase();
       if (attempt % 5 === 0) console.log(`[Pipeline] ${segLabel} poll #${attempt}: status=${st}`);
-      if (st === 'completed' || st === 'done') return imgStatus.url;
-      if (st === 'failed' || st === 'error' || st === 'nsfw' || st === 'cancelled') return null;
+      if (st === 'completed' || st === 'done') return { url: imgStatus.url };
+      if (st === 'failed' || st === 'error' || st === 'nsfw' || st === 'cancelled') {
+        return { url: null, error: `Image ${st}` };
+      }
     }
     console.warn(`[Pipeline] ${segLabel} timed out after 120s`);
-    return null; // timed out
+    return { url: null, error: 'Timed out after 120s' };
   }
 
   // Helper: animate an image via DoP and poll until done
+  // Returns { url, error } object
   async function animateSegmentVideo(seg, imageUrl) {
     const result = await API.higgsfield.generateVideo({
       prompt: seg.prompt,
@@ -387,8 +395,9 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     });
     console.log(`[Pipeline] DoP generate result for ${seg.name}:`, JSON.stringify(result).slice(0, 300));
     if (!result.ok || !result.id) {
-      console.error(`[Pipeline] DoP generate failed for ${seg.name}: ok=${result.ok}, id=${result.id}, error=${result.error || result.message || 'unknown'}`);
-      return null;
+      const errDetail = result.error || result.message || result.detail || JSON.stringify(result).slice(0, 200);
+      debugPanel(`[${seg.name}] DoP submit failed: ${errDetail}`);
+      return { url: null, error: `Submit: ${errDetail}` };
     }
     for (let attempt = 0; attempt < 120; attempt++) {
       await new Promise(r => setTimeout(r, 3000));
@@ -397,16 +406,13 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       if (attempt % 5 === 0) console.log(`[Pipeline] DoP ${seg.name} poll #${attempt}: status=${st}`);
       if (st === 'completed' || st === 'done') {
         const url = status.video_url || status.url || status.output_url || null;
-        console.log(`[Pipeline] DoP ${seg.name} completed: ${url ? url.slice(0, 80) : 'NO URL'}`);
-        return url;
+        return { url };
       }
       if (st === 'failed' || st === 'error') {
-        console.error(`[Pipeline] DoP ${seg.name} failed:`, JSON.stringify(status).slice(0, 300));
-        return null;
+        return { url: null, error: `Video ${st}` };
       }
     }
-    console.warn(`[Pipeline] DoP ${seg.name} timed out after 360s`);
-    return null;
+    return { url: null, error: 'Timed out after 360s' };
   }
 
   // Helper: run async tasks with a concurrency limit
@@ -444,31 +450,40 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       // Step 1: Generate ALL images in parallel (no concurrency limit — Seedream is separate from DoP)
       msg.textContent = `v${item.version}: Generating ${segments.length} images in parallel… [Seedream]`;
       updateSegmentStatus('hook', 'Generating images…', false);
-      const imageUrls = await Promise.all(
+      const imageResults = await Promise.all(
         segments.map((seg, si) => generateSegmentImage(seg, `${seg.name} (${si + 1}/${segments.length})`, item.version))
       );
 
       // Update status after images
-      const imageCount = imageUrls.filter(Boolean).length;
+      const imageCount = imageResults.filter(r => r.url).length;
       msg.textContent = `v${item.version}: ${imageCount}/${segments.length} images ready — animating videos… [DoP]`;
+
+      // Show image errors in debug panel
+      imageResults.forEach((r, i) => {
+        if (!r.url && r.error) debugPanel(`[${segments[i].name}] Image: ${r.error}`);
+      });
 
       // Step 2: Animate images into videos — max 4 concurrent (DoP limit)
       const DOP_CONCURRENCY = 4;
       const videoTasks = segments.map((seg, si) => () => {
-        if (!imageUrls[si]) return Promise.resolve(null);
+        if (!imageResults[si].url) return Promise.resolve({ url: null, error: imageResults[si].error || 'No image' });
         updateSegmentStatus(seg.name, 'Animating…', false);
-        return animateSegmentVideo(seg, imageUrls[si]);
+        return animateSegmentVideo(seg, imageResults[si].url);
       });
-      const videoUrls = await runWithConcurrency(videoTasks, DOP_CONCURRENCY);
+      const videoResults = await runWithConcurrency(videoTasks, DOP_CONCURRENCY);
 
       // Collect results (preserve segment order)
       const segmentResults = [];
       for (let si = 0; si < segments.length; si++) {
-        if (videoUrls[si]) {
-          segmentResults.push({ url: videoUrls[si], label: segments[si].name, textOverlay: segments[si].textOverlay });
+        if (videoResults[si] && videoResults[si].url) {
+          segmentResults.push({ url: videoResults[si].url, label: segments[si].name, textOverlay: segments[si].textOverlay });
           updateSegmentStatus(segments[si].name, 'Done ✓', true);
         } else {
-          updateSegmentStatus(segments[si].name, imageUrls[si] ? 'Video failed' : 'Image failed', false);
+          const reason = imageResults[si].url
+            ? (videoResults[si]?.error || 'Video failed')
+            : (imageResults[si].error || 'Image failed');
+          updateSegmentStatus(segments[si].name, reason, false);
+          debugPanel(`[${segments[si].name}] ${reason}`);
         }
       }
 
@@ -483,6 +498,8 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
         item.pipelineStage = 'failed';
         item.status = 'failed';
         msg.textContent = `⚠️ v${item.version}: No segments rendered successfully.`;
+        // Auto-fetch server debug logs to show what happened
+        if (typeof fetchDebugLog === 'function') fetchDebugLog();
       }
       saveQueue();
     }
@@ -1478,6 +1495,36 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
   // Expose API for console debugging
   window.MAJU_API = API;
   window.MAJU_CONFIG = CONFIG;
+
+  // ─── Debug Panel (visible on page, no F12 needed) ───
+  const _debugLines = [];
+  function debugPanel(msg) {
+    _debugLines.push(`[${new Date().toLocaleTimeString()}] ${msg}`);
+    if (_debugLines.length > 100) _debugLines.shift();
+    const el = document.getElementById('debug-panel-content');
+    if (el) {
+      el.textContent = _debugLines.join('\n');
+      el.scrollTop = el.scrollHeight;
+    }
+  }
+  window.debugPanel = debugPanel;
+
+  // Fetch server-side debug logs and display in panel
+  async function fetchDebugLog() {
+    try {
+      const res = await fetch(backendUrl('/api/debug/log?n=50'));
+      const logs = await res.json();
+      const el = document.getElementById('debug-panel-content');
+      if (el && logs.length) {
+        const lines = logs.map(e => `[${e.t?.slice(11, 19) || '??'}] [${e.tag}] ${JSON.stringify(e, null, 0).slice(0, 300)}`);
+        el.textContent = lines.join('\n') + '\n---\n' + _debugLines.join('\n');
+        el.scrollTop = el.scrollHeight;
+      }
+    } catch (err) {
+      debugPanel(`Failed to fetch server logs: ${err.message}`);
+    }
+  }
+  window.fetchDebugLog = fetchDebugLog;
 
   // ─── Backend Status Check ───
   async function checkBackendStatus(retries = 3) {
