@@ -19,9 +19,19 @@
       <button class="nav-btn active" data-view="dashboard">
         <span class="nav-icon">⚡</span> Dashboard
       </button>
+      <button class="nav-btn" data-view="tracker">
+        <span class="nav-icon">📋</span> Request Tracker
+        <span class="badge" id="tracker-badge">0</span>
+      </button>
       <button class="nav-btn" data-view="approval">
         <span class="nav-icon">✅</span> Approval Queue
         <span class="badge" id="queue-badge">0</span>
+      </button>
+      <button class="nav-btn" data-view="approved">
+        <span class="nav-icon">🎥</span> Approved Videos
+      </button>
+      <button class="nav-btn" data-view="spend">
+        <span class="nav-icon">💰</span> Spend Tracker
       </button>
       <button class="nav-btn" data-view="scheduled">
         <span class="nav-icon">📅</span> Scheduled Posts
@@ -167,6 +177,17 @@
       </div>
     </section>
 
+    <!-- Request Tracker View -->
+    <section class="view" id="view-tracker">
+      <div class="card">
+        <h3 class="card-title">Request Tracker</h3>
+        <p class="tracker-subtitle">Track every request from generation through posting.</p>
+        <div id="tracker-list" class="tracker-list">
+          <p class="empty-state">No active requests. Generate videos from the Dashboard.</p>
+        </div>
+      </div>
+    </section>
+
     <!-- Approval Queue View -->
     <section class="view" id="view-approval">
       <div class="card">
@@ -180,6 +201,27 @@
         </div>
         <div id="queue-list" class="queue-list">
           <p class="empty-state">Queue is empty. Generate videos from the Dashboard.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Approved Videos View -->
+    <section class="view" id="view-approved">
+      <div class="card">
+        <h3 class="card-title">Approved Videos</h3>
+        <div id="approved-list" class="approved-grid">
+          <p class="empty-state">No approved videos yet.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Spend Tracker View -->
+    <section class="view" id="view-spend">
+      <div class="card">
+        <h3 class="card-title">Spend Tracker</h3>
+        <div id="spend-summary" class="spend-summary"></div>
+        <div id="spend-table-wrap">
+          <p class="empty-state">No generation history yet.</p>
         </div>
       </div>
     </section>

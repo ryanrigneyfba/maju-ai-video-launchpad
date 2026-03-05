@@ -64,7 +64,10 @@
   // ─── Navigation ───
   const viewMap = {
     dashboard: 'view-dashboard',
+    tracker: 'view-tracker',
     approval: 'view-approval',
+    approved: 'view-approved',
+    spend: 'view-spend',
     scheduled: 'view-scheduled',
     analytics: 'view-analytics',
     'sop-wiki': 'view-sop-wiki',
@@ -80,7 +83,10 @@
     if (navEl) navEl.classList.add('active');
     const titles = {
       dashboard: 'Dashboard',
+      tracker: 'Request Tracker',
       approval: 'Approval Queue',
+      approved: 'Approved Videos',
+      spend: 'Spend Tracker',
       scheduled: 'Scheduled Posts',
       analytics: 'Analytics',
       'sop-wiki': 'SOP Wiki',
@@ -91,6 +97,10 @@
     if (name === 'analytics' && typeof loadAnalytics === 'function' && !analyticsLoaded) {
       loadAnalytics();
     }
+    // Refresh views when navigating to them
+    if (name === 'tracker') renderTracker();
+    if (name === 'approved') renderApprovedVideos();
+    if (name === 'spend') renderSpendTracker();
   }
 
   $$('.nav-btn').forEach((btn) =>
@@ -274,6 +284,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
 
     saveQueue();
     renderQueue();
+    renderTracker();
     renderActivity();
     updateBadge();
     showPipeline();
@@ -498,17 +509,20 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       newItems.forEach(item => { item.pipelineStage = 'queue'; });
       saveQueue();
       renderQueue();
+      renderTracker();
       updateBadge();
       setStage(2, '✓ Pipeline complete — video ready for approval.');
     } else if (completedVideos.length > 0) {
       // Segments rendered but stitch failed — keep in generate stage for retry, don't pollute approval queue
       msg.textContent = '⚠️ Stitch failed — video not sent to approval. Check backend and retry.';
+      renderTracker();
       setStage(2, '⚠️ Stitch failed — not queued for approval.');
     } else {
       // Nothing rendered at all
       newItems.forEach(item => { item.pipelineStage = 'queue'; item.status = 'failed'; });
       saveQueue();
       renderQueue();
+      renderTracker();
       updateBadge();
       setStage(2, '⚠️ No videos generated — check Higgsfield API key and retry.');
     }
@@ -622,6 +636,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
 
       saveQueue();
       renderQueue(getActiveFilter());
+      renderTracker();
       renderActivity();
       updateBadge();
 
@@ -675,6 +690,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
 
       saveQueue();
       renderQueue(getActiveFilter());
+      renderTracker();
       renderActivity();
       updateBadge();
 
@@ -727,6 +743,193 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     const badge = $('#queue-badge');
     badge.textContent = pending;
     badge.style.display = pending > 0 ? '' : 'none';
+
+    // Tracker badge: count of all active (non-posted, non-failed) items
+    const active = queue.filter(q => q.status !== 'failed' && q.pipelineStage !== 'post').length;
+    const trackerBadge = $('#tracker-badge');
+    if (trackerBadge) {
+      trackerBadge.textContent = active;
+      trackerBadge.style.display = active > 0 ? '' : 'none';
+    }
+  }
+
+  // ─── Request Tracker ───
+  const PIPELINE_STAGES = [
+    { key: 'generate', label: 'Generating', icon: '🎬' },
+    { key: 'stitch', label: 'Stitching', icon: '🧵' },
+    { key: 'queue', label: 'Awaiting Approval', icon: '⏳' },
+    { key: 'post', label: 'Posted', icon: '✅' },
+  ];
+
+  function getStageIndex(item) {
+    if (item.status === 'approved' && item.pipelineStage === 'post') return 3;
+    const idx = PIPELINE_STAGES.findIndex(s => s.key === item.pipelineStage);
+    return idx >= 0 ? idx : 0;
+  }
+
+  function renderTracker() {
+    const list = $('#tracker-list');
+    if (!list) return;
+
+    if (!queue.length) {
+      list.innerHTML = '<p class="empty-state">No active requests. Generate videos from the Dashboard.</p>';
+      return;
+    }
+
+    // Sort: active items first (generate, stitch, queue), then completed (post)
+    const sorted = [...queue].sort((a, b) => {
+      const aIdx = getStageIndex(a);
+      const bIdx = getStageIndex(b);
+      if (aIdx === bIdx) return new Date(b.createdAt) - new Date(a.createdAt);
+      return aIdx - bIdx;
+    });
+
+    list.innerHTML = sorted.map(item => {
+      const currentStage = getStageIndex(item);
+      const isRevision = item.status === 'revision';
+      const isFailed = item.status === 'failed';
+
+      const stagesHtml = PIPELINE_STAGES.map((stage, idx) => {
+        let cls = 'tracker-stage';
+        if (idx < currentStage) cls += ' completed';
+        else if (idx === currentStage) cls += ' active';
+        if (isFailed && idx === currentStage) cls += ' failed';
+        if (isRevision && idx === 0) cls += ' revision';
+        return `<div class="${cls}">
+          <div class="tracker-stage-dot">${idx < currentStage ? '✓' : stage.icon}</div>
+          <div class="tracker-stage-label">${stage.label}</div>
+        </div>`;
+      }).join('<div class="tracker-stage-connector"></div>');
+
+      const progressPct = Math.round(((currentStage + (currentStage < 3 ? 0.5 : 1)) / PIPELINE_STAGES.length) * 100);
+
+      return `<div class="tracker-item ${isFailed ? 'tracker-failed' : ''} ${isRevision ? 'tracker-revision' : ''}">
+        <div class="tracker-header">
+          <div class="tracker-title">
+            <strong>${item.typeName || 'Video'} — v${item.version}/${item.totalVersions}</strong>
+            <span class="tracker-meta">${item.productName} · ${item.avatarName}</span>
+          </div>
+          <div class="tracker-progress-badge">${isFailed ? 'Failed' : isRevision ? 'In Revision' : progressPct + '%'}</div>
+        </div>
+        <div class="tracker-pipeline">${stagesHtml}</div>
+        <div class="tracker-footer">
+          <span class="tracker-meta">Created ${formatDate(item.createdAt)}</span>
+          ${item.postMode === 'asap' ? '<span class="tracker-meta">Post ASAP</span>' : `<span class="tracker-meta">Scheduled: ${formatDate(item.schedDate)}</span>`}
+          ${(item.revisionCount || 0) > 0 ? `<span class="tracker-meta tracker-rev-count">Revision ${item.revisionCount}</span>` : ''}
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // ─── Approved Videos ───
+  function renderApprovedVideos() {
+    const list = $('#approved-list');
+    if (!list) return;
+
+    const approved = queue.filter(q => q.status === 'approved');
+    if (!approved.length) {
+      list.innerHTML = '<p class="empty-state">No approved videos yet.</p>';
+      return;
+    }
+
+    // Most recently approved first
+    const sorted = [...approved].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    list.innerHTML = sorted.map(item => {
+      const videoSrc = item.stitchedVideoUrl || item.videoUrl;
+      return `<div class="approved-card">
+        ${videoSrc ? `<video src="${videoSrc}" controls preload="metadata" playsinline></video>` : '<div class="queue-video-placeholder" style="height:180px"><span>No video</span></div>'}
+        <div class="approved-card-info">
+          <h4>${item.typeName || 'Video'} — v${item.version}</h4>
+          <p>${item.productName} · ${item.avatarName}</p>
+          <p>${formatDate(item.createdAt)}</p>
+          ${item.postMode === 'asap' ? '<p>Post ASAP</p>' : `<p>Scheduled: ${formatDate(item.schedDate)}</p>`}
+          ${item.metricoolId ? '<p style="color:var(--success)">Posted to Metricool</p>' : ''}
+          ${(item.approvalNotes || []).map(n => `<div class="approved-card-notes">${n}</div>`).join('')}
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // ─── Spend Tracker ───
+  // Higgsfield pricing estimates (per API call)
+  const COST_ESTIMATES = {
+    seedream_image: 0.03,    // V2 Seedream image generation
+    dop_video: 0.10,         // V1 DoP video animation (per segment)
+    dop_turbo: 0.10,
+    'dop-turbo': 0.10,
+    'dop-lite': 0.05,
+    'dop-preview': 0.08,
+  };
+
+  function renderSpendTracker() {
+    const summaryEl = $('#spend-summary');
+    const tableEl = $('#spend-table-wrap');
+    if (!summaryEl || !tableEl) return;
+
+    // Build spend log from queue items
+    const spendRows = [];
+    for (const item of queue) {
+      const segments = (item.aiPrompt && item.aiPrompt.segments) || DEFAULT_SEGMENT_PROMPTS;
+      const segCount = item.segmentVideos ? item.segmentVideos.length : 0;
+      const imageCount = segCount > 0 ? segments.length : 0; // images attempted = total segments
+      const videoCount = segCount;
+      const model = (segments[0] && segments[0].model) || 'dop-turbo';
+      const imageCost = imageCount * COST_ESTIMATES.seedream_image;
+      const videoCost = videoCount * (COST_ESTIMATES[model] || COST_ESTIMATES.dop_video);
+      const totalCost = imageCost + videoCost;
+
+      spendRows.push({
+        id: item.id,
+        date: item.createdAt,
+        name: `${item.typeName || 'Video'} — v${item.version}`,
+        product: item.productName,
+        images: imageCount,
+        videos: videoCount,
+        model: model,
+        imageCost,
+        videoCost,
+        totalCost,
+        status: item.status,
+      });
+    }
+
+    if (!spendRows.length) {
+      summaryEl.innerHTML = '';
+      tableEl.innerHTML = '<p class="empty-state">No generation history yet.</p>';
+      return;
+    }
+
+    // Sort by date descending
+    spendRows.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    const totalSpend = spendRows.reduce((s, r) => s + r.totalCost, 0);
+    const totalImages = spendRows.reduce((s, r) => s + r.images, 0);
+    const totalVideos = spendRows.reduce((s, r) => s + r.videos, 0);
+    const totalRequests = spendRows.length;
+
+    summaryEl.innerHTML = `
+      <div class="spend-stat"><div class="stat-value">$${totalSpend.toFixed(2)}</div><div class="stat-label">Est. Total Spend</div></div>
+      <div class="spend-stat"><div class="stat-value">${totalRequests}</div><div class="stat-label">Requests</div></div>
+      <div class="spend-stat"><div class="stat-value">${totalImages}</div><div class="stat-label">Images Generated</div></div>
+      <div class="spend-stat"><div class="stat-value">${totalVideos}</div><div class="stat-label">Videos Rendered</div></div>
+    `;
+
+    tableEl.innerHTML = `<table class="spend-table">
+      <thead><tr>
+        <th>Date</th><th>Request</th><th>Product</th><th>Images</th><th>Videos</th><th>Model</th><th>Est. Cost</th><th>Status</th>
+      </tr></thead>
+      <tbody>${spendRows.map(r => `<tr>
+        <td class="spend-date">${formatDate(r.date)}</td>
+        <td>${r.name}</td>
+        <td>${r.product || '—'}</td>
+        <td>${r.images}</td>
+        <td>${r.videos}</td>
+        <td>${r.model}</td>
+        <td class="spend-amount">$${r.totalCost.toFixed(2)}</td>
+        <td>${r.status}</td>
+      </tr>`).join('')}</tbody>
+    </table>`;
   }
 
   // ─── Scheduled Posts (Metricool) ───
@@ -1489,6 +1692,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     checkBackendStatus();
   });
   renderQueue();
+  renderTracker();
   renderActivity();
   updateBadge();
   renderScheduledPosts();

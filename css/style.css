@@ -174,6 +174,55 @@ code{background:var(--bg-input);padding:1px 5px;border-radius:4px;font-size:.8re
 .approval-notes{font-size:.78rem;color:var(--accent);margin-top:.3rem;font-style:italic;border-left:2px solid var(--accent);padding-left:.5rem}
 .ai-prompt{font-size:.78rem;color:#4ade80;margin-top:.4rem;border-left:2px solid #4ade80;padding-left:.5rem;background:rgba(74,222,128,.05);padding:.4rem .5rem;border-radius:0 4px 4px 0}
 
+/* ── Request Tracker ── */
+.tracker-subtitle{font-size:.82rem;color:var(--text-dim);margin-bottom:1rem}
+.tracker-list{display:flex;flex-direction:column;gap:.75rem}
+.tracker-item{background:var(--bg-input);border-radius:var(--radius);padding:1rem;border-left:3px solid var(--accent)}
+.tracker-item.tracker-failed{border-left-color:var(--danger);opacity:.6}
+.tracker-item.tracker-revision{border-left-color:var(--revision)}
+.tracker-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.75rem}
+.tracker-title{display:flex;flex-direction:column;gap:.15rem}
+.tracker-title strong{font-size:.9rem}
+.tracker-meta{font-size:.72rem;color:var(--text-dim)}
+.tracker-progress-badge{font-size:.72rem;font-weight:600;padding:.2rem .6rem;border-radius:10px;background:var(--accent);color:#fff;white-space:nowrap}
+.tracker-failed .tracker-progress-badge{background:var(--danger)}
+.tracker-revision .tracker-progress-badge{background:var(--revision)}
+.tracker-pipeline{display:flex;align-items:center;gap:0;margin-bottom:.6rem}
+.tracker-stage{display:flex;flex-direction:column;align-items:center;flex:1;gap:.3rem}
+.tracker-stage-dot{width:32px;height:32px;border-radius:50%;background:var(--bg-card);border:2px solid var(--text-dim);display:flex;align-items:center;justify-content:center;font-size:.75rem;transition:all .3s}
+.tracker-stage.completed .tracker-stage-dot{background:var(--success);border-color:var(--success);color:#fff;font-size:.7rem}
+.tracker-stage.active .tracker-stage-dot{border-color:var(--accent);background:var(--accent);color:#fff;animation:pulse 1.5s infinite}
+.tracker-stage.failed .tracker-stage-dot{border-color:var(--danger);background:var(--danger);color:#fff}
+.tracker-stage.revision .tracker-stage-dot{border-color:var(--revision);background:var(--revision);color:#fff}
+.tracker-stage-label{font-size:.65rem;color:var(--text-dim);text-align:center;white-space:nowrap}
+.tracker-stage.active .tracker-stage-label{color:var(--accent);font-weight:600}
+.tracker-stage.completed .tracker-stage-label{color:var(--success)}
+.tracker-stage-connector{flex:0 0 auto;width:24px;height:2px;background:var(--text-dim);margin-bottom:1.2rem}
+.tracker-stage.completed+.tracker-stage-connector{background:var(--success)}
+.tracker-footer{display:flex;gap:1rem;flex-wrap:wrap}
+.tracker-rev-count{color:var(--revision);font-weight:600}
+
+/* ── Approved Videos ── */
+.approved-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:1rem}
+.approved-card{background:var(--bg-input);border-radius:var(--radius);overflow:hidden;border:1px solid rgba(255,255,255,.06)}
+.approved-card video{width:100%;max-height:320px;object-fit:contain;background:#000}
+.approved-card-info{padding:.75rem}
+.approved-card-info h4{font-size:.85rem;margin-bottom:.25rem}
+.approved-card-info p{font-size:.72rem;color:var(--text-dim);margin-bottom:.15rem}
+.approved-card-notes{font-size:.72rem;color:var(--accent);font-style:italic;margin-top:.3rem;border-left:2px solid var(--accent);padding-left:.4rem}
+
+/* ── Spend Tracker ── */
+.spend-summary{display:flex;gap:1rem;margin-bottom:1.25rem;flex-wrap:wrap}
+.spend-stat{background:var(--bg-input);border-radius:var(--radius);padding:.75rem 1rem;flex:1;min-width:140px;text-align:center}
+.spend-stat .stat-value{font-size:1.4rem;font-weight:700;color:var(--accent)}
+.spend-stat .stat-label{font-size:.72rem;color:var(--text-dim);margin-top:.15rem}
+.spend-table{width:100%;border-collapse:collapse;font-size:.82rem}
+.spend-table th{text-align:left;padding:.6rem .75rem;border-bottom:1px solid rgba(255,255,255,.1);color:var(--text-dim);font-weight:500;font-size:.72rem;text-transform:uppercase}
+.spend-table td{padding:.6rem .75rem;border-bottom:1px solid rgba(255,255,255,.04)}
+.spend-table tr:hover td{background:rgba(255,255,255,.02)}
+.spend-date{color:var(--text-dim);white-space:nowrap}
+.spend-amount{font-weight:600;color:var(--accent)}
+
 /* ── Scheduled Posts ── */
 .api-status{
   display:flex;align-items:center;gap:.5rem;
