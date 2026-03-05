@@ -70,14 +70,15 @@ jobs:
       - name: Deploy to App Runner
         env:
           ECR_REGISTRY: ${{ steps.ecr-login.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
         run: |
           ROLE_ARN=$(aws iam get-role --role-name AppRunnerECRAccessRole --query 'Role.Arn' --output text)
-          IMAGE_URI="${ECR_REGISTRY}/${ECR_REPO}:latest"
+          IMAGE_URI="${ECR_REGISTRY}/${ECR_REPO}:${IMAGE_TAG}"
 
           EXISTING=$(aws apprunner list-services --query "ServiceSummaryList[?ServiceName=='${APP_RUNNER_SERVICE}'].ServiceArn" --output text 2>/dev/null || echo "")
 
           if [ -n "$EXISTING" ] && [ "$EXISTING" != "None" ]; then
-            echo "Updating existing App Runner service..."
+            echo "Updating App Runner service with image ${IMAGE_URI}..."
             aws apprunner update-service \
               --service-arn "$EXISTING" \
               --source-configuration "{
@@ -88,6 +89,16 @@ jobs:
                   \"ImageConfiguration\": {\"Port\": \"3001\"}
                 }
               }"
+            # Wait for the deployment to start
+            echo "Waiting for deployment to begin..."
+            sleep 10
+            # Wait for service to become active (up to 5 min)
+            for i in $(seq 1 30); do
+              STATUS=$(aws apprunner describe-service --service-arn "$EXISTING" --query 'Service.Status' --output text)
+              echo "  Service status: $STATUS (attempt $i/30)"
+              if [ "$STATUS" = "RUNNING" ]; then break; fi
+              sleep 10
+            done
             SERVICE_URL=$(aws apprunner describe-service --service-arn "$EXISTING" --query 'Service.ServiceUrl' --output text)
           else
             echo "Creating new App Runner service..."
