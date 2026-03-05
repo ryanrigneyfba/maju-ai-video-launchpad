@@ -130,21 +130,22 @@ app.get('/api/debug/higgsfield-endpoints', async (req, res) => {
   const v1Body = { params: { prompt: 'A black seed oil bottle', aspect_ratio: '9:16', duration: 5 } };
 
   const tests = [
-    // ── Test auth on known endpoint (bytedance/seedream from SDK docs) ──
+    // ── THEORY: SDK uses generic endpoint + model in body ──
+    { ep: '/text-to-video', method: 'POST', headers: v2Headers, body: { model: 'kling-v3.0-pro', prompt: 'test', aspect_ratio: '9:16', duration: 5 }, label: 'Generic: /text-to-video + model body' },
+    { ep: '/v1/text-to-video', method: 'POST', headers: v2Headers, body: { model: 'kling-v3.0-pro', prompt: 'test', aspect_ratio: '9:16', duration: 5 }, label: 'Generic: /v1/text-to-video + model body' },
+    { ep: '/text-to-image', method: 'POST', headers: v2Headers, body: { model: 'bytedance/seedream/v4', prompt: 'test' }, label: 'Generic: /text-to-image + model body' },
+    { ep: '/v1/text-to-image', method: 'POST', headers: v2Headers, body: { model: 'bytedance/seedream/v4', prompt: 'test' }, label: 'Generic: /v1/text-to-image + model body' },
+    // ── THEORY: OpenAI-compatible /v1/generations pattern ──
+    { ep: '/v1/generations', method: 'POST', headers: v2Headers, body: { model: 'kling-v3.0-pro', prompt: 'test' }, label: 'Generic: /v1/generations' },
+    { ep: '/generations', method: 'POST', headers: v2Headers, body: { model: 'kling-v3.0-pro', prompt: 'test' }, label: 'Generic: /generations' },
+    // ── Auth test on known path-based endpoint ──
     { ep: '/bytedance/seedream/v4/text-to-image', method: 'POST', headers: v2Headers, body: { prompt: 'test' }, label: 'Auth:Key - seedream' },
-    { ep: '/bytedance/seedream/v4/text-to-image', method: 'POST', headers: bearerHeaders, body: { prompt: 'test' }, label: 'Auth:Bearer(full) - seedream' },
-    { ep: '/bytedance/seedream/v4/text-to-image', method: 'POST', headers: bearerIdHeaders, body: { prompt: 'test' }, label: 'Auth:Bearer(id) - seedream' },
-    { ep: '/bytedance/seedream/v4/text-to-image', method: 'POST', headers: v1Headers, body: { prompt: 'test' }, label: 'Auth:V1headers - seedream' },
-    // ── V2 Kling endpoints (flat names from Open-Higgsfield) ──
-    { ep: '/kling-v3.0-pro-text-to-video', method: 'POST', headers: v2Headers, body: v2Body, label: 'V2: kling-v3.0-pro-t2v' },
-    { ep: '/nano-banana-pro', method: 'POST', headers: v2Headers, body: { prompt: 'test' }, label: 'V2: nano-banana-pro' },
-    // ── V1 legacy endpoints ──
-    { ep: '/v1/image2video/dop', method: 'POST', headers: v1Headers, body: v1Body, label: 'V1: image2video/dop' },
-    { ep: '/v1/text2image/soul', method: 'POST', headers: v1Headers, body: v1Body, label: 'V1: text2image/soul' },
-    // ── Discovery: POST instead of GET (405 = method not allowed on GET) ──
+    { ep: '/bytedance/seedream/v4/text-to-image', method: 'POST', headers: bearerHeaders, body: { prompt: 'test' }, label: 'Auth:Bearer - seedream' },
+    // ── Path-based Kling endpoints ──
+    { ep: '/kling-v3.0-pro-text-to-video', method: 'POST', headers: v2Headers, body: v2Body, label: 'Path: kling-v3.0-pro-t2v' },
+    // ── Discovery: try POST (405 on GET) ──
     { ep: '/v1/models', method: 'POST', headers: v2Headers, body: {}, label: 'Discovery POST: /v1/models' },
     { ep: '/models', method: 'POST', headers: v2Headers, body: {}, label: 'Discovery POST: /models' },
-    { ep: '/schemas', method: 'POST', headers: v2Headers, body: {}, label: 'Discovery POST: /schemas' },
     { ep: '/applications', method: 'POST', headers: v2Headers, body: {}, label: 'Discovery POST: /applications' },
   ];
 
