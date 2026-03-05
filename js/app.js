@@ -362,13 +362,17 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
   async function generateSegmentImage(seg, segLabel, itemVersion) {
     if (seg.image_url) return seg.image_url;
     const imgResult = await API.higgsfield.generateImage({ prompt: seg.prompt, aspect_ratio: '9:16' });
+    console.log(`[Pipeline] Image submit for ${segLabel}:`, imgResult.ok, 'id:', imgResult.id);
     if (!imgResult.ok || !imgResult.id) return null;
     for (let attempt = 0; attempt < 60; attempt++) {
       await new Promise(r => setTimeout(r, 2000));
       const imgStatus = await API.higgsfield.getImageStatus(imgResult.id);
-      if (imgStatus.status === 'completed' || imgStatus.status === 'done') return imgStatus.url;
-      if (imgStatus.status === 'failed' || imgStatus.status === 'error') return null;
+      const st = (imgStatus.status || '').toLowerCase();
+      if (attempt % 5 === 0) console.log(`[Pipeline] ${segLabel} poll #${attempt}: status=${st}`);
+      if (st === 'completed' || st === 'done') return imgStatus.url;
+      if (st === 'failed' || st === 'error' || st === 'nsfw' || st === 'cancelled') return null;
     }
+    console.warn(`[Pipeline] ${segLabel} timed out after 120s`);
     return null; // timed out
   }
 
@@ -464,7 +468,8 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
         allSegmentVideos.push(...segmentResults.map(s => ({ url: s.url, label: `${item.typeName} - ${s.label}` })));
         msg.textContent = `v${item.version}: ${segmentResults.length}/${segments.length} segments rendered!`;
       } else {
-        item.pipelineStage = 'queue';
+        item.pipelineStage = 'failed';
+        item.status = 'failed';
         msg.textContent = `⚠️ v${item.version}: No segments rendered successfully.`;
       }
       saveQueue();
@@ -528,10 +533,9 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       renderTracker();
       setStage(2, '⚠️ Stitch failed — not queued for approval.');
     } else {
-      // Nothing rendered at all
-      newItems.forEach(item => { item.pipelineStage = 'queue'; item.status = 'failed'; });
+      // Nothing rendered at all — keep in generate stage so they don't pollute approval queue
+      newItems.forEach(item => { item.pipelineStage = 'failed'; item.status = 'failed'; });
       saveQueue();
-      renderQueue();
       renderTracker();
       updateBadge();
       setStage(2, '⚠️ No videos generated — check Higgsfield API key and retry.');
@@ -1230,7 +1234,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
           // V1 DoP: jobs[0].status = queued | in_progress | completed | failed
           // Video URLs in jobs[0].results.raw.url / jobs[0].results.min.url
           const job = (data.jobs && data.jobs[0]) || {};
-          const jobStatus = job.status || data.status || 'unknown';
+          const jobStatus = (job.status || data.status || 'unknown').toLowerCase();
           const videoUrl = (job.results && (job.results.raw?.url || job.results.min?.url)) || data.video_url || data.url;
           return {
             ok: res.ok,
@@ -1253,10 +1257,12 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
           });
           const data = await res.json();
           // V2 returns: { status, output: { images: [{ url }] } }
+          // Higgsfield API returns title-case statuses: Queued, InProgress, Completed, Failed, NSFW, Cancelled
           const imageUrl = (data.output && data.output.images && data.output.images[0]?.url) || data.url;
+          const normalizedStatus = (data.status || '').toLowerCase();
           return {
             ok: res.ok,
-            status: data.status === 'completed' || data.status === 'COMPLETED' ? 'completed' : data.status,
+            status: normalizedStatus,
             url: imageUrl,
             ...data,
           };
