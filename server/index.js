@@ -121,28 +121,29 @@ async function runHiggsDebugTests(apiKey) {
   const keyInfo = { length: apiKey.length, hasColon: apiKey.includes(':'), keyIdLength: keyId.length, keySecretLength: keySecret.length };
   const h = { 'Authorization': `Key ${apiKey}`, 'Content-Type': 'application/json' };
   const b = { prompt: 'test', aspect_ratio: '9:16', duration: 5 };
+  // V1 auth: hf-api-key (UUID) + hf-secret as separate headers
+  const v1h = { 'hf-api-key': keyId, 'hf-secret': keySecret, 'Content-Type': 'application/json' };
+  // V1 DoP body formats
+  const dopI2v = { params: { prompt: 'A bottle rotating slowly', input_images: ['https://placehold.co/512x512.png'], aspect_ratio: '9:16', duration: 5, model: 'dop-turbo' } };
+  const dopT2v = { params: { prompt: 'A bottle rotating slowly', aspect_ratio: '9:16', duration: 5, model: 'dop-turbo' } };
   const tests = [
-    { ep: '/bytedance/seedream/v4/text-to-image', method: 'POST', headers: h, body: { prompt: 'test' }, label: 'CONTROL: seedream' },
-    // Try fetching API docs / OpenAPI spec
+    // ── Controls ──
+    { ep: '/bytedance/seedream/v4/text-to-image', method: 'POST', headers: h, body: { prompt: 'test' }, label: 'CONTROL V2: seedream (200?)' },
+    { ep: '/v1/motions', method: 'GET', headers: v1h, body: undefined, label: 'CONTROL V1: motions list' },
+    // ── V1 DoP image-to-video (known endpoint, with image) ──
+    { ep: '/v1/image2video/dop', method: 'POST', headers: v1h, body: dopI2v, label: 'V1: i2v/dop (with img)' },
+    // ── V1 DoP image-to-video without image (maybe falls back to t2v?) ──
+    { ep: '/v1/image2video/dop', method: 'POST', headers: v1h, body: dopT2v, label: 'V1: i2v/dop (no img)' },
+    // ── V1 text-to-video variants ──
+    { ep: '/v1/text2video/dop', method: 'POST', headers: v1h, body: dopT2v, label: 'V1: text2video/dop' },
+    { ep: '/v1/text-to-video/dop', method: 'POST', headers: v1h, body: dopT2v, label: 'V1: text-to-video/dop' },
+    { ep: '/v1/video/dop', method: 'POST', headers: v1h, body: dopT2v, label: 'V1: video/dop' },
+    { ep: '/v1/generate/dop', method: 'POST', headers: v1h, body: dopT2v, label: 'V1: generate/dop' },
+    // ── API docs ──
     { ep: '/docs', method: 'GET', headers: h, body: undefined, label: 'DOCS: /docs' },
     { ep: '/openapi.json', method: 'GET', headers: h, body: undefined, label: 'DOCS: /openapi.json' },
-    // flux-pro style: model-family/sub/variant/task
-    { ep: '/kling/3.0/pro/text-to-video', method: 'POST', headers: h, body: b, label: 'kling/3.0/pro/t2v' },
-    { ep: '/kling/3.0/standard/text-to-video', method: 'POST', headers: h, body: b, label: 'kling/3.0/std/t2v' },
-    // Flat with dashes
-    { ep: '/kling-3.0-pro/text-to-video', method: 'POST', headers: h, body: b, label: 'kling-3.0-pro/t2v' },
-    { ep: '/kling-3.0/text-to-video', method: 'POST', headers: h, body: b, label: 'kling-3.0/t2v' },
-    // Maybe "video" not "text-to-video"
-    { ep: '/kling/3.0/pro/video', method: 'POST', headers: h, body: b, label: 'kling/3.0/pro/video' },
-    { ep: '/kling/v3.0/video', method: 'POST', headers: h, body: b, label: 'kling/v3.0/video' },
-    // V1 with V2 auth (UUID key works for both)
-    { ep: '/v1/text2video/kling', method: 'POST', headers: h, body: b, label: 'v1/text2video/kling' },
-    // Other known models to confirm pattern
-    { ep: '/flux-pro/kontext/max/text-to-image', method: 'POST', headers: h, body: { prompt: 'test' }, label: 'REF: flux-pro/kontext/max' },
-    { ep: '/wan/2.5/text-to-video', method: 'POST', headers: h, body: b, label: 'wan/2.5/t2v' },
-    { ep: '/wan-ai/2.5/text-to-video', method: 'POST', headers: h, body: b, label: 'wan-ai/2.5/t2v' },
-    { ep: '/veo/3.1/text-to-video', method: 'POST', headers: h, body: b, label: 'veo/3.1/t2v' },
-    { ep: '/google/veo/3.1/text-to-video', method: 'POST', headers: h, body: b, label: 'google/veo/3.1/t2v' },
+    // ── Other V2 models for pattern discovery ──
+    { ep: '/flux-pro/kontext/max/text-to-image', method: 'POST', headers: h, body: { prompt: 'test' }, label: 'V2: flux-pro/kontext/max' },
   ];
   const results = [];
   for (const t of tests) {
