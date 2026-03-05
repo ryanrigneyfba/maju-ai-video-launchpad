@@ -1,0 +1,1650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Stay Viral Master Tracker</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <sty
+        * { font-family: 'Inter', sans-serif; }
+
+        /* Grid background pattern */
+        .grid-bg {
+            background-image
+                linear-gradient(rgba(6, 182, 212, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(6, 182, 212, 0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+        }
+
+        /* Card glow effect */
+        .card-glow {
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(15, 23, 42, 0.7) 100%);
+            border: 1px solid rgba(6, 182, 212, 0.15);
+            box-shadow: 0 0 40px rgba(6, 182, 212, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+        }
+
+        .card-glow:hover {
+            border-color: rgba(6, 182, 212, 0.3);
+            box-shadow: 0 0 60px rgba(6, 182, 212, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+        }
+
+        /* Skeleton loading animation */
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+
+        .skeleton {
+            background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.03) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 8px;
+        }
+
+        /* Fade in animation */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+
+        .fade-in-delay-1 { animation-delay: 0.1s; opacity: 0; }
+        .fade-in-delay-2 { animation-delay: 0.2s; opacity: 0; }
+        .fade-in-delay-3 { animation-delay: 0.3s; opacity: 0; }
+        .fade-in-delay-4 { animation-delay: 0.4s; opacity: 0; }
+        .fade-in-delay-5 { animation-delay: 0.5s; opacity: 0; }
+
+        /* Pulse animation for sync */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .pulse { animation: pulse 2s infinite; }
+
+        /* Number counter animation */
+        @keyframes countUp {
+            from { opacity: 0; transform: scale(0.8); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .count-up {
+            animation: countUp 0.6s ease-out forwards;
+        }
+
+        /* Gradient text */
+        .gradient-text {
+            background: linear-gradient(135deg, #06B6D4 0%, #3B82F6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Button styles */
+        .btn-primary {
+            background: linear-gradient(135deg, #06B6D4 0%, #3B82F6 100%);
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 40px rgba(6, 182, 212, 0.3);
+        }
+
+        /* Range button active state */
+        .range-active {
+            background: linear-gradient(135deg, #06B6D4 0%, #3B82F6 100%);
+            box-shadow: 0 4px 20px rgba(6, 182, 212, 0.4);
+        }
+
+        /* Input focus effect */
+        input:focus {
+            box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.3);
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); }
+        ::-webkit-scrollbar-thumb { background: rgba(6, 182, 212, 0.3); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(6, 182, 212, 0.5); }
+
+        /* Table row hover */
+        .table-row:hover { background: rgba(6, 182, 212, 0.05); }
+    </style>
+</head>
+<body class="bg-black">
+    <div id="root"></div>
+    <script type="text/babel">
+    const {useState, useEffect, useMemo, useCallback} = React;
+
+    // Data URLs
+    const DATA_START_DATE = "2026-01-28"; // Only show data from this date onwards
+    const JSON_URL = "https://raw.githubusercontent.com/ryanrigneyfba/kajabi-tracker/main/transactions.json";
+    const SHEET_ID = "1Bs7p1scYs5ZZXio-qdy88BEPEjMeU5Lc7eXiq2ePT5U";
+    const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
+    const TIKTOK_EXPENSES_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=513847686`;
+    const BOOKED_CALLS_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=691644011`;
+    const FIXED_COSTS_SHEET_ID = "1qb2IIRUTta5ywuTqLLX-2GmLCmtzf7-1cyt0jhStd8U";
+    const FIXED_COSTS_URL = `https://docs.google.com/spreadsheets/d/${FIXED_COSTS_SHEET_ID}/gviz/tq?tqx=out:csv&gid=266077976`;
+    const GA4_SESSIONS_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=240030115`;
+    const REFRESH_INTERVAL = 15 * 60 * 1000;
+    const AGENCY_DATA_URL = "https://raw.githubusercontent.com/ryanrigneyfba/kajabi-tracker/main/agency-data.json";
+    // Distribution payouts from Google Sheet (fallback/supplement for API data)
+    // Add a tab called "Distribution Payouts" in your spreadsheet with columns: date, amount, type, notes
+    const DIST_PAYOUTS_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=0&sheet=Distribution+Payouts`;
+    // Whop API for payment tracking
+    const WHOP_API_KEY = "apik_YssJbpRSTvGQF_C74476_C_f21366dc9d72334bb0a94d62f4f731b9462bda30bdb04b49098f4ce797aa60";
+    const WHOP_API_URL = "https://api.whop.com/api/v5/company/payments";
+    const WHOP_DATA_URL = "https://raw.githubusercontent.com/ryanrigneyfba/kajabi-tracker/main/whop-payments.json";
+
+    // Skeleton Component
+    const Skeleton = ({className}) => (
+        <div className={`skeleton ${className}`}></div>
+    );
+
+    // Animated Number Component
+    const AnimatedNumber = ({value, prefix = "", suffix = "", decimals = 0}) => {
+        const [displayed, setDisplayed] = useState(0);
+
+        useEffect(() => {
+            const duration = 800;
+            const steps = 30;
+            const increment = value / steps;
+            let current = 0;
+            const timer = setInterval(() => {
+                current += increment;
+                if (current >= value) {
+                    setDisplayed(value);
+                    clearInterval(timer);
+                } else {
+                    setDisplayed(current);
+                }
+            }, duration / steps);
+            return () => clearInterval(timer);
+        }, [value]);
+
+        return <span className="count-up">{prefix}{displayed.toLocaleString(undefined, {maximumFractionDigits: decimals})}{suffix}</span>;
+    };
+
+    // Icon Components
+    const Icons = {
+        revenue: () => (
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+        ),
+        sales: () => (
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+            </svg>
+        ),
+        calls: () => (
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+            </svg>
+        ),
+        chart: () => (
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+        ),
+        profit: () => (
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+            </svg>
+        ),
+        sync: () => (
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+        ),
+        sessions: () => (
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            </svg>
+        ),
+        tiktok: () => (
+            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.11v-3.5a6.37 6.37 0 00-.79-.05A6.34 6.34 0 003.15 15.2a6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.34-6.34V8.75a8.19 8.19 0 004.76 1.52v-3.4a4.85 4.85 0 01-1-.18z"/>
+            </svg>
+        ),
+        agency: () => (
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+        )
+    };
+
+    function App() {
+        const [auth, setAuth] = useState(false);
+        const [pw, setPw] = useState("");
+        const [err, setErr] = useState("");
+        const [range, setRange] = useState("today");
+        const [startDate, setStartDate] = useState("");
+        const [endDate, setEndDate] = useState("");
+        const [syncing, setSyncing] = useState(false);
+        const [initialLoad, setInitialLoad] = useState(true);
+        const [lastSync, setLastSync] = useState(null);
+        const [metaSpend, setMetaSpend] = useState(0);
+        const [tiktokExpenses, setTiktokExpenses] = useState([]);
+        const [googleSpend, setGoogleSpend] = useState(0);
+        const [sales, setSales] = useState([]);
+        const [bookedCalls, setBookedCalls] = useState([]);
+        const [fixedCosts, setFixedCosts] = useState([]);
+        const [ga4Sessions, setGa4Sessions] = useState([]);
+        const [loadError, setLoadError] = useState("");
+        const [agencyData, setAgencyData] = useState({analytics: {}, payouts: [], distribution_payouts: []});
+        const [activeTab, setActiveTab] = useState("dashboard");
+        const [distributionPayouts, setDistributionPayouts] = useState([]);
+        const [whopPayments, setWhopPayments] = useState([]);
+
+        useEffect(() => {
+            if(localStorage.getItem("kajabi_auth") === "true") setAuth(true);
+        }, []);
+
+        const getPSTDate = useCallback((date = new Date()) => {
+            const pstOffset = -8 * 60;
+            const utc = date.getTime() + (date.getTimezoneOffset() * 60000);
+            return new Date(utc + (pstOffset * 60000));
+        }, []);
+
+        const parseCSV = (csv) => {
+            const lines = csv.split('\n').filter(line => line.trim());
+            if (lines.length < 2) return [];
+            const headers = lines[0].split(',').map(h => h.replace(/"/g, '').trim().toLowerCase());
+            const rows = [];
+            for (let i = 1; i < lines.length; i++) {
+                const values = [];
+                let current = '';
+                let inQuotes = false;
+                for (let char of lines[i]) {
+                    if (char === '"') inQuotes = !inQuotes;
+                    else if (char === ',' && !inQuotes) { values.push(current.trim()); current = ''; }
+                    else { current += char; }
+                }
+                values.push(current.trim());
+                const row = {};
+                headers.forEach((h, idx) => row[h] = values[idx] || '');
+                rows.push(row);
+            }
+            return rows;
+        };
+
+        const loadData = useCallback(async () => {
+            setSyncing(true);
+            setLoadError("");
+            try {
+                const [jsonRes, sheetRes, bookedRes, tiktokExpensesRes, fixedCostsRes, ga4SessionsRes, agencyRes, distPayoutsRes, whopJsonRes] = await Promise.all([
+                    fetch(JSON_URL + "?t=" + Date.now()),
+                    fetch(SHEET_URL + "&t=" + Date.now()).catch(() => null),
+                    fetch(BOOKED_CALLS_URL + "&t=" + Date.now()).catch(() => null),
+                    fetch(TIKTOK_EXPENSES_URL + "&t=" + Date.now()).catch(() => null),
+                    fetch(FIXED_COSTS_URL + "&t=" + Date.now()).catch(() => null),
+                    fetch(GA4_SESSIONS_URL + "&t=" + Date.now()).catch(() => null),
+                    fetch(AGENCY_DATA_URL + "?t=" + Date.now()).catch(() => null),
+                    fetch(DIST_PAYOUTS_URL + "&t=" + Date.now()).catch(() => null),
+                    fetch(WHOP_DATA_URL + "?t=" + Date.now()).catch(() => null)
+                ]);
+
+                let historicalSales = [];
+                if (jsonRes.ok) {
+                    const jsonData = await jsonRes.json();
+                    historicalSales = jsonData.map((row, idx) => ({
+                        id: idx + 1, date: row.date || '', datetime: row.datetime || '',
+                        offer: row.offer || '', revenue: parseFloat(row.revenue) || 0,
+                        email: row.email || '', source: row.source || ''
+                    })).filter(s => s.date && s.revenue > 0 && s.date >= DATA_START_DATE);
+                }
+
+                let newSales = [];
+                if (sheetRes && sheetRes.ok) {
+                    const csv = await sheetRes.text();
+                    const sheetData = parseCSV(csv);
+                    newSales = sheetData.map((row, idx) => ({
+                        id: 10000 + idx, date: row.date || '', datetime: row.date || '',
+                        offer: row.offer || '', revenue: parseFloat(row.revenue) || 0,
+                        email: row['customer email'] || '', source: row.source || ''
+                    })).filter(s => s.date && s.revenue > 0 && s.date >= DATA_START_DATE);
+                }
+
+                const allSales = [...historicalSales, ...newSales];
+                const seen = new Set();
+                const uniqueSales = allSales.filter(s => {
+                    const key = `${s.email}-${s.datetime}-${s.revenue}`;
+                    if (seen.has(key)) return false;
+                    seen.add(key);
+                    return true;
+                });
+                uniqueSales.sort((a, b) => b.date.localeCompare(a.date));
+                setSales(uniqueSales);
+
+                if (bookedRes && bookedRes.ok) {
+                    const callsCsv = await bookedRes.text();
+                    const callsData = parseCSV(callsCsv);
+                    const calls = callsData.map((row, idx) => ({
+                        id: idx, date: row.date || '', name: row.name || '',
+                        email: row.email || '', eventType: row['event type'] || ''
+                    })).filter(c => {
+                        if (!c.date) return false;
+                        const dateStr = c.date.includes('T') ? c.date.split('T')[0] : c.date;
+                        return dateStr >= DATA_START_DATE;
+                    });
+                    setBookedCalls(calls);
+                }
+
+                if (tiktokExpensesRes && tiktokExpensesRes.ok) {
+                    const tiktokCsv = await tiktokExpensesRes.text();
+                    const tiktokData = parseCSV(tiktokCsv);
+                    const expenses = tiktokData.map((row, idx) => ({
+                        id: idx, date: row.date || '', amount: parseFloat(row.amount) || 0
+                    })).filter(e => {
+                        if (!e.date || e.amount <= 0) return false;
+                        // Handle MM/DD/YYYY format
+                        let dateStr = e.date;
+                        if (e.date.includes('/')) {
+                            const parts = e.date.split('/');
+                            dateStr = `${parts[2]}-${parts[0].padStart(2,'0')}-${parts[1].padStart(2,'0')}`;
+                        }
+                        return dateStr >= DATA_START_DATE;
+                    });
+                    setTiktokExpenses(expenses);
+                }
+
+                if (fixedCostsRes && fixedCostsRes.ok) {
+                    const fixedCsv = await fixedCostsRes.text();
+                    const fixedData = parseCSV(fixedCsv);
+                    const excludeCategories = ['TOTAL EXPENSES', 'AFFILIATE PAYOUTS (PROGRAM SALES)', 'SALES TEAM PAYOUTS', 'ADS SPEND'];
+                    const costs = fixedData
+                        .filter(row => row.category && !excludeCategories.includes(row.category.toUpperCase()))
+                        .map(row => ({ category: row.category || '', amount: parseFloat(row['total ($)']) || 0 }))
+                        .filter(c => c.category);
+                    setFixedCosts(costs);
+                }
+
+                if (ga4SessionsRes && ga4SessionsRes.ok) {
+                    const ga4Csv = await ga4SessionsRes.text();
+                    const lines = ga4Csv.split('\n');
+                    const sessions = [];
+                    const minValidDate = 20260128; // Only include data from Jan 28, 2026 onwards
+                    // Parse all lines looking for date pattern (8 digits starting with 202)
+                    for (let i = 0; i < lines.length; i++) {
+                        const line = lines[i].replace(/"/g, '').trim();
+                        if (!line) continue;
+                        const parts = line.split(',');
+                        if (parts.length >= 2) {
+                            const dateStr = String(parts[0]).trim();
+                            const sessCount = parseInt(parts[1]) || 0;
+                            // Check if it looks like a date (8 digits starting with 202) and is on/after Jan 28
+                            if (/^202\d{5}$/.test(dateStr) && sessCount > 0 && parseInt(dateStr) >= minValidDate) {
+                                const year = dateStr.substring(0, 4);
+                                const month = dateStr.substring(4, 6);
+                                const day = dateStr.substring(6, 8);
+                                sessions.push({
+                                    date: `${year}-${month}-${day}`,
+                                    sessions: sessCount
+                                });
+                            }
+                        }
+                    }
+                    setGa4Sessions(sessions);
+                }
+
+                if (agencyRes && agencyRes.ok) {
+                    const agencyJson = await agencyRes.json();
+                    const payouts = (agencyJson.payouts || []).sort((a, b) => b.date.localeCompare(a.date));
+                    const apiDistPayouts = (agencyJson.distribution_payouts || []).sort((a, b) => b.date.localeCompare(a.date));
+                    setAgencyData({
+                        analytics: agencyJson.analytics || {},
+                        payouts: payouts,
+                        distribution_payouts: apiDistPayouts
+                    });
+                }
+
+                // Load distribution payouts from Google Sheet (supplement/fallback)
+                if (distPayoutsRes && distPayoutsRes.ok) {
+                    const distCsv = await distPayoutsRes.text();
+                    const distData = parseCSV(distCsv);
+                    const sheetDistPayouts = distData.map((row, idx) => ({
+                        id: idx,
+                        date: row.date || '',
+                        amount: parseFloat(row.amount) || 0,
+                        type: row.type || 'distribution',
+                        notes: row.notes || ''
+                    })).filter(d => d.date && d.amount > 0);
+                    setDistributionPayouts(sheetDistPayouts);
+                }
+
+                // Load Whop payments data (from JSON file, updated by GitHub Action)
+                // Falls back to direct API call if JSON not available
+                let whopData = [];
+                if (whopJsonRes && whopJsonRes.ok) {
+                    try {
+                        whopData = await whopJsonRes.json();
+                    } catch(e) { console.warn("Whop JSON parse error:", e); }
+                }
+                if (whopData.length === 0 && WHOP_API_KEY) {
+                    try {
+                        const whopRes = await fetch(WHOP_API_URL + "?per=50", {
+                            headers: { "Authorization": "Bearer " + WHOP_API_KEY }
+                        }).catch(() => null);
+                        if (whopRes && whopRes.ok) {
+                            const whopJson = await whopRes.json();
+                            whopData = (whopJson.data || whopJson.pagination?.data || whopJson || []);
+                        }
+                    } catch(e) { console.warn("Whop API error (CORS may block client-side):", e); }
+                }
+                const processedWhop = (Array.isArray(whopData) ? whopData : []).filter(p => p.status === 'paid' && p.final_amount > 0).map((p, idx) => ({
+                    id: p.id || `whop-${idx}`,
+                    date: (() => { const ts = p.paid_at || p.created_at; if (!ts) return ''; if (typeof ts === 'number') return new Date(ts * 1000).toISOString().split('T')[0]; return String(ts).split('T')[0]; })(),
+                    amount: (parseFloat(p.final_amount || p.subtotal || p.amount || 0)), // Whop amounts are in dollars
+                    status: p.status || 'unknown',
+                    product: p.product?.title || p.product_id || '',
+                    user: p.user?.username || p.user?.email || p.user_id || '',
+                    currency: p.currency || 'usd',
+                    refunded: parseFloat(p.refunded_amount || 0)
+                })).filter(p => p.date && p.amount > 0);
+                setWhopPayments(processedWhop);
+
+                setLastSync(new Date().toLocaleTimeString());
+                setInitialLoad(false);
+            } catch (err) {
+                console.error("Load error:", err);
+            } finally {
+                setSyncing(false);
+            }
+        }, []);
+
+        useEffect(() => {
+            if (auth) {
+                loadData();
+                const interval = setInterval(loadData, REFRESH_INTERVAL);
+                return () => clearInterval(interval);
+            }
+        }, [auth, loadData]);
+
+        const totalMonthlyFixedCosts = useMemo(() => fixedCosts.reduce((sum, c) => sum + c.amount, 0), [fixedCosts]);
+        const dailyFixedCost = useMemo(() => totalMonthlyFixedCosts / 30, [totalMonthlyFixedCosts]);
+
+        const daysInRange = useMemo(() => {
+            const pstNow = getPSTDate();
+            const today = new Date(pstNow.getFullYear(), pstNow.getMonth(), pstNow.getDate());
+            const dataStart = new Date(DATA_START_DATE);
+
+            if (range === "custom" && startDate && endDate) {
+                const start = new Date(startDate) < dataStart ? dataStart : new Date(startDate);
+                const end = new Date(endDate);
+                return Math.max(0, Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1);
+            }
+
+            // Calculate how many days from DATA_START_DATE to today
+            const daysSinceStart = Math.floor((today.getTime() - dataStart.getTime()) / (1000 * 60 * 60 * 24));
+
+            switch(range) {
+                case "today": return daysSinceStart >= 0 ? 1 : 0;
+                case "yesterday": return daysSinceStart >= 1 ? 1 : 0;
+                case "2daysago": return daysSinceStart >= 2 ? 1 : 0;
+                case "7d": return Math.min(7, daysSinceStart + 1);
+                case "30d": return Math.min(30, daysSinceStart + 1);
+                case "12m": return Math.min(365, daysSinceStart + 1);
+                default: return Math.max(0, daysSinceStart + 1);
+            }
+        }, [range, startDate, endDate, getPSTDate]);
+
+        const fixedCostsForRange = useMemo(() => dailyFixedCost * daysInRange, [dailyFixedCost, daysInRange]);
+
+        const filteredSales = useMemo(() => {
+            const pstNow = getPSTDate();
+            const today = new Date(pstNow.getFullYear(), pstNow.getMonth(), pstNow.getDate());
+            return sales.filter(s => {
+                const parts = s.date.split('-');
+                const saleDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+                const diffDays = Math.floor((today.getTime() - saleDate.getTime()) / (1000 * 60 * 60 * 24));
+                if(range === "custom" && startDate && endDate) {
+                    const start = new Date(startDate);
+                    const end = new Date(endDate);
+                    end.setHours(23, 59, 59);
+                    return saleDate >= start && saleDate <= end;
+                }
+                switch(range) {
+                    case "today": return diffDays === 0;
+                    case "yesterday": return diffDays === 1;
+                    case "2daysago": return diffDays === 2;
+                    case "7d": return diffDays >= 0 && diffDays <= 7;
+                    case "30d": return diffDays >= 0 && diffDays <= 30;
+                    case "12m": return diffDays >= 0 && diffDays <= 365;
+                    default: return true;
+                }
+            });
+        }, [sales, range, startDate, endDate, getPSTDate]);
+
+        const filteredWhopPayments = useMemo(() => {
+            const pstNow = getPSTDate();
+            const today = new Date(pstNow.getFullYear(), pstNow.getMonth(), pstNow.getDate());
+            return whopPayments.filter(p => {
+                const parts = p.date.split('-');
+                const pDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+                const diffDays = Math.floor((today.getTime() - pDate.getTime()) / (1000 * 60 * 60 * 24));
+                if(range === "custom" && startDate && endDate) {
+                    const start = new Date(startDate);
+                    const end = new Date(endDate);
+                    end.setHours(23, 59, 59);
+                    return pDate >= start && pDate <= end;
+                }
+                switch(range) {
+                    case "today": return diffDays === 0;
+                    case "yesterday": return diffDays === 1;
+                    case "2daysago": return diffDays === 2;
+                    case "7d": return diffDays >= 0 && diffDays <= 7;
+                    case "30d": return diffDays >= 0 && diffDays <= 30;
+                    case "12m": return diffDays >= 0 && diffDays <= 365;
+                    default: return true;
+                }
+            });
+        }, [whopPayments, range, startDate, endDate, getPSTDate]);
+
+        const tiktokSpend = useMemo(() => {
+            const pstNow = getPSTDate();
+            const today = new Date(pstNow.getFullYear(), pstNow.getMonth(), pstNow.getDate());
+            const filtered = tiktokExpenses.filter(e => {
+                let expenseDate;
+                if (e.date.includes('-')) {
+                    const parts = e.date.split('-');
+                    expenseDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+                } else if (e.date.includes('/')) {
+                    const parts = e.date.split('/');
+                    expenseDate = new Date(parseInt(parts[2]), parseInt(parts[0]) - 1, parseInt(parts[1]));
+                } else return false;
+                if (isNaN(expenseDate.getTime())) return false;
+                const diffDays = Math.floor((today.getTime() - expenseDate.getTime()) / (1000 * 60 * 60 * 24));
+                if(range === "custom" && startDate && endDate) {
+                    const start = new Date(startDate);
+                    const end = new Date(endDate);
+                    end.setHours(23, 59, 59);
+                    return expenseDate >= start && expenseDate <= end;
+                }
+                switch(range) {
+                    case "today": return diffDays === 0;
+                    case "yesterday": return diffDays === 1;
+                    case "2daysago": return diffDays === 2;
+                    case "7d": return diffDays >= 0 && diffDays <= 7;
+                    case "30d": return diffDays >= 0 && diffDays <= 30;
+                    case "12m": return diffDays >= 0 && diffDays <= 365;
+                    default: return true;
+                }
+            });
+            return filtered.reduce((sum, e) => sum + e.amount, 0);
+        }, [tiktokExpenses, range, startDate, endDate, getPSTDate]);
+
+        const filteredBookedCalls = useMemo(() => {
+            const pstNow = getPSTDate();
+            const today = new Date(pstNow.getFullYear(), pstNow.getMonth(), pstNow.getDate());
+            return bookedCalls.filter(c => {
+                let callDate;
+                if (c.date.includes('T')) callDate = new Date(c.date);
+                else if (c.date.includes('-')) {
+                    const parts = c.date.split('-');
+                    callDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+                } else callDate = new Date(c.date);
+                if (isNaN(callDate.getTime())) return false;
+                const diffDays = Math.floor((today.getTime() - callDate.getTime()) / (1000 * 60 * 60 * 24));
+                if(range === "custom" && startDate && endDate) {
+                    const start = new Date(startDate);
+                    const end = new Date(endDate);
+                    end.setHours(23, 59, 59);
+                    return callDate >= start && callDate <= end;
+                }
+                switch(range) {
+                    case "today": return diffDays === 0;
+                    case "yesterday": return diffDays === 1;
+                    case "2daysago": return diffDays === 2;
+                    case "7d": return diffDays >= 0 && diffDays <= 7;
+                    case "30d": return diffDays >= 0 && diffDays <= 30;
+                    case "12m": return diffDays >= 0 && diffDays <= 365;
+                    default: return true;
+                }
+            });
+        }, [bookedCalls, range, startDate, endDate, getPSTDate]);
+
+        const filteredGa4Sessions = useMemo(() => {
+            const pstNow = getPSTDate();
+            const today = new Date(pstNow.getFullYear(), pstNow.getMonth(), pstNow.getDate());
+            return ga4Sessions.filter(s => {
+                const parts = s.date.split('-');
+                const sessionDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+                const diffDays = Math.floor((today.getTime() - sessionDate.getTime()) / (1000 * 60 * 60 * 24));
+                if(range === "custom" && startDate && endDate) {
+                    const start = new Date(startDate);
+                    const end = new Date(endDate);
+                    end.setHours(23, 59, 59);
+                    return sessionDate >= start && sessionDate <= end;
+                }
+                switch(range) {
+                    case "today": return diffDays === 0;
+                    case "yesterday": return diffDays === 1;
+                    case "2daysago": return diffDays === 2;
+                    case "7d": return diffDays >= 0 && diffDays <= 7;
+                    case "30d": return diffDays >= 0 && diffDays <= 30;
+                    case "12m": return diffDays >= 0 && diffDays <= 365;
+                    default: return true;
+                }
+            });
+        }, [ga4Sessions, range, startDate, endDate, getPSTDate]);
+
+        const totalSessions = filteredGa4Sessions.reduce((sum, s) => sum + s.sessions, 0);
+
+        // Filter distribution payouts by selected date range for Business Dashboard
+        const filteredDistPayouts = useMemo(() => {
+            const pstNow = getPSTDate();
+            const today = new Date(pstNow.getFullYear(), pstNow.getMonth(), pstNow.getDate());
+            const allDist = [
+                ...(agencyData.distribution_payouts || []).map(p => ({...p, amount: p.amount_paid || p.settlement_amount || 0})),
+                ...distributionPayouts.map(p => ({...p, amount: p.amount}))
+            ];
+            return allDist.filter(p => {
+                if (!p.date) return false;
+                const parts = p.date.split('-');
+                const payDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+                const diffDays = Math.floor((today.getTime() - payDate.getTime()) / (1000 * 60 * 60 * 24));
+                if(range === "custom" && startDate && endDate) {
+                    const start = new Date(startDate);
+                    const end = new Date(endDate);
+                    end.setHours(23, 59, 59);
+                    return payDate >= start && payDate <= end;
+                }
+                switch(range) {
+                    case "today": return diffDays === 0;
+                    case "yesterday": return diffDays === 1;
+                    case "2daysago": return diffDays === 2;
+                    case "7d": return diffDays >= 0 && diffDays <= 7;
+                    case "30d": return diffDays >= 0 && diffDays <= 30;
+                    case "12m": return diffDays >= 0 && diffDays <= 365;
+                    default: return true;
+                }
+            });
+        }, [agencyData.distribution_payouts, distributionPayouts, range, startDate, endDate, getPSTDate]);
+
+        // Filter creator payouts by selected date range
+        const filteredCreatorPayouts = useMemo(() => {
+            const pstNow = getPSTDate();
+            const today = new Date(pstNow.getFullYear(), pstNow.getMonth(), pstNow.getDate());
+            return (agencyData.payouts || []).filter(p => {
+                if (!p.date) return false;
+                const parts = p.date.split('-');
+                const payDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+                const diffDays = Math.floor((today.getTime() - payDate.getTime()) / (1000 * 60 * 60 * 24));
+                if(range === "custom" && startDate && endDate) {
+                    const start = new Date(startDate);
+                    const end = new Date(endDate);
+                    end.setHours(23, 59, 59);
+                    return payDate >= start && payDate <= end;
+                }
+                switch(range) {
+                    case "today": return diffDays === 0;
+                    case "yesterday": return diffDays === 1;
+                    case "2daysago": return diffDays === 2;
+                    case "7d": return diffDays >= 0 && diffDays <= 7;
+                    case "30d": return diffDays >= 0 && diffDays <= 30;
+                    case "12m": return diffDays >= 0 && diffDays <= 365;
+                    default: return true;
+                }
+            });
+        }, [agencyData.payouts, range, startDate, endDate, getPSTDate]);
+
+    // Daily affiliate analytics for date-range filtering
+    // When daily_analytics exists in agency-data.json, filter by date range.
+    // Otherwise, use the aggregate analytics totals (shown for all ranges).
+    const filteredDailyAnalytics = useMemo(() => {
+        const pstNow = getPSTDate();
+        const today = new Date(pstNow.getFullYear(), pstNow.getMonth(), pstNow.getDate());
+        const dailyData = agencyData.daily_analytics || [];
+
+        // If we have daily data from the API, filter it by date range
+        if (dailyData.length > 0) {
+            return dailyData.filter(d => {
+                if (!d.date) return false;
+                const parts = d.date.split('-');
+                const dDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+                const diffDays = Math.floor((today.getTime() - dDate.getTime()) / (1000 * 60 * 60 * 24));
+                if (range === "custom" && startDate && endDate) {
+                    const start = new Date(startDate);
+                    const end = new Date(endDate);
+                    end.setHours(23, 59, 59);
+                    return dDate >= start && dDate <= end;
+                }
+                switch(range) {
+                    case "today": return diffDays === 0;
+                    case "yesterday": return diffDays === 1;
+                    case "2daysago": return diffDays === 2;
+                    case "7d": return diffDays >= 0 && diffDays <= 7;
+                    case "30d": return diffDays >= 0 && diffDays <= 30;
+                    case "12m": return diffDays >= 0 && diffDays <= 365;
+                    default: return true;
+                }
+            });
+        }
+
+        // No daily data available — use aggregate analytics as a single entry
+        // so KPI cards show the real totals from the API
+        const analytics = agencyData.analytics || {};
+        if (analytics.affiliate_gmv || analytics.est_commission || analytics.orders) {
+            return [{
+                date: analytics.last_updated || today.toISOString().split('T')[0],
+                affiliate_gmv: analytics.affiliate_gmv || 0,
+                est_commission: analytics.est_commission || 0,
+                orders: analytics.orders || 0
+            }];
+        }
+        return [];
+    }, [agencyData.daily_analytics, agencyData.analytics, range, startDate, endDate, getPSTDate]);
+
+        const agencyGrossForRange = filteredDistPayouts.reduce((sum, p) => sum + (p.amount || 0), 0);
+        const managerCut = agencyGrossForRange * 0.15;
+        const agencyProfitForRange = agencyGrossForRange - managerCut;
+
+        // Calculate previous period sessions for comparison
+        const previousPeriodSessions = useMemo(() => {
+            const pstNow = getPSTDate();
+            const today = new Date(pstNow.getFullYear(), pstNow.getMonth(), pstNow.getDate());
+
+            // Determine the period length and calculate previous period range
+            let periodDays = 1;
+            switch(range) {
+                case "today": case "yesterday": case "2daysago": periodDays = 1; break;
+                case "7d": periodDays = 7; break;
+                case "30d": periodDays = 30; break;
+                case "12m": periodDays = 365; break;
+                default: periodDays = 30;
+            }
+
+            // Get the offset for current period start
+            let currentOffset = 0;
+            switch(range) {
+                case "today": currentOffset = 0; break;
+                case "yesterday": currentOffset = 1; break;
+                case "2daysago": currentOffset = 2; break;
+                default: currentOffset = 0;
+            }
+
+            // Previous period is the same length, immediately before
+            const prevPeriodStart = currentOffset + periodDays;
+            const prevPeriodEnd = currentOffset + (periodDays * 2) - 1;
+
+            return ga4Sessions.filter(s => {
+                const parts = s.date.split('-');
+                const sessionDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+                const diffDays = Math.floor((today.getTime() - sessionDate.getTime()) / (1000 * 60 * 60 * 24));
+                return diffDays >= prevPeriodStart && diffDays <= prevPeriodEnd;
+            }).reduce((sum, s) => sum + s.sessions, 0);
+        }, [ga4Sessions, range, getPSTDate]);
+
+        const sessionsChangePercent = previousPeriodSessions > 0
+            ? ((totalSessions - previousPeriodSessions) / previousPeriodSessions * 100).toFixed(1)
+            : null;
+
+        // Calculate previous period data for all metrics
+        const previousPeriodData = useMemo(() => {
+            const pstNow = getPSTDate();
+            const today = new Date(pstNow.getFullYear(), pstNow.getMonth(), pstNow.getDate());
+
+            let periodDays = 1;
+            switch(range) {
+                case "today": case "yesterday": case "2daysago": periodDays = 1; break;
+                case "7d": periodDays = 7; break;
+                case "30d": periodDays = 30; break;
+                case "12m": periodDays = 365; break;
+                default: periodDays = 30;
+            }
+
+            let currentOffset = 0;
+            switch(range) {
+                case "today": currentOffset = 0; break;
+                case "yesterday": currentOffset = 1; break;
+                case "2daysago": currentOffset = 2; break;
+                default: currentOffset = 0;
+            }
+
+            const prevPeriodStart = currentOffset + periodDays;
+            const prevPeriodEnd = currentOffset + (periodDays * 2) - 1;
+
+            const filterByPrevPeriod = (dateStr) => {
+                const cleanDate = dateStr.includes('T') ? dateStr.split('T')[0] : dateStr;
+                const parts = cleanDate.split('-');
+                const itemDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+                const diffDays = Math.floor((today.getTime() - itemDate.getTime()) / (1000 * 60 * 60 * 24));
+                return diffDays >= prevPeriodStart && diffDays <= prevPeriodEnd;
+            };
+
+            const prevSales = sales.filter(s => filterByPrevPeriod(s.date));
+            const prevCalls = bookedCalls.filter(c => filterByPrevPeriod(c.date));
+            const prevRevenue = prevSales.reduce((sum, s) => sum + s.revenue, 0);
+
+            return {
+                revenue: prevRevenue,
+                salesCount: prevSales.length,
+                callsCount: prevCalls.length
+            };
+        }, [sales, bookedCalls, range, getPSTDate]);
+
+        // Calculations
+        const totalRevenue = filteredSales.reduce((s, x) => s + x.revenue, 0);
+        const avgOrder = filteredSales.length > 0 ? totalRevenue / filteredSales.length : 0;
+        const totalAdSpend = parseFloat(metaSpend || 0) + parseFloat(tiktokSpend || 0) + parseFloat(googleSpend || 0);
+        const affiliateCommission = totalRevenue * 0.05;
+        const commissionableSales = filteredSales.filter(s => s.revenue > 999);
+        const salesTeamCommission = commissionableSales.reduce((sum, s) => sum + (s.revenue * 0.20), 0);
+        const totalCommissions = affiliateCommission + salesTeamCommission;
+        const totalExpenses = totalAdSpend + totalCommissions + fixedCostsForRange;
+        const profit = totalRevenue - totalExpenses;
+        const whopRevenue = filteredWhopPayments.reduce((sum, p) => sum + p.amount, 0);
+        const whopRefunds = filteredWhopPayments.reduce((sum, p) => sum + p.refunded, 0);
+        const whopNet = whopRevenue - whopRefunds;
+        const profitIncludingAgency = profit;
+        const profitIncludingWhop = profit + whopNet;
+
+        // Calculate previous period profit for comparison
+        const prevAffiliateComm = previousPeriodData.revenue * 0.05;
+        const prevCommissionableSales = sales.filter(s => {
+            const pstNow = getPSTDate();
+            const today = new Date(pstNow.getFullYear(), pstNow.getMonth(), pstNow.getDate());
+            let periodDays = 1;
+            switch(range) {
+                case "today": case "yesterday": case "2daysago": periodDays = 1; break;
+                case "7d": periodDays = 7; break;
+                case "30d": periodDays = 30; break;
+                case "12m": periodDays = 365; break;
+                default: periodDays = 30;
+            }
+            let currentOffset = 0;
+            switch(range) {
+                case "today": currentOffset = 0; break;
+                case "yesterday": currentOffset = 1; break;
+                case "2daysago": currentOffset = 2; break;
+                default: currentOffset = 0;
+            }
+            const prevPeriodStart = currentOffset + periodDays;
+            const prevPeriodEnd = currentOffset + (periodDays * 2) - 1;
+            const parts = s.date.split('-');
+            const saleDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+            const diffDays = Math.floor((today.getTime() - saleDate.getTime()) / (1000 * 60 * 60 * 24));
+            return diffDays >= prevPeriodStart && diffDays <= prevPeriodEnd && s.revenue > 999;
+        });
+        const prevSalesTeamComm = prevCommissionableSales.reduce((sum, s) => sum + (s.revenue * 0.20), 0);
+        const prevTotalExpenses = prevAffiliateComm + prevSalesTeamComm + fixedCostsForRange;
+        const prevProfit = previousPeriodData.revenue - prevTotalExpenses;
+
+        // Percentage changes
+        const revenueChangePercent = previousPeriodData.revenue > 0
+            ? ((totalRevenue - previousPeriodData.revenue) / previousPeriodData.revenue * 100).toFixed(1)
+            : null;
+        const salesChangePercent = previousPeriodData.salesCount > 0
+            ? ((filteredSales.length - previousPeriodData.salesCount) / previousPeriodData.salesCount * 100).toFixed(1)
+            : null;
+        const callsChangePercent = previousPeriodData.callsCount > 0
+            ? ((filteredBookedCalls.length - previousPeriodData.callsCount) / previousPeriodData.callsCount * 100).toFixed(1)
+            : null;
+        const profitChangePercent = prevProfit !== 0
+            ? ((profit - prevProfit) / Math.abs(prevProfit) * 100).toFixed(1)
+            : null;
+
+        // Agency computed values
+        const totalCreatorPayouts = filteredCreatorPayouts.reduce((sum, p) => sum + (p.amount_paid || p.settlement_amount || 0), 0);
+        const agencyGMV = filteredDailyAnalytics.reduce((sum, d) => sum + (d.affiliate_gmv || 0), 0);
+        const agencyCommission = filteredDailyAnalytics.reduce((sum, d) => sum + (d.est_commission || 0), 0);
+        const agencyOrders = filteredDailyAnalytics.reduce((sum, d) => sum + (d.orders || 0), 0);
+        const agencyRefunds = agencyData.analytics.gmv_refund || 0;
+
+        // Distribution payouts: use date-filtered data
+        const totalDistributionPayouts = filteredDistPayouts.reduce((sum, p) => sum + (p.amount || 0), 0);
+        const allDistPayouts = filteredDistPayouts.map(p => ({
+            ...p,
+            source: p.statement_id ? 'api' : 'sheet'
+        })).sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+        const totalAllPayouts = totalDistributionPayouts + totalCreatorPayouts;
+
+        const chartData = useMemo(() => {
+            const grouped = {};
+            filteredSales.forEach(s => { grouped[s.date] = (grouped[s.date] || 0) + s.revenue; });
+            return Object.entries(grouped).map(([date, revenue]) => ({date, revenue})).sort((a,b) => a.date.localeCompare(b.date));
+        }, [filteredSales]);
+
+        const bookedCallsChartData = useMemo(() => {
+            const grouped = {};
+            filteredBookedCalls.forEach(c => {
+                const dateStr = c.date.includes('T') ? c.date.split('T')[0] : c.date;
+                grouped[dateStr] = (grouped[dateStr] || 0) + 1;
+            });
+            return Object.entries(grouped).map(([date, count]) => ({date, count})).sort((a,b) => a.date.localeCompare(b.date));
+        }, [filteredBookedCalls]);
+
+        const sessionsChartData = useMemo(() => {
+            return filteredGa4Sessions.sort((a, b) => a.date.localeCompare(b.date));
+        }, [filteredGa4Sessions]);
+
+        const pieData = useMemo(() => {
+            const grouped = {};
+            filteredSales.forEach(s => { grouped[s.offer] = (grouped[s.offer] || 0) + s.revenue; });
+            return Object.entries(grouped).map(([name, value]) => ({name, value}));
+        }, [filteredSales]);
+
+        const COLORS = ['#06B6D4', '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#EC4899'];
+
+        // Login Screen
+        if(!auth) return (
+            <div className="min-h-screen bg-black grid-bg flex items-center justify-center p-6">
+                <div className="fade-in card-glow rounded-3xl p-10 w-full max-w-md">
+                    <div className="flex items-center justify-center gap-3 mb-8">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center text-white font-bold text-lg">SV</div>
+                        <h1 className="text-2xl font-bold text-white">Stay Viral</h1>
+                    </div>
+                    <p className="text-slate-400 text-center mb-8">Master Tracker Dashboard</p>
+                    <form onSubmit={e => {
+                        e.preventDefault();
+                        if(pw === "stayviral2026") { localStorage.setItem("kajabi_auth", "true"); setAuth(true); }
+                        else { setErr("Wrong password"); }
+                    }}>
+                        <input type="password" value={pw} onChange={e => setPw(e.target.value)} placeholder="Enter password"
+                            className="w-full bg-black/50 border border-white/10 rounded-xl px-5 py-4 text-white placeholder-slate-500 mb-4 focus:outline-none focus:border-cyan-500/50 transition-all"/>
+                        {err && <p className="text-red-400 mb-4 text-center text-sm">{err}</p>}
+                        <button className="w-full btn-primary text-white rounded-xl py-4 font-semibold">Access Dashboard</button>
+                    </form>
+                </div>
+            </div>
+        );
+
+        const ranges = [
+            {key: "today", label: "Today"},
+            {key: "yesterday", label: "Yesterday"},
+            {key: "2daysago", label: "2 Days Ago"},
+            {key: "7d", label: "7 Days"},
+            {key: "30d", label: "30 Days"},
+            {key: "12m", label: "12 Months"},
+            {key: "all", label: "All Time"},
+            {key: "custom", label: "Custom"}
+        ];
+
+        // Main Dashboard
+        return (
+            <div className="min-h-screen bg-black grid-bg p-4 sm:p-8">
+                <div className="max-w-7xl mx-auto">
+                    {/* Header */}
+                    <div className="fade-in flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center text-white font-bold text-lg">SV</div>
+                            <div>
+                                <h1 className="text-2xl font-bold text-white">Master Tracker</h1>
+                                <p className="text-slate-500 text-sm">Real-time performance analytics</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-4">
+                            <button onClick={loadData} disabled={syncing}
+                                className="btn-primary px-5 py-2.5 rounded-xl text-sm font-medium text-white flex items-center gap-2 disabled:opacity-50">
+                                <span className={syncing ? "animate-spin" : ""}><Icons.sync /></span>
+                                {syncing ? "Syncing..." : "Sync"}
+                            </button>
+                            {lastSync && <span className="text-slate-500 text-xs hidden sm:block">Last: {lastSync}</span>}
+                            <button onClick={() => {localStorage.removeItem("kajabi_auth"); setAuth(false);}}
+                                className="text-slate-500 hover:text-white text-sm transition-colors">Logout</button>
+                        </div>
+                    </div>
+
+                    {/* Tab Navigation */}
+                    <div className="fade-in flex items-center gap-2 mb-6">
+                        <button onClick={() => setActiveTab("dashboard")}
+                            className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 ${
+                                activeTab === "dashboard"
+                                    ? "bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg shadow-cyan-500/25"
+                                    : "bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white"
+                            }`}>
+                            <Icons.chart />
+                            Business Dashboard
+                        </button>
+                        <button onClick={() => setActiveTab("agency")}
+                            className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 ${
+                                activeTab === "agency"
+                                    ? "bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-lg shadow-pink-500/25"
+                                    : "bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white"
+                            }`}>
+                            <Icons.tiktok />
+                            Agency Earnings
+                            {agencyCommission > 0 && (
+                                <span className="bg-pink-400/20 text-pink-300 text-xs px-2 py-0.5 rounded-full">
+                                    ${(agencyCommission / 1000).toFixed(0)}K
+                                </span>
+                            )}
+                        </button>
+                    </div>
+
+                    {/* Data Notice */}
+                    <div className="fade-in bg-slate-800/50 border border-slate-700/50 rounded-xl px-4 py-2 mb-6 text-slate-400 text-xs flex items-center gap-2">
+                        <svg className="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        Data prior to January 28, 2026 is not available
+                    </div>
+
+                    {loadError && (
+                        <div className="fade-in bg-red-500/10 border border-red-500/30 rounded-xl p-4 mb-6 text-red-400 text-sm">
+                            {loadError}
+                        </div>
+                    )}
+
+                    {activeTab === "dashboard" && (<>
+                    {/* Date Range Selector */}
+                    <div className="fade-in fade-in-delay-1 mb-8">
+                        <div className="flex items-center gap-2 overflow-x-auto pb-2">
+                            {ranges.map(r => (
+                                <button key={r.key} onClick={() => setRange(r.key)}
+                                    className={`px-4 py-2 rounded-xl text-sm font-medium transition-all whitespace-nowrap ${
+                                        range === r.key ? "range-active text-white" : "bg-white/5 text-slate-400 hover:bg-white/10 hover:text-white"
+                                    }`}>
+                                    {r.label}
+                                </button>
+                            ))}
+                        </div>
+                        {range === "custom" && (
+                            <div className="flex items-center gap-3 mt-4 flex-wrap">
+                                <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)}
+                                    className="bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-cyan-500/50 transition-all"/>
+                                <span className="text-slate-500">to</span>
+                                <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)}
+                                    className="bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-cyan-500/50 transition-all"/>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Main KPI Cards */}
+                    <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+                        {initialLoad ? (
+                            <>
+                                {[...Array(5)].map((_, i) => (
+                                    <div key={i} className="card-glow rounded-2xl p-6">
+                                        <Skeleton className="h-4 w-20 mb-3" />
+                                        <Skeleton className="h-10 w-32" />
+                                    </div>
+                                ))}
+                            </>
+                        ) : (
+                            <>
+                                <div className="fade-in fade-in-delay-2 card-glow rounded-2xl p-6 transition-all duration-300">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <div className="w-8 h-8 rounded-lg bg-cyan-500/20 flex items-center justify-center text-cyan-400">
+                                            <Icons.revenue />
+                                        </div>
+                                        <span className="text-slate-400 text-sm">Combined Revenue</span>
+                                    </div>
+                                    <p className="text-3xl font-bold text-white">
+                                        <AnimatedNumber value={totalRevenue + whopRevenue + agencyGrossForRange} prefix="$" />
+                                    </p>
+                                    {revenueChangePercent !== null && (
+                                        <div className="mt-2">
+                                            <span className={`text-xs font-medium ${parseFloat(revenueChangePercent) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                                                {parseFloat(revenueChangePercent) >= 0 ? 'â' : 'â'} {Math.abs(parseFloat(revenueChangePercent))}% vs prev
+                                            </span>
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="fade-in fade-in-delay-2 card-glow rounded-2xl p-6 transition-all duration-300">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center text-blue-400">
+                                            <Icons.sales />
+                                        </div>
+                                        <span className="text-slate-400 text-sm">Sales</span>
+                                    </div>
+                                    <p className="text-3xl font-bold text-white">
+                                        <AnimatedNumber value={filteredSales.length} />
+                                    </p>
+                                    {salesChangePercent !== null && (
+                                        <div className="mt-2">
+                                            <span className={`text-xs font-medium ${parseFloat(salesChangePercent) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                                                {parseFloat(salesChangePercent) >= 0 ? 'â' : 'â'} {Math.abs(parseFloat(salesChangePercent))}% vs prev
+                                            </span>
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="fade-in fade-in-delay-2 card-glow rounded-2xl p-6 transition-all duration-300">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-400">
+                                            <Icons.calls />
+                                        </div>
+                                        <span className="text-slate-400 text-sm">Booked Calls</span>
+                                    </div>
+                                    <p className="text-3xl font-bold text-cyan-400">
+                                        <AnimatedNumber value={filteredBookedCalls.length} />
+                                    </p>
+                                    {callsChangePercent !== null && (
+                                        <div className="mt-2">
+                                            <span className={`text-xs font-medium ${parseFloat(callsChangePercent) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                                                {parseFloat(callsChangePercent) >= 0 ? 'â' : 'â'} {Math.abs(parseFloat(callsChangePercent))}% vs prev
+                                            </span>
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="fade-in fade-in-delay-2 card-glow rounded-2xl p-6 transition-all duration-300" style={{borderColor: (profit + agencyProfitForRange + whopNet) >= 0 ? 'rgba(16, 185, 129, 0.25)' : 'rgba(239, 68, 68, 0.25)'}}>
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <div className={`w-8 h-8 rounded-lg ${(profit + agencyProfitForRange + whopNet) >= 0 ? 'bg-emerald-500/20' : 'bg-red-500/20'} flex items-center justify-center ${(profit + agencyProfitForRange + whopNet) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                                            <Icons.profit />
+                                        </div>
+                                        <span className="text-slate-400 text-sm">Combined Profit</span>
+                                    </div>
+                                    <p className={`text-3xl font-bold ${(profit + agencyProfitForRange + whopNet) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                                        <AnimatedNumber value={profit + agencyProfitForRange + whopNet} prefix="$" />
+                                    </p>
+                                    <div className="mt-2">
+                                        <span className="text-xs text-slate-500">Info + Agency + Whop</span>
+                                    </div>
+                                </div>
+                                <div className="fade-in fade-in-delay-2 card-glow rounded-2xl p-6 transition-all duration-300">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <div className="w-8 h-8 rounded-lg bg-violet-500/20 flex items-center justify-center text-violet-400">
+                                            <Icons.sessions />
+                                        </div>
+                                        <span className="text-slate-400 text-sm">Website Sessions</span>
+                                    </div>
+                                    <p className="text-3xl font-bold text-violet-400">
+                                        <AnimatedNumber value={totalSessions} />
+                                    </p>
+                                    <div className="flex items-center justify-between mt-2">
+                                        {sessionsChangePercent !== null && (
+                                            <span className={`text-xs font-medium ${parseFloat(sessionsChangePercent) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                                                {parseFloat(sessionsChangePercent) >= 0 ? 'â' : 'â'} {Math.abs(parseFloat(sessionsChangePercent))}% vs prev
+                                            </span>
+                                        )}
+                                        <span className="text-slate-600 text-xs">24hr delay</span>
+                                    </div>
+                                </div>
+                            </>
+                        )}
+                    </div>
+
+                    {/* Secondary Stats */}
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                        <div className="fade-in fade-in-delay-3 card-glow rounded-2xl p-5">
+                            <p className="text-slate-500 text-xs uppercase tracking-wider mb-1">Avg Order</p>
+                            <p className="text-xl font-bold text-white">${avgOrder.toFixed(2)}</p>
+                        </div>
+                        <div className="fade-in fade-in-delay-3 card-glow rounded-2xl p-5">
+                            <p className="text-slate-500 text-xs uppercase tracking-wider mb-1">Total Ad Spend</p>
+                            <p className="text-xl font-bold text-orange-400">${totalAdSpend.toLocaleString()}</p>
+                        </div>
+                        <div className="fade-in fade-in-delay-3 card-glow rounded-2xl p-5">
+                            <p className="text-slate-500 text-xs uppercase tracking-wider mb-1">Total Expenses</p>
+                            <p className="text-xl font-bold text-red-400">${Math.round(totalExpenses).toLocaleString()}</p>
+                        </div>
+                        <div className="fade-in fade-in-delay-3 card-glow rounded-2xl p-5">
+                            <p className="text-slate-500 text-xs uppercase tracking-wider mb-1">Fixed Costs ({daysInRange}d)</p>
+                            <p className="text-xl font-bold text-purple-400">${Math.round(fixedCostsForRange).toLocaleString()}</p>
+                        </div>
+                    </div>
+
+                    {/* Profit Breakdown: Info / Agency / Whop / Combined */}
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+                        <div className="fade-in fade-in-delay-3 card-glow rounded-2xl p-5">
+                            <p className="text-slate-500 text-xs uppercase tracking-wider mb-1">Info Profit</p>
+                            <p className={`text-xl font-bold ${profit >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                                {profit >= 0 ? '' : '-'}${Math.abs(Math.round(profit)).toLocaleString()}
+                            </p>
+                            <p className="text-slate-600 text-xs mt-1">Revenue â Expenses</p>
+                        </div>
+                        <div className="fade-in fade-in-delay-3 card-glow rounded-2xl p-5" style={{borderColor: 'rgba(236, 72, 153, 0.2)'}}>
+                            <p className="text-slate-500 text-xs uppercase tracking-wider mb-1">Agency Profit</p>
+                            <p className="text-xl font-bold text-pink-400">
+                                ${Math.round(agencyProfitForRange).toLocaleString()}
+                            </p>
+                            <p className="text-slate-600 text-xs mt-1">{filteredDistPayouts.length} payout{filteredDistPayouts.length !== 1 ? 's' : ''} Â· ${Math.round(agencyGrossForRange).toLocaleString()} gross</p>
+                            <p className="text-slate-600 text-xs">â15% mgr: ${Math.round(managerCut).toLocaleString()}</p>
+                        </div>
+                                        <div className="fade-in fade-in-delay-3 card-glow rounded-2xl p-5" style={{borderColor: 'rgba(6, 182, 212, 0.3)'}}>
+                                                                <p className="text-slate-500 text-xs uppercase tracking-wider mb-1">Kajabi Revenue</p>
+                                                                <p className="text-xl font-bold text-cyan-400">
+                                                                                            ${Math.round(totalRevenue).toLocaleString()}
+                                                                </p>
+                                                                    <p className="text-slate-600 text-xs mt-1">{filteredSales.length} sale{filteredSales.length !== 1 ? 's' : ''}</p>
+                                        </div>
+                        <div className="fade-in fade-in-delay-3 card-glow rounded-2xl p-5" style={{borderColor: 'rgba(139, 92, 246, 0.2)'}}>
+                            <p className="text-slate-500 text-xs uppercase tracking-wider mb-1">Whop Revenue</p>
+                            <p className="text-xl font-bold text-purple-400">
+                                ${Math.round(whopNet).toLocaleString()}
+                            </p>
+                            <p className="text-slate-600 text-xs mt-1">{filteredWhopPayments.length} payment{filteredWhopPayments.length !== 1 ? 's' : ''}</p>
+                        </div>
+                        <div className="fade-in fade-in-delay-3 card-glow rounded-2xl p-5" style={{borderColor: (profit + agencyProfitForRange + whopNet) >= 0 ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}}>
+                            <p className="text-slate-500 text-xs uppercase tracking-wider mb-1">Combined Profit</p>
+                            <p className={`text-xl font-bold ${(profit + agencyProfitForRange + whopNet) >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                                {(profit + agencyProfitForRange + whopNet) >= 0 ? '' : '-'}${Math.abs(Math.round(profit + agencyProfitForRange + whopNet)).toLocaleString()}
+                            </p>
+                            <p className="text-slate-600 text-xs mt-1">Info + Agency + Whop</p>
+                        </div>
+                    </div>
+
+                    {/* Ad Spend Inputs */}
+                    <div className="fade-in fade-in-delay-3 card-glow rounded-2xl p-6 mb-6">
+                        <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-gradient-to-r from-cyan-400 to-blue-500"></span>
+                            Ad Spend
+                        </h3>
+                        <div className="grid grid-cols-3 gap-4">
+                            <div>
+                                <label className="text-slate-500 text-xs uppercase tracking-wider mb-2 block">Meta</label>
+                                <div className="relative">
+                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">$</span>
+                                    <input type="number" value={metaSpend} onChange={e => setMetaSpend(e.target.value)}
+                                        className="w-full bg-black/50 border border-white/10 rounded-xl pl-8 pr-4 py-3 text-white focus:outline-none focus:border-cyan-500/50 transition-all"/>
+                                </div>
+                            </div>
+                            <div>
+                                <label className="text-slate-500 text-xs uppercase tracking-wider mb-2 block">TikTok <span className="text-emerald-400">(auto)</span></label>
+                                <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl px-4 py-3 text-emerald-400 font-medium">
+                                    ${tiktokSpend.toLocaleString()}
+                                </div>
+                            </div>
+                            <div>
+                                <label className="text-slate-500 text-xs uppercase tracking-wider mb-2 block">Google</label>
+                                <div className="relative">
+                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">$</span>
+                                    <input type="number" value={googleSpend} onChange={e => setGoogleSpend(e.target.value)}
+                                        className="w-full bg-black/50 border border-white/10 rounded-xl pl-8 pr-4 py-3 text-white focus:outline-none focus:border-cyan-500/50 transition-all"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Fixed Costs Breakdown */}
+                    {fixedCosts.length > 0 && (
+                        <div className="fade-in fade-in-delay-4 card-glow rounded-2xl p-6 mb-6">
+                            <div className="flex justify-between items-center mb-4">
+                                <h3 className="text-white font-semibold flex items-center gap-2">
+                                    <span className="w-2 h-2 rounded-full bg-gradient-to-r from-purple-400 to-pink-500"></span>
+                                    Fixed Costs <span className="text-emerald-400 text-xs font-normal">(auto)</span>
+                                </h3>
+                                <p className="text-slate-500 text-xs">Monthly: ${totalMonthlyFixedCosts.toLocaleString(undefined, {maximumFractionDigits: 0})} | Daily: ${dailyFixedCost.toLocaleString(undefined, {maximumFractionDigits: 0})}</p>
+                            </div>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+                                {fixedCosts.map((cost, idx) => (
+                                    <div key={idx} className="bg-white/5 rounded-xl p-4">
+                                        <p className="text-slate-500 text-xs mb-1 truncate">{cost.category.replace(' Payouts', '').replace('(Program Sales)', '').replace(' Spend', '')}</p>
+                                        <p className="text-lg font-semibold text-purple-400">${(cost.amount / 30).toLocaleString(undefined, {maximumFractionDigits: 0})}<span className="text-slate-600 text-xs">/day</span></p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Expenses Breakdown */}
+                    <div className="fade-in fade-in-delay-4 card-glow rounded-2xl p-6 mb-6">
+                        <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-gradient-to-r from-orange-400 to-red-500"></span>
+                            Expenses Breakdown
+                        </h3>
+                        <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+                            <div className="bg-white/5 rounded-xl p-4">
+                                <p className="text-slate-500 text-xs mb-1">Ad Spend</p>
+                                <p className="text-lg font-semibold text-orange-400">${totalAdSpend.toLocaleString()}</p>
+                            </div>
+                            <div className="bg-white/5 rounded-xl p-4">
+                                <p className="text-slate-500 text-xs mb-1">Affiliate (5%)</p>
+                                <p className="text-lg font-semibold text-orange-400">${affiliateCommission.toFixed(2)}</p>
+                            </div>
+                            <div className="bg-white/5 rounded-xl p-4">
+                                <p className="text-slate-500 text-xs mb-1">Sales Team (20%)</p>
+                                <p className="text-lg font-semibold text-orange-400">${salesTeamCommission.toFixed(2)}</p>
+                            </div>
+                            <div className="bg-white/5 rounded-xl p-4">
+                                <p className="text-slate-500 text-xs mb-1">Fixed Costs</p>
+                                <p className="text-lg font-semibold text-orange-400">${Math.round(fixedCostsForRange).toLocaleString()}</p>
+                            </div>
+                            <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4">
+                                <p className="text-slate-500 text-xs mb-1">Total Expenses</p>
+                                <p className="text-lg font-semibold text-red-400">${Math.round(totalExpenses).toLocaleString()}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Charts Row */}
+                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-6">
+                        <div className="fade-in fade-in-delay-5 card-glow rounded-2xl p-6">
+                            <h3 className="text-white font-semibold mb-4">Revenue by Day</h3>
+                            {chartData.length > 0 ? (
+                                <div className="space-y-3 max-h-48 overflow-y-auto">
+                                    {chartData.slice(-7).map((d, i) => (
+                                        <div key={i} className="flex justify-between items-center">
+                                            <span className="text-slate-400 text-sm">{d.date.slice(5)}</span>
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-24 h-2 bg-white/5 rounded-full overflow-hidden">
+                                                    <div className="h-full bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full transition-all duration-500"
+                                                        style={{width: `${(d.revenue / Math.max(...chartData.map(x => x.revenue))) * 100}%`}}></div>
+                                                </div>
+                                                <span className="text-emerald-400 font-medium text-sm w-20 text-right">${d.revenue.toLocaleString()}</span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : <p className="text-slate-500 text-center py-8">No data</p>}
+                        </div>
+                        <div className="fade-in fade-in-delay-5 card-glow rounded-2xl p-6">
+                            <h3 className="text-white font-semibold mb-4">Booked Calls by Day</h3>
+                            {bookedCallsChartData.length > 0 ? (
+                                <div className="space-y-3 max-h-48 overflow-y-auto">
+                                    {bookedCallsChartData.slice(-7).map((d, i) => (
+                                        <div key={i} className="flex justify-between items-center">
+                                            <span className="text-slate-400 text-sm">{d.date.slice(5)}</span>
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-24 h-2 bg-white/5 rounded-full overflow-hidden">
+                                                    <div className="h-full bg-gradient-to-r from-emerald-400 to-cyan-500 rounded-full transition-all duration-500"
+                                                        style={{width: `${(d.count / Math.max(...bookedCallsChartData.map(x => x.count), 1)) * 100}%`}}></div>
+                                                </div>
+                                                <span className="text-cyan-400 font-medium text-sm w-8 text-right">{d.count}</span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : <p className="text-slate-500 text-center py-8">No calls</p>}
+                        </div>
+                        <div className="fade-in fade-in-delay-5 card-glow rounded-2xl p-6">
+                            <h3 className="text-white font-semibold mb-4">Revenue by Offer</h3>
+                            {pieData.length > 0 ? (
+                                <div className="space-y-3 max-h-48 overflow-y-auto">
+                                    {pieData.sort((a,b) => b.value - a.value).map((d, i) => (
+                                        <div key={i} className="flex justify-between items-center gap-3">
+                                            <div className="flex items-center gap-2 min-w-0 flex-1">
+                                                <div className="w-3 h-3 rounded-full flex-shrink-0" style={{backgroundColor: COLORS[i % COLORS.length]}}></div>
+                                                <span className="text-slate-300 text-sm truncate">{d.name}</span>
+                                            </div>
+                                            <span className="text-emerald-400 font-medium text-sm flex-shrink-0">${d.value.toLocaleString()}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : <p className="text-slate-500 text-center py-8">No data</p>}
+                        </div>
+                        <div className="fade-in fade-in-delay-5 card-glow rounded-2xl p-6">
+                            <h3 className="text-white font-semibold mb-4">Website Sessions by Day</h3>
+                            {sessionsChartData.length > 0 ? (
+                                <div className="space-y-3 max-h-48 overflow-y-auto">
+                                    {sessionsChartData.slice(-7).map((d, i) => (
+                                        <div key={i} className="flex justify-between items-center">
+                                            <span className="text-slate-400 text-sm">{d.date.slice(5)}</span>
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-24 h-2 bg-white/5 rounded-full overflow-hidden">
+                                                    <div className="h-full bg-gradient-to-r from-violet-400 to-purple-500 rounded-full transition-all duration-500"
+                                                        style={{width: `${(d.sessions / Math.max(...sessionsChartData.map(x => x.sessions), 1)) * 100}%`}}></div>
+                                                </div>
+                                                <span className="text-violet-400 font-medium text-sm w-16 text-right">{d.sessions.toLocaleString()}</span>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : <p className="text-slate-500 text-center py-8">No sessions data</p>}
+                        </div>
+                    </div>
+
+                    {/* Sales Table */}
+                    <div className="fade-in fade-in-delay-5 card-glow rounded-2xl p-6">
+                        <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-gradient-to-r from-cyan-400 to-blue-500"></span>
+                            Recent Sales <span className="text-slate-500 font-normal">({filteredSales.length})</span>
+                        </h3>
+                        {filteredSales.length === 0 ? (
+                            <p className="text-slate-500 text-center py-8">No sales found</p>
+                        ) : (
+                            <div className="overflow-x-auto max-h-80 overflow-y-auto">
+                                <table className="w-full">
+                                    <thead className="sticky top-0 bg-slate-900/95 backdrop-blur">
+                                        <tr className="border-b border-white/10">
+                                            <th className="text-left py-3 text-slate-500 font-medium text-xs uppercase tracking-wider">Date</th>
+                                            <th className="text-left py-3 text-slate-500 font-medium text-xs uppercase tracking-wider">Offer</th>
+                                            <th className="text-right py-3 text-slate-500 font-medium text-xs uppercase tracking-wider">Revenue</th>
+                                            <th className="text-right py-3 text-slate-500 font-medium text-xs uppercase tracking-wider">Affiliate</th>
+                                            <th className="text-right py-3 text-slate-500 font-medium text-xs uppercase tracking-wider">Sales Team</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {filteredSales.slice(0, 50).map(s => (
+                                            <tr key={s.id} className="table-row border-b border-white/5 transition-colors">
+                                                <td className="py-3 text-white text-sm">{s.date.slice(5)}</td>
+                                                <td className="py-3 text-slate-300 text-sm max-w-[200px] truncate">{s.offer}</td>
+                                                <td className="py-3 text-right text-emerald-400 font-medium text-sm">${s.revenue.toLocaleString()}</td>
+                                                <td className="py-3 text-right text-orange-400 text-sm">${(s.revenue * 0.05).toFixed(2)}</td>
+                                                <td className="py-3 text-right text-orange-400 text-sm">{s.revenue > 999 ? `$${(s.revenue * 0.20).toFixed(2)}` : 'â'}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </div>
+
+                    </>)}
+
+                    {/* âââââââââââ AGENCY EARNINGS SECTION âââââââââââ */}
+                    {activeTab === "agency" && (
+                    <div className="mt-2 mb-6">
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-pink-500/30 to-transparent"></div>
+                            <div className="flex items-center gap-2 px-4 py-2 bg-pink-500/10 border border-pink-500/30 rounded-xl">
+                                <Icons.tiktok />
+                                <span className="text-pink-400 font-semibold text-sm">Agency Earnings — TikTok Partner Center</span>
+                            </div>
+                            <div className="h-px flex-1 bg-gradient-to-r from-transparent via-pink-500/30 to-transparent"></div>
+                        </div>
+
+                        {/* Agency Date Range Buttons */}
+                        <div className="flex flex-wrap gap-2 justify-center mb-4">
+                            {ranges.map(r => (
+                                <button key={r.key} onClick={() => { setRange(r.key); if(r.key === 'custom') {} }} className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 ${range === r.key ? 'bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-lg shadow-pink-500/25' : 'bg-slate-800/50 text-slate-400 hover:bg-slate-700/50 hover:text-slate-300 border border-slate-700/50'}`}>
+                                    {r.label}
+                                </button>
+                            ))}
+                        </div>
+                        {range === 'custom' && (
+                            <div className="flex gap-3 justify-center mb-4">
+                                <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className="bg-slate-800 border border-slate-600 text-white rounded-lg px-3 py-1.5 text-sm" />
+                                <span className="text-slate-400 self-center">to</span>
+                                <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className="bg-slate-800 border border-slate-600 text-white rounded-lg px-3 py-1.5 text-sm" />
+                            </div>
+                        )}
+                        {/* Primary KPI Cards */}
+                        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+                            <div className="fade-in card-glow rounded-2xl p-6 transition-all duration-300" style={{borderColor: 'rgba(236, 72, 153, 0.15)'}}>
+                                <div className="flex items-center gap-2 mb-2">
+                                    <div className="w-8 h-8 rounded-lg bg-pink-500/20 flex items-center justify-center text-pink-400">
+                                        <Icons.revenue />
+                                    </div>
+                                    <span className="text-slate-400 text-sm">Affiliate GMV</span>
+                                </div>
+                                <p className="text-3xl font-bold text-white">
+                                    <AnimatedNumber value={agencyGMV} prefix="$" />
+                                </p>
+                                <p className="text-slate-600 text-xs mt-1">{`${range === "today" ? "Today" : range === "yesterday" ? "Yesterday" : range === "2daysago" ? "2 Days Ago" : range === "7d" ? "Last 7 Days" : range === "30d" ? "Last 30 Days" : range === "12m" ? "Last 12 Months" : range === "custom" ? "Custom Range" : "All Time"}`}</p>
+                            </div>
+                            <div className="fade-in card-glow rounded-2xl p-6 transition-all duration-300" style={{borderColor: 'rgba(236, 72, 153, 0.15)'}}>
+                                <div className="flex items-center gap-2 mb-2">
+                                    <div className="w-8 h-8 rounded-lg bg-pink-500/20 flex items-center justify-center text-pink-400">
+                                        <Icons.agency />
+                                    </div>
+                                    <span className="text-slate-400 text-sm">Est. Commission</span>
+                                </div>
+                                <p className="text-3xl font-bold text-pink-400">
+                                    <AnimatedNumber value={agencyCommission} prefix="$" />
+                                </p>
+                                <p className="text-slate-600 text-xs mt-1">{`${range === "today" ? "Today" : range === "yesterday" ? "Yesterday" : range === "2daysago" ? "2 Days Ago" : range === "7d" ? "Last 7 Days" : range === "30d" ? "Last 30 Days" : range === "12m" ? "Last 12 Months" : range === "custom" ? "Custom Range" : "All Time"}`}</p>
+                            </div>
+                            <div className="fade-in card-glow rounded-2xl p-6 transition-all duration-300" style={{borderColor: 'rgba(236, 72, 153, 0.15)'}}>
+                                <div className="flex items-center gap-2 mb-2">
+                                    <div className="w-8 h-8 rounded-lg bg-pink-500/20 flex items-center justify-center text-pink-400">
+                                        <Icons.sales />
+                                    </div>
+                                    <span className="text-slate-400 text-sm">Orders</span>
+                                </div>
+                                <p className="text-3xl font-bold text-white">
+                                    <AnimatedNumber value={agencyOrders} />
+                                </p>
+                                <p className="text-slate-600 text-xs mt-1">{`${range === "today" ? "Today" : range === "yesterday" ? "Yesterday" : range === "2daysago" ? "2 Days Ago" : range === "7d" ? "Last 7 Days" : range === "30d" ? "Last 30 Days" : range === "12m" ? "Last 12 Months" : range === "custom" ? "Custom Range" : "All Time"}`}</p>
+                            </div>
+                            <div className="fade-in card-glow rounded-2xl p-6 transition-all duration-300" style={{borderColor: 'rgba(16, 185, 129, 0.2)'}}>
+                                <div className="flex items-center gap-2 mb-2">
+                                    <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-400">
+                                        <Icons.profit />
+                                    </div>
+                                    <span className="text-slate-400 text-sm">Distribution Payouts</span>
+                                </div>
+                                <p className="text-3xl font-bold text-emerald-400">
+                                    <AnimatedNumber value={totalDistributionPayouts} prefix="$" decimals={2} />
+                                </p>
+                                <p className="text-slate-600 text-xs mt-1">{allDistPayouts.length} payments</p>
+                            </div>
+                            <div className="fade-in card-glow rounded-2xl p-6 transition-all duration-300" style={{borderColor: 'rgba(16, 185, 129, 0.3)', background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(15, 23, 42, 0.9) 100%)'}}>
+                                <div className="flex items-center gap-2 mb-2">
+                                    <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center text-emerald-400">
+                                        <Icons.revenue />
+                                    </div>
+                                    <span className="text-slate-400 text-sm">Total All Payouts</span>
+                                </div>
+                                <p className="text-3xl font-bold text-emerald-400">
+                                    <AnimatedNumber value={totalAllPayouts} prefix="$" decimals={2} />
+                                </p>
+                                <p className="text-slate-600 text-xs mt-1">Distribution + Creator</p>
+                            </div>
+                        </div>
+
+                        {/* Secondary Stats */}
+                        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                            <div className="card-glow rounded-2xl p-5" style={{borderColor: 'rgba(236, 72, 153, 0.1)'}}>
+                                <p className="text-slate-500 text-xs uppercase tracking-wider mb-1">GMV (Refunds)</p>
+                                <p className="text-xl font-bold text-red-400">${agencyRefunds.toLocaleString(undefined, {maximumFractionDigits: 2})}</p>
+                            </div>
+                            <div className="card-glow rounded-2xl p-5" style={{borderColor: 'rgba(236, 72, 153, 0.1)'}}>
+                                <p className="text-slate-500 text-xs uppercase tracking-wider mb-1">Commission Rate</p>
+                                <p className="text-xl font-bold text-pink-400">{agencyGMV > 0 ? ((agencyCommission / agencyGMV) * 100).toFixed(1) : '0'}%</p>
+                            </div>
+                            <div className="card-glow rounded-2xl p-5" style={{borderColor: 'rgba(236, 72, 153, 0.1)'}}>
+                                <p className="text-slate-500 text-xs uppercase tracking-wider mb-1">Avg Order Value</p>
+                                <p className="text-xl font-bold text-white">${agencyOrders > 0 ? (agencyGMV / agencyOrders).toFixed(2) : '0'}</p>
+                            </div>
+                            <div className="card-glow rounded-2xl p-5" style={{borderColor: 'rgba(236, 72, 153, 0.1)'}}>
+                                <p className="text-slate-500 text-xs uppercase tracking-wider mb-1">Creator Payouts</p>
+                                <p className="text-xl font-bold text-slate-300">${totalCreatorPayouts.toLocaleString(undefined, {maximumFractionDigits: 2})}</p>
+                            </div>
+                        </div>
+
+                        {/* Distribution Payouts Table */}
+                        <div className="card-glow rounded-2xl p-6 mb-6" style={{borderColor: 'rgba(16, 185, 129, 0.2)'}}>
+                            <div className="flex justify-between items-center mb-4">
+                                <h3 className="text-white font-semibold flex items-center gap-2">
+                                    <span className="w-2 h-2 rounded-full bg-gradient-to-r from-emerald-400 to-cyan-500"></span>
+                                    Product Distribution Payouts <span className="text-slate-500 font-normal">({allDistPayouts.length})</span>
+                                </h3>
+                                <span className="text-emerald-400 text-xs flex items-center gap-1">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                                    Auto-synced
+                                </span>
+                            </div>
+
+                            {allDistPayouts.length === 0 ? (
+                                <div className="text-center py-8">
+                                    <p className="text-slate-500 mb-2">No distribution payout data yet</p>
+                                    <p className="text-slate-600 text-xs">Data will appear once the API fetches from Partner Center, or add a "Distribution Payouts" tab to your Google Sheet with columns: date, amount, type, notes</p>
+                                </div>
+                            ) : (
+                                <div className="overflow-x-auto max-h-80 overflow-y-auto">
+                                    <table className="w-full">
+                                        <thead className="sticky top-0 bg-slate-900/95 backdrop-blur">
+                                            <tr className="border-b border-white/10">
+                                                <th className="text-left py-3 text-slate-500 font-medium text-xs uppercase tracking-wider">Date</th>
+                                                <th className="text-left py-3 text-slate-500 font-medium text-xs uppercase tracking-wider">Type</th>
+                                                <th className="text-left py-3 text-slate-500 font-medium text-xs uppercase tracking-wider">Source</th>
+                                                <th className="text-right py-3 text-slate-500 font-medium text-xs uppercase tracking-wider">Amount</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {allDistPayouts.map((p, i) => (
+                                                <tr key={i} className="table-row border-b border-white/5 transition-colors">
+                                                    <td className="py-3 text-white text-sm">{p.date}</td>
+                                                    <td className="py-3 text-slate-400 text-sm">{(p.type || 'distribution').replace(/_/g, ' ')}</td>
+                                                    <td className="py-3 text-sm">
+                                                        <span className={`px-2 py-0.5 rounded-full text-xs ${p.source === 'api' ? 'bg-cyan-500/20 text-cyan-400' : 'bg-amber-500/20 text-amber-400'}`}>
+                                                            {p.source === 'api' ? 'API' : 'Sheet'}
+                                                        </span>
+                                                    </td>
+                                                    <td className="py-3 text-right text-emerald-400 font-medium text-sm">${(p.amount || 0).toLocaleString(undefined, {maximumFractionDigits: 2})}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Creator Payouts Table (smaller settlements) */}
+                        <div className="card-glow rounded-2xl p-6 mb-6" style={{borderColor: 'rgba(236, 72, 153, 0.15)'}}>
+                            <div className="flex justify-between items-center mb-4">
+                                <h3 className="text-white font-semibold flex items-center gap-2">
+                                    <span className="w-2 h-2 rounded-full bg-gradient-to-r from-pink-400 to-rose-500"></span>
+                                    Creator Settlements <span className="text-slate-500 font-normal">({agencyData.payouts.length})</span>
+                                </h3>
+                                <span className="text-slate-500 text-xs">v1 API settlements</span>
+                            </div>
+
+                            {agencyData.payouts.length === 0 ? (
+                                <p className="text-slate-500 text-center py-8">No creator settlement data yet</p>
+                            ) : (
+                                <div className="overflow-x-auto max-h-48 overflow-y-auto">
+                                    <table className="w-full">
+                                        <thead className="sticky top-0 bg-slate-900/95 backdrop-blur">
+                                            <tr className="border-b border-white/10">
+                                                <th className="text-left py-3 text-slate-500 font-medium text-xs uppercase tracking-wider">Payment ID</th>
+                                                <th className="text-left py-3 text-slate-500 font-medium text-xs uppercase tracking-wider">Date</th>
+                                                <th className="text-right py-3 text-slate-500 font-medium text-xs uppercase tracking-wider">Settlement</th>
+                                                <th className="text-right py-3 text-slate-500 font-medium text-xs uppercase tracking-wider">Amount Paid</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {agencyData.payouts.map((p, i) => (
+                                                <tr key={i} className="table-row border-b border-white/5 transition-colors">
+                                                    <td className="py-3 text-slate-400 text-sm font-mono text-xs">{(p.payment_id || '').slice(-8) || 'â'}</td>
+                                                    <td className="py-3 text-white text-sm">{p.date}</td>
+                                                    <td className="py-3 text-right text-slate-300 text-sm">${(p.settlement_amount || 0).toFixed(2)}</td>
+                                                    <td className="py-3 text-right text-emerald-400 font-medium text-sm">${(p.amount_paid || 0).toFixed(2)}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Data Source Note */}
+                        <div className="bg-pink-500/5 border border-pink-500/20 rounded-xl px-4 py-3 text-slate-500 text-xs space-y-1">
+                            <div className="flex items-center gap-2">
+                                <Icons.tiktok />
+                                <span>Auto-synced from TikTok Shop Partner Center â Product Distribution Service (via GitHub Actions)</span>
+                                {agencyData.analytics.last_updated && <span className="text-pink-400 ml-auto">Last sync: {agencyData.analytics.last_updated}</span>}
+                            </div>
+                            <div className="text-slate-600 pl-7">
+                                Tip: Add a "Distribution Payouts" tab to your Google Sheet (columns: date, amount, type, notes) to manually track payouts until the API is fully connected.
+                            </div>
+                        </div>
+                    </div>
+                    )}
+
+
+                    {/* Footer */}
+                    <div className="mt-6 text-center text-slate-600 text-xs">
+                        Auto-refreshes every 30 min â¢ PST timezone â¢ {sales.length} total transactions â¢ {ga4Sessions.length} GA4 records â¢ {allDistPayouts.length} distribution payouts â¢ {agencyData.payouts.length} creator payouts • {whopPayments.length} Whop payments
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    ReactDOM.render(<App/>, document.getElementById("root"));
+    </script>
+</body>
+</html>
+
