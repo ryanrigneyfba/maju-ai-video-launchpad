@@ -113,40 +113,46 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Debug: test multiple Higgsfield endpoint patterns to find the right one
-app.get('/api/debug/higgsfield-endpoints', async (req, res) => {
-  const apiKey = req.query.key;
-  if (!apiKey) return res.status(400).json({ error: 'Pass ?key=KEY_ID:KEY_SECRET' });
+// Debug: test Higgsfield endpoints - POST to avoid URL-encoding issues with keys
+// Usage: POST /api/debug/higgsfield-endpoints with JSON body { "key": "KEY_ID:KEY_SECRET" }
+// Or GET with ?key=... (but POST is safer for keys with special chars)
+app.post('/api/debug/higgsfield-endpoints', express.json(), async (req, res) => {
+  const apiKey = req.body?.key;
+  if (!apiKey) return res.status(400).json({ error: 'POST JSON body: { "key": "KEY_ID:KEY_SECRET" }' });
 
-  const [keyId, keySecret] = apiKey.includes(':') ? apiKey.split(':') : [apiKey, ''];
+  // Log key format (redacted) to help debug
+  const keyInfo = {
+    length: apiKey.length,
+    hasColon: apiKey.includes(':'),
+    colonCount: (apiKey.match(/:/g) || []).length,
+    firstCharAfterColon: apiKey.includes(':') ? apiKey.split(':')[1]?.[0] || 'EMPTY' : 'N/A',
+    keyIdLength: apiKey.includes(':') ? apiKey.split(':')[0].length : apiKey.length,
+    keySecretLength: apiKey.includes(':') ? apiKey.split(':').slice(1).join(':').length : 0,
+  };
 
-  // Auth variants to test
+  // Split on FIRST colon only (secret might contain colons)
+  const colonIdx = apiKey.indexOf(':');
+  const keyId = colonIdx > -1 ? apiKey.substring(0, colonIdx) : apiKey;
+  const keySecret = colonIdx > -1 ? apiKey.substring(colonIdx + 1) : '';
+
+  // Auth variants
   const v2Headers = { 'Authorization': `Key ${apiKey}`, 'Content-Type': 'application/json' };
-  const v1Headers = { 'hf-api-key': keyId, 'hf-secret': keySecret, 'Content-Type': 'application/json' };
   const bearerHeaders = { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' };
-  const bearerIdHeaders = { 'Authorization': `Bearer ${keyId}`, 'Content-Type': 'application/json' };
-
-  const v2Body = { prompt: 'A black seed oil bottle on a white background', aspect_ratio: '9:16', duration: 5 };
-  const v1Body = { params: { prompt: 'A black seed oil bottle', aspect_ratio: '9:16', duration: 5 } };
+  const v1Headers = { 'hf-api-key': keyId, 'hf-secret': keySecret, 'Content-Type': 'application/json' };
 
   const tests = [
-    // ── THEORY: SDK uses generic endpoint + model in body ──
-    { ep: '/text-to-video', method: 'POST', headers: v2Headers, body: { model: 'kling-v3.0-pro', prompt: 'test', aspect_ratio: '9:16', duration: 5 }, label: 'Generic: /text-to-video + model body' },
-    { ep: '/v1/text-to-video', method: 'POST', headers: v2Headers, body: { model: 'kling-v3.0-pro', prompt: 'test', aspect_ratio: '9:16', duration: 5 }, label: 'Generic: /v1/text-to-video + model body' },
-    { ep: '/text-to-image', method: 'POST', headers: v2Headers, body: { model: 'bytedance/seedream/v4', prompt: 'test' }, label: 'Generic: /text-to-image + model body' },
-    { ep: '/v1/text-to-image', method: 'POST', headers: v2Headers, body: { model: 'bytedance/seedream/v4', prompt: 'test' }, label: 'Generic: /v1/text-to-image + model body' },
-    // ── THEORY: OpenAI-compatible /v1/generations pattern ──
-    { ep: '/v1/generations', method: 'POST', headers: v2Headers, body: { model: 'kling-v3.0-pro', prompt: 'test' }, label: 'Generic: /v1/generations' },
-    { ep: '/generations', method: 'POST', headers: v2Headers, body: { model: 'kling-v3.0-pro', prompt: 'test' }, label: 'Generic: /generations' },
-    // ── Auth test on known path-based endpoint ──
-    { ep: '/bytedance/seedream/v4/text-to-image', method: 'POST', headers: v2Headers, body: { prompt: 'test' }, label: 'Auth:Key - seedream' },
-    { ep: '/bytedance/seedream/v4/text-to-image', method: 'POST', headers: bearerHeaders, body: { prompt: 'test' }, label: 'Auth:Bearer - seedream' },
-    // ── Path-based Kling endpoints ──
-    { ep: '/kling-v3.0-pro-text-to-video', method: 'POST', headers: v2Headers, body: v2Body, label: 'Path: kling-v3.0-pro-t2v' },
-    // ── Discovery: try POST (405 on GET) ──
-    { ep: '/v1/models', method: 'POST', headers: v2Headers, body: {}, label: 'Discovery POST: /v1/models' },
-    { ep: '/models', method: 'POST', headers: v2Headers, body: {}, label: 'Discovery POST: /models' },
-    { ep: '/applications', method: 'POST', headers: v2Headers, body: {}, label: 'Discovery POST: /applications' },
+    // ── Auth tests on known endpoint (seedream from SDK docs) ──
+    { ep: '/bytedance/seedream/v4/text-to-image', method: 'POST', headers: v2Headers, body: { prompt: 'test' }, label: 'Auth:Key' },
+    { ep: '/bytedance/seedream/v4/text-to-image', method: 'POST', headers: bearerHeaders, body: { prompt: 'test' }, label: 'Auth:Bearer' },
+    // ── Generic endpoint + model in body (SDK pattern) ──
+    { ep: '/text-to-video', method: 'POST', headers: v2Headers, body: { model: 'kling-v3.0-pro', prompt: 'test', aspect_ratio: '9:16', duration: 5 }, label: 'Generic: /text-to-video' },
+    { ep: '/v1/text-to-video', method: 'POST', headers: v2Headers, body: { model: 'kling-v3.0-pro', prompt: 'test', aspect_ratio: '9:16', duration: 5 }, label: 'Generic: /v1/text-to-video' },
+    { ep: '/text-to-image', method: 'POST', headers: v2Headers, body: { model: 'bytedance/seedream/v4', prompt: 'test' }, label: 'Generic: /text-to-image' },
+    // ── Path-based Kling ──
+    { ep: '/kling-v3.0-pro-text-to-video', method: 'POST', headers: v2Headers, body: { prompt: 'test', aspect_ratio: '9:16', duration: 5 }, label: 'Path: kling-v3.0-pro' },
+    // ── Discovery ──
+    { ep: '/v1/models', method: 'POST', headers: v2Headers, body: {}, label: 'Discovery: /v1/models' },
+    { ep: '/applications', method: 'POST', headers: v2Headers, body: {}, label: 'Discovery: /applications' },
   ];
 
   const results = [];
@@ -163,7 +169,56 @@ app.get('/api/debug/higgsfield-endpoints', async (req, res) => {
       results.push({ label: t.label, endpoint: t.ep, error: err.message });
     }
   }
-  res.json({ results });
+  res.json({ keyInfo, results });
+});
+// Simple UI to test the debug endpoint without needing curl
+app.get('/api/debug/higgsfield-endpoints', (req, res) => {
+  // If key provided in query, run tests directly
+  if (req.query.key) {
+    const apiKey = req.query.key;
+    const colonIdx = apiKey.indexOf(':');
+    const keyId = colonIdx > -1 ? apiKey.substring(0, colonIdx) : apiKey;
+    const keySecret = colonIdx > -1 ? apiKey.substring(colonIdx + 1) : '';
+    const v2Headers = { 'Authorization': `Key ${apiKey}`, 'Content-Type': 'application/json' };
+    const bearerHeaders = { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' };
+    const tests = [
+      { ep: '/bytedance/seedream/v4/text-to-image', method: 'POST', headers: v2Headers, body: { prompt: 'test' }, label: 'Auth:Key' },
+      { ep: '/bytedance/seedream/v4/text-to-image', method: 'POST', headers: bearerHeaders, body: { prompt: 'test' }, label: 'Auth:Bearer' },
+      { ep: '/text-to-video', method: 'POST', headers: v2Headers, body: { model: 'kling-v3.0-pro', prompt: 'test', aspect_ratio: '9:16', duration: 5 }, label: 'Generic: /text-to-video' },
+      { ep: '/kling-v3.0-pro-text-to-video', method: 'POST', headers: v2Headers, body: { prompt: 'test', aspect_ratio: '9:16', duration: 5 }, label: 'Path: kling-v3.0-pro' },
+    ];
+    const runTests = async () => {
+      const results = [];
+      for (const t of tests) {
+        try {
+          const result = await proxyRequest(`https://platform.higgsfield.ai${t.ep}`, t.method, t.headers, t.body);
+          results.push({ label: t.label, status: result.status, data: result.data });
+        } catch (err) { results.push({ label: t.label, error: err.message }); }
+      }
+      res.json({ keyInfo: { length: apiKey.length, hasColon: apiKey.includes(':'), keyIdLength: keyId.length, keySecretLength: keySecret.length }, results });
+    };
+    return runTests();
+  }
+  // Otherwise show a simple form
+  res.send(`<!DOCTYPE html><html><body style="font-family:monospace;max-width:800px;margin:40px auto">
+    <h2>Higgsfield API Debug</h2>
+    <p>Enter your API key (KEY_ID:KEY_SECRET) to test endpoints:</p>
+    <input id="key" type="password" style="width:100%;padding:8px;font-size:16px" placeholder="KEY_ID:KEY_SECRET" />
+    <button onclick="runTest()" style="margin-top:10px;padding:8px 20px;font-size:16px">Test</button>
+    <pre id="out" style="margin-top:20px;background:#111;color:#0f0;padding:20px;border-radius:8px;overflow:auto;max-height:600px"></pre>
+    <script>
+    async function runTest() {
+      const key = document.getElementById('key').value;
+      document.getElementById('out').textContent = 'Testing...';
+      try {
+        const r = await fetch('/api/debug/higgsfield-endpoints', {
+          method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({key})
+        });
+        const data = await r.json();
+        document.getElementById('out').textContent = JSON.stringify(data, null, 2);
+      } catch(e) { document.getElementById('out').textContent = 'Error: ' + e.message; }
+    }
+    </script></body></html>`);
 });
 
 // Get SOP segment definitions
