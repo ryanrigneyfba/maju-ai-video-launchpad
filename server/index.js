@@ -118,42 +118,48 @@ app.get('/api/debug/higgsfield-endpoints', async (req, res) => {
   const apiKey = req.query.key;
   if (!apiKey) return res.status(400).json({ error: 'Pass ?key=KEY_ID:KEY_SECRET' });
 
-  // Format: vendor/model/version/task (like bytedance/seedream/v4/text-to-image)
-  const endpoints = [
-    // Kuaishou/Kling patterns (vendor/model/version/task)
-    '/kuaishou/kling/v3.0/text-to-video',
-    '/kuaishou/kling/v3/text-to-video',
-    '/kuaishou/kling/v3.0-pro/text-to-video',
-    '/kuaishou/kling/3.0/text-to-video',
-    '/kuaishou/kling-video/v3.0/text-to-video',
-    '/kwaivgi/kling-video/v3.0/text-to-video',
-    // Known working format from SDK docs
-    '/bytedance/seedream/v4/text-to-image',
-    // Try listing/discovery endpoints
-    '/v1/models',
-    '/models',
-    '/api/models',
-    '/applications',
+  const [keyId, keySecret] = apiKey.includes(':') ? apiKey.split(':') : [apiKey, ''];
+
+  // V2 Auth: Authorization: Key KEY_ID:KEY_SECRET
+  const v2Headers = { 'Authorization': `Key ${apiKey}`, 'Content-Type': 'application/json' };
+  // V1 Auth: hf-api-key + hf-secret as separate headers
+  const v1Headers = { 'hf-api-key': keyId, 'hf-secret': keySecret, 'Content-Type': 'application/json' };
+
+  const v2Body = { prompt: 'A black seed oil bottle on a white background', aspect_ratio: '9:16', duration: 5 };
+  const v1Body = { params: { prompt: 'A black seed oil bottle', aspect_ratio: '9:16', duration: 5 } };
+
+  const tests = [
+    // ── V2 API: flat endpoint names (third-party models) ──
+    { ep: '/kling-v3.0-pro-text-to-video', method: 'POST', headers: v2Headers, body: v2Body, label: 'V2: kling-v3.0-pro-text-to-video' },
+    { ep: '/kling-v3.0-standard-text-to-video', method: 'POST', headers: v2Headers, body: v2Body, label: 'V2: kling-v3.0-standard-text-to-video' },
+    { ep: '/kling-o1-text-to-video', method: 'POST', headers: v2Headers, body: v2Body, label: 'V2: kling-o1-text-to-video' },
+    { ep: '/nano-banana-pro', method: 'POST', headers: v2Headers, body: { prompt: 'A black seed oil bottle', aspect_ratio: '9:16' }, label: 'V2: nano-banana-pro' },
+    { ep: '/bytedance/seedream/v4/text-to-image', method: 'POST', headers: v2Headers, body: { prompt: 'A black seed oil bottle' }, label: 'V2: bytedance/seedream (control)' },
+    // ── V1 API: legacy endpoints with hf-api-key/hf-secret auth ──
+    { ep: '/v1/image2video/dop', method: 'POST', headers: v1Headers, body: v1Body, label: 'V1: image2video/dop' },
+    { ep: '/v1/text2image/soul', method: 'POST', headers: v1Headers, body: v1Body, label: 'V1: text2image/soul' },
+    { ep: '/v1/motions', method: 'GET', headers: v1Headers, body: undefined, label: 'V1: motions (list)' },
+    // ── Discovery endpoints ──
+    { ep: '/v1/models', method: 'GET', headers: v2Headers, body: undefined, label: 'Discovery: /v1/models' },
+    { ep: '/models', method: 'GET', headers: v2Headers, body: undefined, label: 'Discovery: /models' },
+    { ep: '/schemas', method: 'GET', headers: v2Headers, body: undefined, label: 'Discovery: /schemas' },
+    { ep: '/applications', method: 'GET', headers: v2Headers, body: undefined, label: 'Discovery: /applications' },
+    // ── V1 endpoints with V2 auth (in case key format works for both) ──
+    { ep: '/v1/image2video/dop', method: 'POST', headers: v2Headers, body: v1Body, label: 'V1+V2auth: image2video/dop' },
   ];
 
-  const body = { prompt: 'A black seed oil bottle on a white background', aspect_ratio: '9:16', duration: 5 };
-
   const results = [];
-  for (const ep of endpoints) {
+  for (const t of tests) {
     try {
-      // Use GET for listing endpoints, POST for generation
-      const isListing = ep.includes('models') || ep.includes('applications');
-      const method = isListing ? 'GET' : 'POST';
-      const sendBody = isListing ? undefined : body;
       const result = await proxyRequest(
-        `https://platform.higgsfield.ai${ep}`,
-        method,
-        { 'Authorization': `Key ${apiKey}`, 'Content-Type': 'application/json' },
-        sendBody
+        `https://platform.higgsfield.ai${t.ep}`,
+        t.method,
+        t.headers,
+        t.body
       );
-      results.push({ endpoint: ep, method, status: result.status, data: result.data });
+      results.push({ label: t.label, endpoint: t.ep, method: t.method, status: result.status, data: result.data });
     } catch (err) {
-      results.push({ endpoint: ep, error: err.message });
+      results.push({ label: t.label, endpoint: t.ep, error: err.message });
     }
   }
   res.json({ results });
