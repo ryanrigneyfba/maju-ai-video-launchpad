@@ -651,7 +651,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     try {
       const res = await fetch(`sops/${name}.md`);
       if (!res.ok) throw new Error('Not found');
-      const md = await res.text();
+      const md = await res.text();h
       el.innerHTML = renderMarkdown(md);
     } catch {
       el.innerHTML = '<p class="empty-state">Could not load SOP.</p>';
@@ -868,7 +868,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
           // Higgsfield status: queued, in_progress, completed, failed, nsfw
           // Normalize for pipeline
           const job = (data.jobs && data.jobs[0]) || {};
-          const videoUrl = (job.results && (job.results.raw?.url || job.results.min?.url)) || data.video_url || data.url;
+          const videoUrl = (job.results && (job.results.raw?.url || job.results.min?.url)) || (data.video && data.video.url) || data.video_url || data.url;
           return {
             ok: res.ok,
             status: data.status,
