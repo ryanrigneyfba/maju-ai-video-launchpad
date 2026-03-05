@@ -1185,20 +1185,22 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       async generateVideo(params) {
         console.log('[Higgsfield DoP] Generate video:', params);
         if (!apiKeys.higgsfield) return { ok: false, error: 'No Higgsfield API key set — add in Settings' };
-        // DoP V1 body format
-        const body = {
-          params: {
-            prompt: params.prompt || '',
-            input_images: [{ type: 'image_url', image_url: params.image_url }],
-            model: params.model || 'dop-turbo',
-            aspect_ratio: params.aspect_ratio || '9:16',
-            duration: params.duration || 5,
-          },
+        // DoP V2 subscribe format
+        const input = {
+          prompt: params.prompt || '',
+          input_images: [{ type: 'image_url', image_url: params.image_url }],
+          model: params.model || 'dop-turbo',
+          aspect_ratio: params.aspect_ratio || '9:16',
+          duration: params.duration || 5,
         };
         // Optional motion preset
         if (params.motion_id) {
-          body.params.motion_id = params.motion_id;
+          input.motion_id = params.motion_id;
         }
+        const body = {
+          endpoint: '/v1/image2video/dop',
+          input,
+        };
         try {
           const res = await fetch(backendUrl('/api/proxy/higgsfield/generate'), {
             method: 'POST',
@@ -1218,13 +1220,12 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       async generateImage(params) {
         console.log('[Higgsfield] Generate image (V2 Seedream):', params);
         if (!apiKeys.higgsfield) return { ok: false, error: 'No Higgsfield API key set — add in Settings' };
-        // V2 image generation (Seedream/Flux) — uses Authorization: Key header
+        // V2 image generation (Seedream) — uses Authorization: Key header
         const body = {
-          endpoint: 'flux-pro/kontext/max/text-to-image',
+          endpoint: 'bytedance/seedream/v4/text-to-image',
           input: {
             prompt: params.prompt || '',
             aspect_ratio: params.aspect_ratio || '9:16',
-            safety_tolerance: 2,
           },
         };
         try {

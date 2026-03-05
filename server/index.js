@@ -1,6 +1,7 @@
 /* ═══════════════════════════════════════════
    MAJU AI Video Launchpad — Backend Server
-   FFmpeg stitching + job management
+   FFmpeg stitching + API proxy + job management
+   Deployed on AWS App Runner
    ═══════════════════════════════════════════ */
 
 const express = require('express');
