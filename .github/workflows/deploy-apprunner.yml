@@ -1,0 +1,92 @@
+name: Deploy to AWS App Runner
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'server/**'
+      - '.github/workflows/deploy-apprunner.yml'
+  workflow_dispatch:
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REPO_NAME: maju-backend
+  APP_RUNNER_SERVICE_NAME: maju-backend
+  PORT: "3001"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: ecr-login
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Get AWS Account ID
+        id: account
+        run: |
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          echo "id=${ACCOUNT_ID}" >> $GITHUB_OUTPUT
+          echo "ecr_uri=${ACCOUNT_ID}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com" >> $GITHUB_OUTPUT
+
+      - name: Create ECR repository if needed
+        run: |
+          aws ecr describe-repositories --repository-names "${{ env.ECR_REPO_NAME }}" --region "${{ env.AWS_REGION }}" 2>/dev/null || aws ecr create-repository --repository-name "${{ env.ECR_REPO_NAME }}" --region "${{ env.AWS_REGION }}" --image-scanning-configuration scanOnPush=true
+
+      - name: Build tag and push Docker image
+        env:
+          IMAGE_URI: ${{ steps.account.outputs.ecr_uri }}/${{ env.ECR_REPO_NAME }}:latest
+        run: |
+          docker build -t ${{ env.ECR_REPO_NAME }} -f server/Dockerfile server/
+          docker tag ${{ env.ECR_REPO_NAME }}:latest $IMAGE_URI
+          docker push $IMAGE_URI
+
+      - name: Setup IAM role for App Runner
+        id: iam
+        run: |
+          ROLE_NAME="AppRunnerECRAccessRole"
+          if ! aws iam get-role --role-name "${ROLE_NAME}" 2>/dev/null; then
+            aws iam create-role --role-name "${ROLE_NAME}" --assume-role-policy-document '{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"Service":"build.apprunner.amazonaws.com"},"Action":"sts:AssumeRole"}]}'
+            aws iam attach-role-policy --role-name "${ROLE_NAME}" --policy-arn "arn:aws:iam::aws:policy/service-role/AWSAppRunnerServicePolicyForECRAccess"
+            sleep 15
+          fi
+          ROLE_ARN=$(aws iam get-role --role-name "${ROLE_NAME}" --query 'Role.Arn' --output text)
+          echo "role_arn=${ROLE_ARN}" >> $GITHUB_OUTPUT
+
+      - name: Deploy to App Runner
+        id: deploy
+        env:
+          IMAGE_URI: ${{ steps.account.outputs.ecr_uri }}/${{ env.ECR_REPO_NAME }}:latest
+          ROLE_ARN: ${{ steps.iam.outputs.role_arn }}
+        run: |
+          EXISTING_SERVICE=$(aws apprunner list-services --region "${{ env.AWS_REGION }}" --query "ServiceSummaryList[?ServiceName=='${{ env.APP_RUNNER_SERVICE_NAME }}'].ServiceArn" --output text 2>/dev/null || echo "")
+          if [ -n "${EXISTING_SERVICE}" ] && [ "${EXISTING_SERVICE}" != "None" ]; then
+            echo "Updating existing service..."
+            aws apprunner update-service --service-arn "${EXISTING_SERVICE}" --source-configuration "{\"AuthenticationConfiguration\":{\"AccessRoleArn\":\"${ROLE_ARN}\"},\"ImageRepository\":{\"ImageIdentifier\":\"${IMAGE_URI}\",\"ImageRepositoryType\":\"ECR\",\"ImageConfiguration\":{\"Port\":\"${{ env.PORT }}\"}}}" --region "${{ env.AWS_REGION }}"
+            SERVICE_URL=$(aws apprunner describe-service --service-arn "${EXISTING_SERVICE}" --region "${{ env.AWS_REGION }}" --query 'Service.ServiceUrl' --output text)
+          else
+            echo "Creating new service..."
+            CREATE_OUTPUT=$(aws apprunner create-service --service-name "${{ env.APP_RUNNER_SERVICE_NAME }}" --source-configuration "{\"AuthenticationConfiguration\":{\"AccessRoleArn\":\"${ROLE_ARN}\"},\"ImageRepository\":{\"ImageIdentifier\":\"${IMAGE_URI}\",\"ImageRepositoryType\":\"ECR\",\"ImageConfiguration\":{\"Port\":\"${{ env.PORT }}\"}}}" --instance-configuration '{"Cpu":"1024","Memory":"2048"}' --health-check-configuration '{"Protocol":"HTTP","Path":"/api/health","Interval":20,"Timeout":5,"HealthyThreshold":1,"UnhealthyThreshold":5}' --region "${{ env.AWS_REGION }}")
+            SERVICE_URL=$(echo "${CREATE_OUTPUT}" | python3 -c "import sys,json; print(json.load(sys.stdin)['Service']['ServiceUrl'])")
+          fi
+          echo "service_url=https://${SERVICE_URL}" >> $GITHUB_OUTPUT
+
+      - name: Deployment summary
+        run: |
+          echo "## MAJU Backend Deployed" >> $GITHUB_STEP_SUMMARY
+          echo "**Backend URL:** ${{ steps.deploy.outputs.service_url }}" >> $GITHUB_STEP_SUMMARY
+          echo "Service should be active in ~2-3 minutes." >> $GITHUB_STEP_SUMMARY
