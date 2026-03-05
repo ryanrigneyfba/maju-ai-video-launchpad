@@ -5,6 +5,10 @@ on:
     branches: [main]
     paths:
       - 'server/**'
+      - 'js/**'
+      - 'css/**'
+      - 'index.html'
+      - 'backend-url.json'
       - '.github/workflows/deploy-apprunner.yml'
   workflow_dispatch:
 
@@ -51,7 +55,7 @@ jobs:
         env:
           IMAGE_URI: ${{ steps.account.outputs.ecr_uri }}/${{ env.ECR_REPO_NAME }}:latest
         run: |
-          docker build -t ${{ env.ECR_REPO_NAME }} -f server/Dockerfile server/
+          docker build -t ${{ env.ECR_REPO_NAME }} -f server/Dockerfile .
           docker tag ${{ env.ECR_REPO_NAME }}:latest $IMAGE_URI
           docker push $IMAGE_URI
 
