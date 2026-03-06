@@ -1167,6 +1167,8 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     if (apiKeys.higgsfield) $('#api-higgsfield').value = apiKeys.higgsfield;
     if (apiKeys.higgsfieldSecret) $('#api-higgsfield-secret').value = apiKeys.higgsfieldSecret;
     if (apiKeys.metricool) $('#api-metricool').value = apiKeys.metricool;
+    if (apiKeys.metricoolBlogId) $('#setting-metricool-blog-id').value = apiKeys.metricoolBlogId;
+    if (apiKeys.metricoolUserId) $('#setting-metricool-user-id').value = apiKeys.metricoolUserId;
     if (apiKeys.arcads) $('#api-arcads').value = apiKeys.arcads;
     if (apiKeys.creatify) $('#api-creatify').value = apiKeys.creatify;
   }
@@ -1233,6 +1235,8 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       higgsfield: $('#api-higgsfield').value.trim(),
       higgsfieldSecret: $('#api-higgsfield-secret').value.trim(),
       metricool: $('#api-metricool').value.trim(),
+      metricoolBlogId: $('#setting-metricool-blog-id').value.trim(),
+      metricoolUserId: $('#setting-metricool-user-id').value.trim(),
       arcads: $('#api-arcads').value.trim(),
       creatify: $('#api-creatify').value.trim(),
     };
@@ -1471,10 +1475,12 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       },
 
       async schedulePost(params) {
+        const blogId = apiKeys.metricoolBlogId || '';
+        const userId = apiKeys.metricoolUserId || '';
         console.log('[Metricool] Schedule post:', params);
         if (!apiKeys.metricool) return { ok: false, error: 'No API key set' };
         try {
-          const res = await fetch(backendUrl('/api/proxy/metricool/posts'), {
+          const res = await fetch(backendUrl(`/api/proxy/metricool/posts?blogId=${blogId}&userId=${userId}`), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'x-api-key-value': apiKeys.metricool },
             body: JSON.stringify(params),
@@ -1880,29 +1886,79 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
   // Analytics is loaded lazily — triggered from nav click handler below
 
   // ─── Wire Approve → Metricool Post ───
+  async function fetchMetricoolBrands() {
+    if (!apiKeys.metricool) return;
+    if (apiKeys.metricoolBlogId && apiKeys.metricoolUserId) return; // already discovered
+    try {
+      const url = backendUrl('/api/proxy/metricool/brands' + (apiKeys.metricoolUserId ? `?userId=${apiKeys.metricoolUserId}` : ''));
+      const res = await fetch(url, {
+        method: 'GET',
+        headers: { 'x-api-key-value': apiKeys.metricool }
+      });
+      if (!res.ok) { console.warn('[Metricool] Brands fetch failed:', res.status); return; }
+      const json = await res.json();
+      const brands = json.data || json;
+      if (Array.isArray(brands) && brands.length > 0) {
+        const brand = brands[0];
+        apiKeys.metricoolBlogId = brand.id || brand.blogId;
+        apiKeys.metricoolUserId = brand.userId;
+        localStorage.setItem(CONFIG.storageKeys.apiKeys, JSON.stringify(apiKeys));
+        console.log('[Metricool] Auto-discovered blogId:', apiKeys.metricoolBlogId, 'userId:', apiKeys.metricoolUserId);
+      }
+    } catch (err) {
+      console.error('[Metricool] Error fetching brands:', err);
+    }
+  }
+
   function scheduleApprovedItem(item) {
     if (!apiKeys.metricool) {
       console.log('[Metricool] No API key — skip scheduling');
       return;
     }
+    if (!apiKeys.metricoolBlogId) {
+      console.warn('[Metricool] No blogId — attempting auto-discovery first');
+      return fetchMetricoolBrands().then(() => {
+        if (apiKeys.metricoolBlogId) return scheduleApprovedItem(item);
+        console.error('[Metricool] Still no blogId after discovery — cannot schedule');
+      });
+    }
     const caption = item.instagramCaption || `${item.productName} — ${item.typeName}`;
     const tags = (item.hashtags || []).map(t => `#${t.replace(/^#/, '')}`).join(' ');
-    const fullContent = tags ? `${caption}\n\n${tags}` : caption;
+    const fullText = tags ? `${caption}\n\n${tags}` : caption;
     const videoSrc = item.stitchedVideoUrl || item.videoUrl;
-    const postParams = {
-      content: fullContent,
-      networks: [{ network: 'instagram', type: 'reels' }],
+    // publicationDate is REQUIRED — use schedDate if set, otherwise 1 hour from now
+    let scheduleDateISO;
+    if (item.schedDate) {
+      scheduleDateISO = item.schedDate;
+    } else {
+      const future = new Date(Date.now() + 60 * 60 * 1000);
+      scheduleDateISO = future.toISOString().split('.')[0]; // "YYYY-MM-DDTHH:MM:SS"
+    }
+    const postPayload = {
+      text: fullText,
+      autoPublish: true,
+      draft: false,
+      providers: [{ network: 'instagram' }],
+      instagramData: { type: 'REEL', showReelOnFeed: true },
       media: videoSrc ? [{ url: videoSrc, type: 'video' }] : [],
-      publicationDate: item.schedDate
-        ? { dateTime: item.schedDate, timezone: Intl.DateTimeFormat().resolvedOptions().timeZone }
-        : undefined,
+      mediaAltText: [],
+      publicationDate: {
+        dateTime: scheduleDateISO,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+      },
+      shortener: false,
+      smartLinkData: { ids: [] },
+      firstCommentText: '',
+      hasNotReadNotes: false,
+      descendants: [],
+      saveExternalMediaFiles: true
     };
-    console.log('[Metricool] Scheduling Instagram Reel:', { content: fullContent.substring(0, 80) + '...', hasVideo: !!videoSrc });
-    return API.metricool.schedulePost(postParams).then((res) => {
+    console.log('[Metricool] Scheduling Instagram Reel:', { text: fullText.substring(0, 80) + '...', hasVideo: !!videoSrc });
+    return API.metricool.schedulePost(postPayload).then((res) => {
       if (res.ok) {
-        console.log('[Metricool] Post scheduled:', res);
         item.metricoolId = res.postId || res.id;
         saveQueue();
+        console.log('[Metricool] Post scheduled successfully:', res);
       } else {
         console.warn('[Metricool] Schedule failed:', res);
       }
@@ -2017,6 +2073,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
   syncKeysFromBackend().then(() => {
     loadApiKeys();
     checkBackendStatus();
+    fetchMetricoolBrands();
   });
   renderQueue();
   renderTracker();
