@@ -518,6 +518,18 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       const firstItem = newItems[0];
       if (firstItem && firstItem.aiPrompt && firstItem.aiPrompt.captions) {
         stitchOptions.captions = firstItem.aiPrompt.captions;
+      } else {
+        // Fallback: build captions from segment textOverlay data
+        const segs = (firstItem && firstItem.aiPrompt && firstItem.aiPrompt.segments) || DEFAULT_SEGMENT_PROMPTS;
+        stitchOptions.captions = segs
+          .filter(seg => seg.textOverlay)
+          .map(seg => {
+            const idx = segs.indexOf(seg);
+            let segStart = 0;
+            for (let j = 0; j < idx; j++) segStart += (segs[j].duration || 3);
+            const segEnd = segStart + (seg.duration || 3);
+            return { text: seg.textOverlay.replace(/\n/g, ' '), startTime: segStart, endTime: segEnd };
+          });
       }
 
       try {
