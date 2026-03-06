@@ -715,7 +715,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
             ${(item.revisionCount || 0) > 0 ? `<div class="revision-count">🔄 Revision ${item.revisionCount}</div>` : ''}
           </div>
           ${(item.revisionNotes || []).length ? (item.revisionNotes || []).map((n, i) => `<div class="rejection-notes">Rev ${i + 1}: ${n}</div>`).join('') : ''}
-          ${(item.approvalNotes || []).length ? (item.approvalNotes || []).map((n) => `<div class="approval-notes">Approved: ${n}</div>`).join('') : ''}
+          ${(Array.isArray(item.approvalNotes) ? item.approvalNotes : (item.approvalNotes ? [item.approvalNotes] : [])).length ? (Array.isArray(item.approvalNotes) ? item.approvalNotes : (item.approvalNotes ? [item.approvalNotes] : [])).map((n) => `<div class="approval-notes">Approved: ${n}</div>`).join('') : ''}
         </div>
         <div class="queue-actions">
           ${item.status === 'pending' || item.status === 'revision'
@@ -1003,7 +1003,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
           <p>${formatDate(item.createdAt)}</p>
           ${item.postMode === 'asap' ? '<p>Post ASAP</p>' : `<p>Scheduled: ${formatDate(item.schedDate)}</p>`}
           ${item.metricoolId ? '<p style="color:var(--success)">Posted to Metricool</p>' : ''}
-          ${(item.approvalNotes || []).map(n => `<div class="approved-card-notes">${n}</div>`).join('')}
+          ${(Array.isArray(item.approvalNotes) ? item.approvalNotes : (item.approvalNotes ? [item.approvalNotes] : [])).map(n => `<div class="approved-card-notes">${n}</div>`).join('')}
         </div>
       </div>`;
     }).join('');
@@ -1929,7 +1929,10 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     // publicationDate is REQUIRED — use schedDate if set, otherwise 1 hour from now
     let scheduleDateISO;
     if (item.schedDate) {
-      scheduleDateISO = item.schedDate;
+      // Normalize to yyyy-MM-ddTHH:mm:ss — input may be missing T or seconds
+      const d = new Date(item.schedDate);
+      const y = d.getFullYear(), pad = n => String(n).padStart(2, '0');
+      scheduleDateISO = `${y}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:00`;
     } else {
       const future = new Date(Date.now() + 60 * 60 * 1000);
       scheduleDateISO = future.toISOString().split('.')[0]; // "YYYY-MM-DDTHH:MM:SS"
@@ -1940,7 +1943,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       draft: false,
       providers: [{ network: 'instagram' }],
       instagramData: { type: 'REEL', showReelOnFeed: true },
-      media: videoSrc ? [{ url: videoSrc, type: 'video' }] : [],
+      media: videoSrc ? [videoSrc] : [],
       mediaAltText: [],
       publicationDate: {
         dateTime: scheduleDateISO,
@@ -1950,8 +1953,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       smartLinkData: { ids: [] },
       firstCommentText: '',
       hasNotReadNotes: false,
-      descendants: [],
-      saveExternalMediaFiles: true
+      descendants: []
     };
     console.log('[Metricool] Scheduling Instagram Reel:', { text: fullText.substring(0, 80) + '...', hasVideo: !!videoSrc });
     return API.metricool.schedulePost(postPayload).then((res) => {
