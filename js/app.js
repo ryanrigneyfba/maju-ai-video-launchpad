@@ -1217,7 +1217,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
           input_images: [{ type: 'image_url', image_url: params.image_url }],
           enhance_prompt: true,
           input_images_end: [],
-          motions: motionId ? [{ motion_id: motionId }] : [],
+          motions: motionId ? [{ id: motionId, strength: params.motion_strength || 0.5 }] : [],
         };
         const body = {
           endpoint: '/v1/image2video/dop',
