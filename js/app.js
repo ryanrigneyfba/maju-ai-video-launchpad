@@ -26,7 +26,7 @@
   // ─── State ───
   let queue = JSON.parse(localStorage.getItem(CONFIG.storageKeys.queue) || '[]');
 
-  // Cleanup: remove busted pending items that have no stitched video and no segment videos
+  // Cleanup: remove busted pending items that have no stitched video andno segment ideos
   const beforeCount = queue.length;
   queue = queue.filter(item => {
     if (item.status === 'pending' && !item.stitchedVideoUrl && (!item.segmentVideos || item.segmentVideos.length === 0)) {
