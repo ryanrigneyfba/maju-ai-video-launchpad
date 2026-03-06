@@ -463,6 +463,7 @@ function downloadFile(url, destPath) {
 
 const https = require('https');
 const http = require('http');
+const crypto = require('crypto');
 function proxyRequest(targetUrl, method, headers, body) {
   return new Promise((resolve, reject) => {
     const url = new URL(targetUrl);
@@ -611,6 +612,103 @@ app.get('/api/proxy/higgsfield/motions', async (req, res) => {
     res.status(result.status).json(result.data);
   } catch (err) {
     debugLog('hf-motions-err', { error: err.message });
+    res.status(502).json({ error: err.message });
+  }
+});
+
+// ── Kling AI Proxy ──
+// API: https://api-singapore.klingai.com
+// Auth: JWT (HS256) generated from AccessKey + SecretKey
+
+function generateKlingJwt(accessKey, secretKey) {
+  const header = Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url');
+  const now = Math.floor(Date.now() / 1000);
+  const payload = Buffer.from(JSON.stringify({ iss: accessKey, exp: now + 1800, nbf: now - 5 })).toString('base64url');
+  const sig = crypto.createHmac('sha256', secretKey).update(`${header}.${payload}`).digest('base64url');
+  return `${header}.${payload}.${sig}`;
+}
+
+function klingAuthHeaders(req) {
+  const accessKey = req.headers['x-api-key-value'] || '';
+  const secretKey = req.headers['x-api-secret-value'] || '';
+  return {
+    'Authorization': `Bearer ${generateKlingJwt(accessKey, secretKey)}`,
+    'Content-Type': 'application/json',
+  };
+}
+
+// Text-to-Video
+app.post('/api/proxy/kling/text2video', async (req, res) => {
+  const accessKey = req.headers['x-api-key-value'];
+  if (!accessKey) return res.status(400).json({ error: 'Missing Kling API key' });
+  debugLog('kling-t2v-req', { body: JSON.stringify(req.body).slice(0, 300) });
+  try {
+    const result = await proxyRequest(
+      'https://api-singapore.klingai.com/v1/videos/text2video',
+      'POST',
+      klingAuthHeaders(req),
+      req.body
+    );
+    debugLog('kling-t2v-res', { status: result.status, data: JSON.stringify(result.data).slice(0, 500) });
+    res.status(result.status).json(result.data);
+  } catch (err) {
+    debugLog('kling-t2v-err', { error: err.message });
+    res.status(502).json({ error: err.message });
+  }
+});
+
+// Image-to-Video
+app.post('/api/proxy/kling/image2video', async (req, res) => {
+  const accessKey = req.headers['x-api-key-value'];
+  if (!accessKey) return res.status(400).json({ error: 'Missing Kling API key' });
+  debugLog('kling-i2v-req', { body: JSON.stringify(req.body).slice(0, 300) });
+  try {
+    const result = await proxyRequest(
+      'https://api-singapore.klingai.com/v1/videos/image2video',
+      'POST',
+      klingAuthHeaders(req),
+      req.body
+    );
+    debugLog('kling-i2v-res', { status: result.status, data: JSON.stringify(result.data).slice(0, 500) });
+    res.status(result.status).json(result.data);
+  } catch (err) {
+    debugLog('kling-i2v-err', { error: err.message });
+    res.status(502).json({ error: err.message });
+  }
+});
+
+// Poll text2video status
+app.get('/api/proxy/kling/text2video/:taskId', async (req, res) => {
+  const accessKey = req.headers['x-api-key-value'];
+  if (!accessKey) return res.status(400).json({ error: 'Missing Kling API key' });
+  try {
+    const result = await proxyRequest(
+      `https://api-singapore.klingai.com/v1/videos/text2video/${encodeURIComponent(req.params.taskId)}`,
+      'GET',
+      klingAuthHeaders(req)
+    );
+    debugLog('kling-t2v-status', { taskId: req.params.taskId, status: result.status, data: JSON.stringify(result.data).slice(0, 300) });
+    res.status(result.status).json(result.data);
+  } catch (err) {
+    debugLog('kling-t2v-status-err', { error: err.message });
+    res.status(502).json({ error: err.message });
+  }
+});
+
+// Poll image2video status
+app.get('/api/proxy/kling/image2video/:taskId', async (req, res) => {
+  const accessKey = req.headers['x-api-key-value'];
+  if (!accessKey) return res.status(400).json({ error: 'Missing Kling API key' });
+  try {
+    const result = await proxyRequest(
+      `https://api-singapore.klingai.com/v1/videos/image2video/${encodeURIComponent(req.params.taskId)}`,
+      'GET',
+      klingAuthHeaders(req)
+    );
+    debugLog('kling-i2v-status', { taskId: req.params.taskId, status: result.status, data: JSON.stringify(result.data).slice(0, 300) });
+    res.status(result.status).json(result.data);
+  } catch (err) {
+    debugLog('kling-i2v-status-err', { error: err.message });
     res.status(502).json({ error: err.message });
   }
 });
@@ -799,6 +897,7 @@ app.listen(PORT, () => {
   console.log(`  GET  /api/download/:id   — Download finished video`);
   console.log(`  GET  /api/health         — Health check`);
   console.log(`  /api/proxy/higgsfield/*  — Higgsfield proxy`);
+  console.log(`  /api/proxy/kling/*       — Kling AI proxy`);
   console.log(`  /api/proxy/metricool/*   — Metricool proxy`);
   console.log(`  /api/proxy/arcads/*      — Arcads proxy`);
   console.log(`  /api/proxy/creatify/*    — Creatify proxy`);

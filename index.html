@@ -142,7 +142,7 @@
           <span class="status-dot disconnected"></span>
           <span>Backend: Not connected</span>
         </div>
-        <p class="settings-note">Videos are automatically stitched into a 9:16 vertical reel with captions after Higgsfield renders them. The pipeline handles everything — generate, stitch, caption, and queue for approval.</p>
+        <p class="settings-note">Videos are automatically generated via Kling AI and stitched into a 9:16 vertical reel with captions. The pipeline handles everything — generate, stitch, caption, and queue for approval.</p>
 
         <div class="stitch-segments" id="stitch-segments">
           <div class="stitch-segment"><span>1. Hook (0-3s)</span> <span class="file-status" id="seg-hook">Waiting…</span></div>
@@ -283,19 +283,19 @@
           </div>
 
           <div class="api-field">
-            <label>Higgsfield API Key</label>
+            <label>Kling AI Access Key</label>
             <div class="api-input-row">
-              <input type="password" id="api-higgsfield" placeholder="Enter API Key…">
-              <button class="btn btn-sm btn-toggle-vis" data-target="api-higgsfield">Show</button>
+              <input type="password" id="api-kling" placeholder="Enter Access Key…">
+              <button class="btn btn-sm btn-toggle-vis" data-target="api-kling">Show</button>
             </div>
           </div>
           <div class="api-field">
-            <label>Higgsfield API Secret</label>
+            <label>Kling AI Secret Key</label>
             <div class="api-input-row">
-              <input type="password" id="api-higgsfield-secret" placeholder="Enter API Secret…">
-              <button class="btn btn-sm btn-toggle-vis" data-target="api-higgsfield-secret">Show</button>
+              <input type="password" id="api-kling-secret" placeholder="Enter Secret Key…">
+              <button class="btn btn-sm btn-toggle-vis" data-target="api-kling-secret">Show</button>
             </div>
-            <span class="api-hint">AI video generation — get credentials at <code>cloud.higgsfield.ai</code></span>
+            <span class="api-hint">AI video generation (text-to-video) — get credentials at <code>klingai.com/global/dev</code></span>
           </div>
 
           <div class="api-field">

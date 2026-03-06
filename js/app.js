@@ -147,56 +147,55 @@
     const approvals = relevantFeedback.filter((f) => f.action === 'approve');
     const rejections = relevantFeedback.filter((f) => f.action === 'reject');
 
-    const systemPrompt = `You are a video production AI assistant for MAJU, a wellness brand. You generate optimized Higgsfield prompts for AI avatar videos.
+    const systemPrompt = `You are a video production AI assistant for MAJU, a wellness brand. You generate optimized Kling AI text-to-video prompts.
 
 Format: ${videoType}
-Avatar: ${avatar} (Patient Maya / Bree Alba)
-Product: ${product} (Maju's Black Seed Oil 8oz)
+Avatar: ${avatar} (Patient Maya / Bree Alba — young woman, hair in bun, black tank top, minimal makeup, natural look)
+Product: ${product} (Maju's Black Seed Oil 8oz — dark glass bottle with "MAJU BLACK SEED OIL" label)
+Video model: Kling v2 Master (text-to-video, 5s per segment)
 
-This is the "Anti-Puffy Face Snack" Selfcare Snack Reel — red onion + Maju Black Seed Oil + salt. Total duration: 15 seconds, 9:16 vertical.
+This is the "Anti-Puffy Face Snack" Selfcare Snack Reel — red onion + Maju Black Seed Oil + salt. Total duration: 25 seconds (5 segments x 5s each), 9:16 vertical.
 
-The video has exactly 5 segments with specific Higgsfield prompts:
+The video has exactly 5 segments. Each segment is generated as a 5-second Kling text-to-video clip. Prompts must be rich, descriptive, and cinematic — Kling generates from text alone (no reference image).
 
-SEGMENT 1: HOOK (0-3s) — Stop the scroll
-Default prompt: "Medium close-up of a woman in a dark kitchen holding a whole red onion near her face, looking at it curiously then at camera with a confident smile. A bottle of black seed oil sits on the wooden counter beside her. Warm golden lighting from window. She slowly raises the onion. 9:16 vertical, 3 seconds, smooth motion."
+SEGMENT 1: HOOK (0-5s) — Stop the scroll
 Text overlay: "de-puff your face snack" OR "wake up puffy? eat this"
 
-SEGMENT 2: THE REVEAL — Ingredients + Pour (3-6s) — Product placement money shot
-Default prompt: "Woman pouring black seed oil from a dark bottle onto a halved red onion on a wooden cutting board. Camera slightly wider, waist up. She looks down at the onion as she pours. The bottle label reading BLACK SEED OIL faces the camera. Warm kitchen lighting, dark moody background. Smooth satisfying pour motion. 9:16 vertical, 3 seconds."
+SEGMENT 2: THE REVEAL — Ingredients + Pour (5-10s) — Product placement money shot
 Text overlay: "1 red onion\\n+ black seed oil\\n+ salt"
 
-SEGMENT 3: THE DEMO — Eating the Snack (6-11s) — Viral hook, authentic reaction
-Default prompt: "Tight close-up of woman biting into a raw red onion half glistening with oil. She takes a big bite, chews with a slight grimace then settles into it and nods. A bottle of black seed oil is visible on the counter behind her. Warm golden kitchen lighting. Authentic, unpolished reaction. 9:16 vertical, 5 seconds, natural motion."
+SEGMENT 3: THE DEMO — Eating the Snack (10-15s) — Viral hook, authentic reaction
 Text overlay: NONE (let the visual do the work)
 
-SEGMENT 4: RESULT + BENEFITS (11-13s) — Educate on benefits
-Default prompt: "Woman holding a bitten red onion near her face, looking confidently at camera. She gently touches her cheek with her free hand. Black seed oil bottle visible on counter. Warm golden lighting. Calm, satisfied expression. 9:16 vertical, 2 seconds."
+SEGMENT 4: RESULT + BENEFITS (15-20s) — Educate on benefits
 Text overlay: "drains facial bloat\\nreduces water retention\\ntightens puffy skin"
 
-SEGMENT 5: THE GLOW — Result + CTA (13-15s) — Payoff beauty shot
-Default prompt: "Woman looking at herself in a mirror, gently touching her glowing face with both hands. Dewy, healthy skin. She looks serene and satisfied. A bottle of black seed oil is prominently placed in the foreground near the mirror. Warm, soft lighting emphasizes skin glow. 9:16 vertical, 2 seconds, slow smooth motion."
+SEGMENT 5: THE GLOW — Result + CTA (20-25s) — Payoff beauty shot
 Text overlay: "anti-puffy face snack\\n(onion + black seed oil + salt)" + CTA
 
-CRITICAL RULES:
-- Maju Black Seed Oil bottle MUST be visible in EVERY segment
-- Bottle label readable in at least Reveal + Glow segments
-- Kitchen: dark/moody (dark cabinets, warm wood), NOT bright/white
-- Lighting: warm golden-hour (3200-4000K), soft, flattering
-- Avatar: black tank top, hair in bun, minimal makeup, natural look
+CRITICAL RULES FOR EVERY PROMPT:
+- EVERY prompt MUST describe Patient Maya: "a young woman with her hair in a bun wearing a black tank top"
+- EVERY prompt MUST include the Maju bottle: "a dark bottle labeled MAJU BLACK SEED OIL"
+- The bottle MUST be visible in EVERY segment — on the counter, in her hand, or in the foreground
+- Bottle label must be readable in at least Reveal + Glow segments
+- Kitchen: ALWAYS dark/moody (dark cabinets, warm wood), NEVER bright/white
+- Lighting: ALWAYS warm golden-hour (3200-4000K), soft, flattering
 - Eating reaction must be AUTHENTIC — slight grimace then acceptance, NOT polished
 - Movement: smooth, natural, never robotic
+- Each prompt should be 2-3 sentences of rich visual description for Kling text-to-video
+- Include "Vertical 9:16 format" in each prompt
 
-For A/B testing, vary: hook text, pacing (15-18s), CTA ("save for later" / "link in bio" / "shop now"), and audio style.
+For A/B testing, vary: hook text, CTA ("save for later" / "link in bio" / "shop now"), and lighting intensity.
 
 Return ONLY a JSON object with these fields:
-- "segments": array of 5 objects, each with { "name": segment name, "prompt": optimized Higgsfield prompt, "duration": seconds, "textOverlay": text to show or null }
+- "segments": array of 5 objects, each with { "name": segment name, "prompt": optimized Kling text-to-video prompt, "duration": 5, "textOverlay": text to show or null, "model": "kling-v2-master" }
 - "direction": overall visual/pacing/tone direction
 - "reasoning": 1 sentence explaining what you optimized based on feedback
 - "captions": array of 5 objects for each segment with { "text": "caption text", "startTime": seconds, "endTime": seconds }
 - "hookVariant": which hook text variant this version uses
 
 Example:
-{"segments":[{"name":"hook","prompt":"Medium close-up of a woman...","duration":3,"textOverlay":"de-puff your face snack"},{"name":"reveal","prompt":"Woman pouring...","duration":3,"textOverlay":"1 red onion\\n+ black seed oil\\n+ salt"},{"name":"demo","prompt":"Tight close-up...","duration":5,"textOverlay":null},{"name":"result","prompt":"Woman holding...","duration":2,"textOverlay":"drains facial bloat\\nreduces water retention\\ntightens puffy skin"},{"name":"glow","prompt":"Woman looking...","duration":2,"textOverlay":"anti-puffy face snack"}],"direction":"Warm, moody kitchen. Authentic reactions.","reasoning":"Used default SOP prompts.","captions":[{"text":"de-puff your face snack","startTime":0,"endTime":3},{"text":"1 red onion + black seed oil + salt","startTime":3,"endTime":6},{"text":"","startTime":6,"endTime":11},{"text":"drains facial bloat, reduces water retention, tightens puffy skin","startTime":11,"endTime":13},{"text":"anti-puffy face snack","startTime":13,"endTime":15}],"hookVariant":"de-puff your face snack"}`;
+{"segments":[{"name":"hook","prompt":"A young woman with her hair in a bun wearing a black tank top...","duration":5,"textOverlay":"de-puff your face snack","model":"kling-v2-master"},{"name":"reveal","prompt":"A young woman with hair in a bun wearing a black tank top pours...","duration":5,"textOverlay":"1 red onion\\n+ black seed oil\\n+ salt","model":"kling-v2-master"},{"name":"demo","prompt":"Tight close-up of a young woman with hair in a bun...","duration":5,"textOverlay":null,"model":"kling-v2-master"},{"name":"result","prompt":"A young woman with hair in a bun wearing a black tank top holds...","duration":5,"textOverlay":"drains facial bloat\\nreduces water retention\\ntightens puffy skin","model":"kling-v2-master"},{"name":"glow","prompt":"A young woman with hair in a bun wearing a black tank top looks...","duration":5,"textOverlay":"anti-puffy face snack","model":"kling-v2-master"}],"direction":"Warm, moody kitchen. Authentic reactions.","reasoning":"Used default SOP prompts.","captions":[{"text":"de-puff your face snack","startTime":0,"endTime":5},{"text":"1 red onion + black seed oil + salt","startTime":5,"endTime":10},{"text":"","startTime":10,"endTime":15},{"text":"drains facial bloat, reduces water retention, tightens puffy skin","startTime":15,"endTime":20},{"text":"anti-puffy face snack","startTime":20,"endTime":25}],"hookVariant":"de-puff your face snack"}`;
 
     const feedbackContext = relevantFeedback.length
       ? `\n\nPast feedback for this format (${relevantFeedback.length} entries):
@@ -318,11 +317,11 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     }
 
     // If no Higgsfield key, simulate the whole pipeline
-    console.log('[Pipeline] apiKeys.higgsfield =', apiKeys.higgsfield ? '(set)' : '(empty)', '| All keys:', Object.keys(apiKeys).filter(k => apiKeys[k]));
-    if (!apiKeys.higgsfield) {
+    console.log('[Pipeline] apiKeys.kling =', apiKeys.kling ? '(set)' : '(empty)', '| All keys:', Object.keys(apiKeys).filter(k => apiKeys[k]));
+    if (!apiKeys.kling) {
       let stage = 0;
       const sim = [
-        '⚠️ Higgsfield API key not set — video generation simulated. Add key in Settings.',
+        '⚠️ Kling API key not set — video generation simulated. Add key in Settings.',
         'FFmpeg stitch simulated (no backend connected).',
         '✓ Pipeline complete — videos in queue (simulated).',
       ];
@@ -349,69 +348,49 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     runRealPipeline(steps, msg, setStage);
   }
 
-  // SOP v2.0 default Higgsfield prompts for each segment
+  // SOP v2.0 default Kling prompts for each segment
+  // Avatar: Patient Maya (Bree Alba) — young woman, black tank top, hair in bun, minimal makeup, natural look
+  // Product: Maju's Black Seed Oil 8oz dark bottle with "MAJU BLACK SEED OIL" label
   const DEFAULT_SEGMENT_PROMPTS = [
-    { name: 'hook', duration: 3, prompt: 'Medium close-up of a woman in a dark kitchen holding a whole red onion near her face, looking at it curiously then at camera with a confident smile. A bottle of black seed oil sits on the wooden counter beside her. Warm golden lighting from window. She slowly raises the onion. 9:16 vertical, 3 seconds, smooth motion.', textOverlay: 'de-puff your face snack' },
-    { name: 'reveal', duration: 3, prompt: 'Woman pouring black seed oil from a dark bottle onto a halved red onion on a wooden cutting board. Camera slightly wider, waist up. She looks down at the onion as she pours. The bottle label reading BLACK SEED OIL faces the camera. Warm kitchen lighting, dark moody background. Smooth satisfying pour motion. 9:16 vertical, 3 seconds.', textOverlay: '1 red onion\n+ black seed oil\n+ salt' },
-    { name: 'demo', duration: 5, prompt: 'Tight close-up of woman biting into a raw red onion half glistening with oil. She takes a big bite, chews with a slight grimace then settles into it and nods. A bottle of black seed oil is visible on the counter behind her. Warm golden kitchen lighting. Authentic, unpolished reaction. 9:16 vertical, 5 seconds, natural motion.', textOverlay: null },
-    { name: 'result', duration: 2, prompt: 'Woman holding a bitten red onion near her face, looking confidently at camera. She gently touches her cheek with her free hand. Black seed oil bottle visible on counter. Warm golden lighting. Calm, satisfied expression. 9:16 vertical, 2 seconds.', textOverlay: 'drains facial bloat\nreduces water retention\ntightens puffy skin' },
-    { name: 'glow', duration: 2, prompt: 'Woman looking at herself in a mirror, gently touching her glowing face with both hands. Dewy, healthy skin. She looks serene and satisfied. A bottle of black seed oil is prominently placed in the foreground near the mirror. Warm, soft lighting emphasizes skin glow. 9:16 vertical, 2 seconds, slow smooth motion.', textOverlay: 'anti-puffy face snack\n(onion + black seed oil + salt)' },
+    { name: 'hook', duration: 5, prompt: 'A young woman with her hair in a bun wearing a black tank top stands in a dark moody kitchen with warm golden lighting. She holds a whole red onion near her face, looking at it curiously then turning to camera with a confident knowing smile. A dark glass bottle labeled "MAJU BLACK SEED OIL" sits prominently on the wooden counter beside her. She slowly raises the onion. Cinematic warm golden-hour lighting from a window, dark cabinets in background. Vertical 9:16 format, smooth natural motion.', textOverlay: 'de-puff your face snack', model: 'kling-v2-master' },
+    { name: 'reveal', duration: 5, prompt: 'A young woman with hair in a bun wearing a black tank top pours dark oil from a bottle labeled "MAJU BLACK SEED OIL" onto a halved red onion on a wooden cutting board. Camera slightly wider showing her waist up. She looks down at the onion as she pours, the bottle label clearly readable facing camera. Dark moody kitchen with warm golden lighting, dark cabinets behind her. Smooth satisfying pour motion, oil glistening on the onion. Vertical 9:16 format.', textOverlay: '1 red onion\n+ black seed oil\n+ salt', model: 'kling-v2-master' },
+    { name: 'demo', duration: 5, prompt: 'Tight close-up of a young woman with hair in a bun wearing a black tank top biting into a raw red onion half glistening with dark oil. She takes a big crunchy bite, chews with a slight grimace then settles into it and nods approvingly. A dark bottle labeled "MAJU BLACK SEED OIL" is visible on the counter behind her. Warm golden kitchen lighting, dark moody background. Authentic unpolished eating reaction. Vertical 9:16 format, natural motion.', textOverlay: null, model: 'kling-v2-master' },
+    { name: 'result', duration: 5, prompt: 'A young woman with hair in a bun wearing a black tank top holds a bitten red onion near her face, looking confidently at camera. She gently touches her cheek with her free hand, feeling her skin. A dark bottle labeled "MAJU BLACK SEED OIL" is visible on the counter beside her. Warm golden lighting in a dark moody kitchen. Calm, satisfied expression on her face. Vertical 9:16 format.', textOverlay: 'drains facial bloat\nreduces water retention\ntightens puffy skin', model: 'kling-v2-master' },
+    { name: 'glow', duration: 5, prompt: 'A young woman with hair in a bun wearing a black tank top looks at herself in a mirror, gently touching her glowing dewy face with both hands. She looks serene and satisfied with her skin. A dark bottle labeled "MAJU BLACK SEED OIL" is prominently placed in the foreground near the mirror. Warm soft golden lighting emphasizes her healthy glowing skin. Dark moody background. Vertical 9:16 format, slow smooth motion.', textOverlay: 'anti-puffy face snack\n(onion + black seed oil + salt)', model: 'kling-v2-master' },
   ];
 
-  // Helper: generate a single image via Seedream and poll until done
+  // Helper: generate a video segment via Kling text-to-video and poll until done
   // Returns { url, error } object
-  async function generateSegmentImage(seg, segLabel, itemVersion) {
-    if (seg.image_url) return { url: seg.image_url };
-    const imgResult = await API.higgsfield.generateImage({ prompt: seg.prompt, aspect_ratio: '9:16' });
-    console.log(`[Pipeline] Image submit for ${segLabel}:`, imgResult.ok, 'id:', imgResult.id);
-    if (!imgResult.ok || !imgResult.id) {
-      const errDetail = imgResult.error || imgResult.message || JSON.stringify(imgResult).slice(0, 200);
-      debugPanel(`[${segLabel}] Submit failed: ${errDetail}`);
-      return { url: null, error: `Submit: ${errDetail}` };
-    }
-    for (let attempt = 0; attempt < 60; attempt++) {
-      await new Promise(r => setTimeout(r, 2000));
-      const imgStatus = await API.higgsfield.getImageStatus(imgResult.id);
-      const st = (imgStatus.status || '').toLowerCase();
-      if (attempt % 5 === 0) console.log(`[Pipeline] ${segLabel} poll #${attempt}: status=${st}`);
-      if (st === 'completed' || st === 'done') return { url: imgStatus.url };
-      if (st === 'failed' || st === 'error' || st === 'nsfw' || st === 'cancelled') {
-        return { url: null, error: `Image ${st}` };
-      }
-    }
-    console.warn(`[Pipeline] ${segLabel} timed out after 120s`);
-    return { url: null, error: 'Timed out after 120s' };
-  }
-
-  // Helper: animate an image via DoP and poll until done
-  // Returns { url, error } object
-  async function animateSegmentVideo(seg, imageUrl) {
-    const result = await API.higgsfield.generateVideo({
+  async function generateSegmentVideo(seg, segLabel) {
+    const result = await API.kling.generateVideo({
       prompt: seg.prompt,
-      image_url: imageUrl,
-      duration: seg.duration || 5,
-      model: seg.model || 'dop-turbo',
-      motion_id: seg.motion_id,
+      duration: seg.duration <= 5 ? '5' : '10',
+      aspect_ratio: '9:16',
+      model_name: seg.model || 'kling-v2-master',
+      mode: 'std',
     });
-    console.log(`[Pipeline] DoP generate result for ${seg.name}:`, JSON.stringify(result).slice(0, 300));
-    if (!result.ok || !result.id) {
+    console.log(`[Pipeline] Kling submit for ${segLabel}:`, result.ok, 'taskId:', result.taskId);
+    if (!result.ok || !result.taskId) {
       const errDetail = result.error || result.message || JSON.stringify(result).slice(0, 200);
-      debugPanel(`[${seg.name}] DoP submit failed: ${errDetail}`);
+      debugPanel(`[${segLabel}] Kling submit failed: ${errDetail}`);
       return { url: null, error: `Submit: ${errDetail}` };
     }
+    // Poll for completion (Kling can take a few minutes)
     for (let attempt = 0; attempt < 120; attempt++) {
       await new Promise(r => setTimeout(r, 3000));
-      const status = await API.higgsfield.getStatus(result.id);
-      const st = (status.status || '').toLowerCase();
-      if (attempt % 5 === 0) console.log(`[Pipeline] DoP ${seg.name} poll #${attempt}: status=${st}`);
-      if (st === 'completed' || st === 'done') {
-        const url = status.video_url || status.url || status.output_url || null;
-        return { url };
+      const status = await API.kling.getVideoStatus(result.taskId);
+      const st = (status.task_status || '').toLowerCase();
+      if (attempt % 5 === 0) console.log(`[Pipeline] Kling ${segLabel} poll #${attempt}: status=${st}`);
+      if (st === 'succeed') {
+        const videos = status.task_result && status.task_result.videos;
+        const url = videos && videos[0] && videos[0].url;
+        return { url: url || null, error: url ? null : 'No video URL in result' };
       }
-      if (st === 'failed' || st === 'error') {
-        return { url: null, error: `Video ${st}` };
+      if (st === 'failed') {
+        return { url: null, error: `Video failed: ${status.task_status_msg || 'unknown'}` };
       }
     }
+    console.warn(`[Pipeline] ${segLabel} timed out after 360s`);
     return { url: null, error: 'Timed out after 360s' };
   }
 
@@ -438,8 +417,8 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
   }
 
   async function runRealPipeline(steps, msg, setStage) {
-    // Stage 0: Generate each segment via Higgsfield
-    setStage(0, 'Generating video segments via Higgsfield…');
+    // Stage 0: Generate each segment via Kling text-to-video
+    setStage(0, 'Generating video segments via Kling AI…');
 
     const newItems = queue.filter(q => q.pipelineStage === 'generate');
     const allSegmentVideos = []; // { url, label } for stitching
@@ -450,30 +429,16 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       const segments = testMode ? allSegments.slice(0, 1) : allSegments;
       if (testMode) debugPanel('[Test Mode] Generating 1 segment only (hook)');
 
-      // Step 1: Generate ALL images in parallel (no concurrency limit — Seedream is separate from DoP)
-      msg.textContent = `v${item.version}: Generating ${segments.length} images in parallel… [Seedream]`;
-      updateSegmentStatus('hook', 'Generating images…', false);
-      const imageResults = await Promise.all(
-        segments.map((seg, si) => generateSegmentImage(seg, `${seg.name} (${si + 1}/${segments.length})`, item.version))
-      );
+      // Generate ALL video segments in parallel via Kling (text→video, no image step needed)
+      const KLING_CONCURRENCY = 3;
+      msg.textContent = `v${item.version}: Generating ${segments.length} video segments via Kling…`;
+      updateSegmentStatus('hook', 'Generating videos…', false);
 
-      // Update status after images
-      const imageCount = imageResults.filter(r => r.url).length;
-      msg.textContent = `v${item.version}: ${imageCount}/${segments.length} images ready — animating videos… [DoP]`;
-
-      // Show image errors in debug panel
-      imageResults.forEach((r, i) => {
-        if (!r.url && r.error) debugPanel(`[${segments[i].name}] Image: ${r.error}`);
-      });
-
-      // Step 2: Animate images into videos — max 4 concurrent (DoP limit)
-      const DOP_CONCURRENCY = 4;
       const videoTasks = segments.map((seg, si) => () => {
-        if (!imageResults[si].url) return Promise.resolve({ url: null, error: imageResults[si].error || 'No image' });
-        updateSegmentStatus(seg.name, 'Animating…', false);
-        return animateSegmentVideo(seg, imageResults[si].url);
+        updateSegmentStatus(seg.name, 'Generating…', false);
+        return generateSegmentVideo(seg, `${seg.name} (${si + 1}/${segments.length})`);
       });
-      const videoResults = await runWithConcurrency(videoTasks, DOP_CONCURRENCY);
+      const videoResults = await runWithConcurrency(videoTasks, KLING_CONCURRENCY);
 
       // Collect results (preserve segment order)
       const segmentResults = [];
@@ -482,9 +447,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
           segmentResults.push({ url: videoResults[si].url, label: segments[si].name, textOverlay: segments[si].textOverlay });
           updateSegmentStatus(segments[si].name, 'Done ✓', true);
         } else {
-          const reason = imageResults[si].url
-            ? (videoResults[si]?.error || 'Video failed')
-            : (imageResults[si].error || 'Image failed');
+          const reason = videoResults[si]?.error || 'Video failed';
           updateSegmentStatus(segments[si].name, reason, false);
           debugPanel(`[${segments[si].name}] ${reason}`);
         }
@@ -501,7 +464,6 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
         item.pipelineStage = 'failed';
         item.status = 'failed';
         msg.textContent = `⚠️ v${item.version}: No segments rendered successfully.`;
-        // Auto-fetch server debug logs to show what happened
         if (typeof fetchDebugLog === 'function') fetchDebugLog();
       }
       saveQueue();
@@ -582,7 +544,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       saveQueue();
       renderTracker();
       updateBadge();
-      setStage(2, '⚠️ No videos generated — check Higgsfield API key and retry.');
+      setStage(2, '⚠️ No videos generated — check Kling API key and retry.');
     }
   }
 
@@ -754,9 +716,9 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       renderActivity();
       updateBadge();
 
-      // If higgsfield key exists, send revision request
-      if (apiKeys.higgsfield) {
-        API.higgsfield.reviseVideo(item.id, notes);
+      // If kling key exists, send revision request
+      if (apiKeys.kling) {
+        API.kling.reviseVideo(item.id, notes);
       }
     }
 
@@ -912,14 +874,13 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
   }
 
   // ─── Spend Tracker ───
-  // Higgsfield pricing estimates (per API call)
+  // Kling pricing estimates (per API call)
   const COST_ESTIMATES = {
-    seedream_image: 0.03,    // V2 Seedream image generation
-    dop_video: 0.10,         // V1 DoP video animation (per segment)
-    dop_turbo: 0.10,
-    'dop-turbo': 0.10,
-    'dop-lite': 0.05,
-    'dop-preview': 0.08,
+    'kling-v2-master': 0.14,    // Kling v2 Master (5s video)
+    'kling-v2-5-turbo': 0.07,   // Kling v2.5 Turbo (5s video)
+    'kling-v2-6': 0.14,          // Kling v2.6 (5s video)
+    'kling-v1': 0.07,            // Kling v1 (5s video)
+    default_video: 0.14,
   };
 
   function renderSpendTracker() {
@@ -932,11 +893,11 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     for (const item of queue) {
       const segments = (item.aiPrompt && item.aiPrompt.segments) || DEFAULT_SEGMENT_PROMPTS;
       const segCount = item.segmentVideos ? item.segmentVideos.length : 0;
-      const imageCount = segCount > 0 ? segments.length : 0; // images attempted = total segments
+      const imageCount = 0; // Kling generates video directly, no separate image step
       const videoCount = segCount;
-      const model = (segments[0] && segments[0].model) || 'dop-turbo';
-      const imageCost = imageCount * COST_ESTIMATES.seedream_image;
-      const videoCost = videoCount * (COST_ESTIMATES[model] || COST_ESTIMATES.dop_video);
+      const model = (segments[0] && segments[0].model) || 'kling-v2-master';
+      const imageCost = 0;
+      const videoCost = videoCount * (COST_ESTIMATES[model] || COST_ESTIMATES.default_video);
       const totalCost = imageCost + videoCost;
 
       spendRows.push({
@@ -1065,17 +1026,10 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
   // ─── API Settings ───
   // Load saved keys into form fields
   function loadApiKeys() {
-    // Migrate old KEY_ID:KEY_SECRET combined format to separate fields
-    if (apiKeys.higgsfield && apiKeys.higgsfield.includes(':') && !apiKeys.higgsfieldSecret) {
-      const [key, secret] = apiKeys.higgsfield.split(':');
-      apiKeys.higgsfield = key;
-      apiKeys.higgsfieldSecret = secret;
-      localStorage.setItem(CONFIG.storageKeys.apiKeys, JSON.stringify(apiKeys));
-    }
     if (apiKeys.backendUrl) $('#api-backend-url').value = apiKeys.backendUrl;
     if (apiKeys.claude) $('#api-claude').value = apiKeys.claude;
-    if (apiKeys.higgsfield) $('#api-higgsfield').value = apiKeys.higgsfield;
-    if (apiKeys.higgsfieldSecret) $('#api-higgsfield-secret').value = apiKeys.higgsfieldSecret;
+    if (apiKeys.kling) $('#api-kling').value = apiKeys.kling;
+    if (apiKeys.klingSecret) $('#api-kling-secret').value = apiKeys.klingSecret;
     if (apiKeys.metricool) $('#api-metricool').value = apiKeys.metricool;
     if (apiKeys.arcads) $('#api-arcads').value = apiKeys.arcads;
     if (apiKeys.creatify) $('#api-creatify').value = apiKeys.creatify;
@@ -1140,8 +1094,8 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     apiKeys = {
       backendUrl: $('#api-backend-url').value.trim(),
       claude: $('#api-claude').value.trim(),
-      higgsfield: $('#api-higgsfield').value.trim(),
-      higgsfieldSecret: $('#api-higgsfield-secret').value.trim(),
+      kling: $('#api-kling').value.trim(),
+      klingSecret: $('#api-kling-secret').value.trim(),
       metricool: $('#api-metricool').value.trim(),
       arcads: $('#api-arcads').value.trim(),
       creatify: $('#api-creatify').value.trim(),
@@ -1199,154 +1153,57 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
   // All API calls route through the backend proxy to avoid CORS issues.
 
   const API = {
-    // ── Higgsfield — AI avatar video generation (via proxy) ──
-    // API: https://platform.higgsfield.ai
-    // Auth: Key KEY_ID:KEY_SECRET
-    higgsfield: {
-      // DoP (Diffusion-on-Prompt) image-to-video via V1 API
-      // Models: dop-turbo (fast), dop-lite (budget), dop-preview (experimental)
-      // Max 4 concurrent requests, 1 input image per request
+    // ── Kling AI — Video generation (via proxy) ──
+    // API: https://api-singapore.klingai.com
+    // Auth: JWT (HS256) from AccessKey + SecretKey (handled server-side)
+    // Models: kling-v1, kling-v2-master, kling-v2-5-turbo, kling-v2-6
+    kling: {
       async generateVideo(params) {
-        console.log('[Higgsfield DoP] Generate video:', params);
-        if (!apiKeys.higgsfield) return { ok: false, error: 'No Higgsfield API key set — add in Settings' };
-        // DoP API body uses { params: { ... } } wrapper
-        // Auto-fetch a motion if none provided (DOP API requires at least 1)
-        let motionId = params.motion_id;
-        if (!motionId) {
-          try {
-            const motions = await this.getMotions();
-            if (Array.isArray(motions) && motions.length > 0) {
-              motionId = motions[0].id || motions[0].motion_id;
-              console.log('[Higgsfield DoP] Using default motion:', motionId);
-            }
-          } catch (e) {
-            console.warn('[Higgsfield DoP] Could not fetch motions:', e.message);
-          }
-        }
-        const dopParams = {
-          model: params.model || 'dop-turbo',
-          prompt: params.prompt || '',
-          input_images: [{ type: 'image_url', image_url: params.image_url }],
-          enhance_prompt: true,
-          input_images_end: [],
-          motions: motionId ? [{ id: motionId, strength: params.motion_strength || 0.5 }] : [],
-        };
+        console.log('[Kling] Generate video:', params);
+        if (!apiKeys.kling) return { ok: false, error: 'No Kling API key set — add in Settings' };
         const body = {
-          endpoint: '/v1/image2video/dop',
-          input: { params: dopParams },
+          model_name: params.model_name || 'kling-v2-master',
+          prompt: params.prompt || '',
+          aspect_ratio: params.aspect_ratio || '9:16',
+          duration: params.duration || '5',
+          mode: params.mode || 'std',
         };
+        if (params.negative_prompt) body.negative_prompt = params.negative_prompt;
+        if (params.camera_control) body.camera_control = params.camera_control;
         try {
-          const res = await fetch(backendUrl('/api/proxy/higgsfield/generate'), {
+          const res = await fetch(backendUrl('/api/proxy/kling/text2video'), {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'x-api-key-value': apiKeys.higgsfield, 'x-api-secret-value': apiKeys.higgsfieldSecret || '' },
+            headers: { 'Content-Type': 'application/json', 'x-api-key-value': apiKeys.kling, 'x-api-secret-value': apiKeys.klingSecret || '' },
             body: JSON.stringify(body),
           });
           const data = await res.json();
-          console.log('[Higgsfield DoP] Generate response:', data);
-          // Higgsfield returns request_id (V2) or id (V1 DoP)
-          return { ok: res.ok, id: data.request_id || data.id, ...data };
+          console.log('[Kling] Generate response:', data);
+          const taskId = data.data && data.data.task_id;
+          return { ok: res.ok && data.code === 0, taskId, ...data };
         } catch (err) {
-          console.error('[Higgsfield DoP] Error:', err);
+          console.error('[Kling] Error:', err);
           return { ok: false, error: err.message };
         }
       },
 
-      async generateImage(params) {
-        console.log('[Higgsfield] Generate image (Flux Kontext Max):', params);
-        if (!apiKeys.higgsfield) return { ok: false, error: 'No Higgsfield API key set — add in Settings' };
-        const body = {
-          endpoint: 'flux-pro/kontext/max/text-to-image',
-          input: {
-            prompt: params.prompt || '',
-            aspect_ratio: params.aspect_ratio || '9:16',
-            safety_tolerance: 6,
-          },
-        };
+      async getVideoStatus(taskId) {
+        if (!apiKeys.kling) return { task_status: 'failed', task_status_msg: 'No Kling API key' };
         try {
-          const res = await fetch(backendUrl('/api/proxy/higgsfield/generate'), {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'x-api-key-value': apiKeys.higgsfield, 'x-api-secret-value': apiKeys.higgsfieldSecret || '' },
-            body: JSON.stringify(body),
+          const res = await fetch(backendUrl(`/api/proxy/kling/text2video/${encodeURIComponent(taskId)}`), {
+            headers: { 'x-api-key-value': apiKeys.kling, 'x-api-secret-value': apiKeys.klingSecret || '' },
           });
           const data = await res.json();
-          console.log('[Higgsfield] Image response:', data);
-          return { ok: res.ok, id: data.request_id || data.id, ...data };
+          return data.data || { task_status: 'failed', task_status_msg: data.message || 'Unknown error' };
         } catch (err) {
-          console.error('[Higgsfield] Image error:', err);
-          return { ok: false, error: err.message };
+          return { task_status: 'failed', task_status_msg: err.message };
         }
       },
 
       async reviseVideo(videoId, notes) {
-        if (!apiKeys.higgsfield) return { ok: false, error: 'No Higgsfield API key set' };
-        // For revisions, we re-generate with updated prompt (DoP is image-based)
-        // The caller should provide image_url from the original generation
         return this.generateVideo({
           prompt: `Revision — feedback: ${notes}`,
-          image_url: videoId, // videoId doubles as image_url for revisions
-          model: 'dop-turbo',
+          model_name: 'kling-v2-master',
         });
-      },
-
-      // V1 DoP status polling (for video generation)
-      async getStatus(generationId) {
-        if (!apiKeys.higgsfield) return { ok: false, error: 'No Higgsfield API key set' };
-        try {
-          const res = await fetch(backendUrl(`/api/proxy/higgsfield/status/${encodeURIComponent(generationId)}`), {
-            headers: { 'x-api-key-value': apiKeys.higgsfield, 'x-api-secret-value': apiKeys.higgsfieldSecret || '' },
-          });
-          const data = await res.json();
-          // DoP: jobs[0].status = queued | in_progress | completed | failed
-          // Video URLs in jobs[0].results.raw.url / jobs[0].results.min.url
-          const job = (data.jobs && data.jobs[0]) || {};
-          const jobStatus = (job.status || data.status || 'unknown').toLowerCase();
-          const videoUrl = (job.results && (job.results.raw?.url || job.results.min?.url)) || data.video?.url || data.video_url || data.images?.[0]?.url || data.url;
-          return {
-            ok: res.ok,
-            status: jobStatus,
-            video_url: videoUrl,
-            progress: data.progress,
-            ...data,
-          };
-        } catch (err) {
-          return { ok: false, error: err.message };
-        }
-      },
-
-      // V2 status polling (for image generation via Seedream/Flux)
-      async getImageStatus(requestId) {
-        if (!apiKeys.higgsfield) return { ok: false, error: 'No Higgsfield API key set' };
-        try {
-          const res = await fetch(backendUrl(`/api/proxy/higgsfield/status/${encodeURIComponent(requestId)}`), {
-            headers: { 'x-api-key-value': apiKeys.higgsfield, 'x-api-secret-value': apiKeys.higgsfieldSecret || '' },
-          });
-          const data = await res.json();
-          // V2 returns: { status, output: { images: [{ url }] } }
-          // Higgsfield API returns title-case statuses: Queued, InProgress, Completed, Failed, NSFW, Cancelled
-          const imageUrl = (data.output && data.output.images && data.output.images[0]?.url) || data.images?.[0]?.url || data.url;
-          const normalizedStatus = (data.status || '').toLowerCase();
-          return {
-            ok: res.ok,
-            status: normalizedStatus,
-            url: imageUrl,
-            ...data,
-          };
-        } catch (err) {
-          return { ok: false, error: err.message };
-        }
-      },
-
-      async getMotions() {
-        if (!apiKeys.higgsfield) return [];
-        try {
-          const res = await fetch(backendUrl('/api/proxy/higgsfield/motions'), {
-            headers: { 'x-api-key-value': apiKeys.higgsfield, 'x-api-secret-value': apiKeys.higgsfieldSecret || '' },
-          });
-          return await res.json();
-        } catch (err) {
-          console.error('[Higgsfield] Motions error:', err);
-          return [];
-        }
       },
     },
 
