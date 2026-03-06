@@ -20,8 +20,10 @@ const PORT = process.env.PORT || 3001;
 // ─── Directories ───
 const UPLOAD_DIR = path.join(__dirname, 'uploads');
 const OUTPUT_DIR = path.join(__dirname, 'output');
+const AUDIO_DIR = path.join(__dirname, 'audio');
 fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 fs.mkdirSync(OUTPUT_DIR, { recursive: true });
+fs.mkdirSync(AUDIO_DIR, { recursive: true });
 
 // ─── Middleware ───
 app.use(cors());
@@ -308,7 +310,7 @@ function runStitch(jobId, clips, outputPath, options = {}) {
 
   // Audio background track if provided
   if (options.audioBg) {
-    const audioPath = path.join(UPLOAD_DIR, options.audioBg);
+    const audioPath = fs.existsSync(path.join(AUDIO_DIR, options.audioBg)) ? path.join(AUDIO_DIR, options.audioBg) : path.join(UPLOAD_DIR, options.audioBg);
     if (fs.existsSync(audioPath)) {
       args.push('-i', audioPath, '-shortest');
     }
@@ -370,6 +372,54 @@ function formatSrtTime(seconds) {
   const ms = Math.round((seconds % 1) * 1000);
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')},${String(ms).padStart(3, '0')}`;
 }
+
+// ─── Audio / Music Management ───
+const audioStorage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, AUDIO_DIR),
+  filename: (req, file, cb) => {
+    const safe = file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_');
+    cb(null, safe);
+  },
+});
+const audioUpload = multer({
+  storage: audioStorage,
+  limits: { fileSize: 50 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const allowed = ['.mp3', '.wav', '.aac', '.m4a', '.ogg', '.flac'];
+    const ext = path.extname(file.originalname).toLowerCase();
+    if (allowed.includes(ext)) cb(null, true);
+    else cb(new Error('Audio type ' + ext + ' not allowed'));
+  },
+});
+
+app.post('/api/audio/upload', audioUpload.single('audio'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No audio file uploaded' });
+  res.json({ ok: true, filename: req.file.filename, originalName: req.file.originalname, size: req.file.size });
+});
+
+app.get('/api/audio/list', (req, res) => {
+  try {
+    const files = fs.readdirSync(AUDIO_DIR)
+      .filter(f => ['.mp3', '.wav', '.aac', '.m4a', '.ogg', '.flac'].includes(path.extname(f).toLowerCase()))
+      .map(f => {
+        const stat = fs.statSync(path.join(AUDIO_DIR, f));
+        return { filename: f, size: stat.size, modified: stat.mtime };
+      })
+      .sort((a, b) => new Date(b.modified) - new Date(a.modified));
+    res.json({ tracks: files });
+  } catch (err) {
+    res.json({ tracks: [] });
+  }
+});
+
+app.use('/audio', express.static(AUDIO_DIR));
+
+app.delete('/api/audio/:filename', (req, res) => {
+  const filePath = path.join(AUDIO_DIR, req.params.filename);
+  if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'Not found' });
+  fs.unlinkSync(filePath);
+  res.json({ ok: true });
+});
 
 // ─── Auto-Stitch from URLs ───
 // Downloads video clips from URLs (e.g. Higgsfield output) and stitches them automatically
@@ -463,6 +513,7 @@ function downloadFile(url, destPath) {
 
 const https = require('https');
 const http = require('http');
+const crypto = require('crypto');
 function proxyRequest(targetUrl, method, headers, body) {
   return new Promise((resolve, reject) => {
     const url = new URL(targetUrl);
@@ -611,6 +662,103 @@ app.get('/api/proxy/higgsfield/motions', async (req, res) => {
     res.status(result.status).json(result.data);
   } catch (err) {
     debugLog('hf-motions-err', { error: err.message });
+    res.status(502).json({ error: err.message });
+  }
+});
+
+// ── Kling AI Proxy ──
+// API: https://api-singapore.klingai.com
+// Auth: JWT (HS256) generated from AccessKey + SecretKey
+
+function generateKlingJwt(accessKey, secretKey) {
+  const header = Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url');
+  const now = Math.floor(Date.now() / 1000);
+  const payload = Buffer.from(JSON.stringify({ iss: accessKey, exp: now + 1800, nbf: now - 5 })).toString('base64url');
+  const sig = crypto.createHmac('sha256', secretKey).update(`${header}.${payload}`).digest('base64url');
+  return `${header}.${payload}.${sig}`;
+}
+
+function klingAuthHeaders(req) {
+  const accessKey = req.headers['x-api-key-value'] || '';
+  const secretKey = req.headers['x-api-secret-value'] || '';
+  return {
+    'Authorization': `Bearer ${generateKlingJwt(accessKey, secretKey)}`,
+    'Content-Type': 'application/json',
+  };
+}
+
+// Text-to-Video
+app.post('/api/proxy/kling/text2video', async (req, res) => {
+  const accessKey = req.headers['x-api-key-value'];
+  if (!accessKey) return res.status(400).json({ error: 'Missing Kling API key' });
+  debugLog('kling-t2v-req', { body: JSON.stringify(req.body).slice(0, 300) });
+  try {
+    const result = await proxyRequest(
+      'https://api-singapore.klingai.com/v1/videos/text2video',
+      'POST',
+      klingAuthHeaders(req),
+      req.body
+    );
+    debugLog('kling-t2v-res', { status: result.status, data: JSON.stringify(result.data).slice(0, 500) });
+    res.status(result.status).json(result.data);
+  } catch (err) {
+    debugLog('kling-t2v-err', { error: err.message });
+    res.status(502).json({ error: err.message });
+  }
+});
+
+// Image-to-Video
+app.post('/api/proxy/kling/image2video', async (req, res) => {
+  const accessKey = req.headers['x-api-key-value'];
+  if (!accessKey) return res.status(400).json({ error: 'Missing Kling API key' });
+  debugLog('kling-i2v-req', { body: JSON.stringify(req.body).slice(0, 300) });
+  try {
+    const result = await proxyRequest(
+      'https://api-singapore.klingai.com/v1/videos/image2video',
+      'POST',
+      klingAuthHeaders(req),
+      req.body
+    );
+    debugLog('kling-i2v-res', { status: result.status, data: JSON.stringify(result.data).slice(0, 500) });
+    res.status(result.status).json(result.data);
+  } catch (err) {
+    debugLog('kling-i2v-err', { error: err.message });
+    res.status(502).json({ error: err.message });
+  }
+});
+
+// Poll text2video status
+app.get('/api/proxy/kling/text2video/:taskId', async (req, res) => {
+  const accessKey = req.headers['x-api-key-value'];
+  if (!accessKey) return res.status(400).json({ error: 'Missing Kling API key' });
+  try {
+    const result = await proxyRequest(
+      `https://api-singapore.klingai.com/v1/videos/text2video/${encodeURIComponent(req.params.taskId)}`,
+      'GET',
+      klingAuthHeaders(req)
+    );
+    debugLog('kling-t2v-status', { taskId: req.params.taskId, status: result.status, data: JSON.stringify(result.data).slice(0, 300) });
+    res.status(result.status).json(result.data);
+  } catch (err) {
+    debugLog('kling-t2v-status-err', { error: err.message });
+    res.status(502).json({ error: err.message });
+  }
+});
+
+// Poll image2video status
+app.get('/api/proxy/kling/image2video/:taskId', async (req, res) => {
+  const accessKey = req.headers['x-api-key-value'];
+  if (!accessKey) return res.status(400).json({ error: 'Missing Kling API key' });
+  try {
+    const result = await proxyRequest(
+      `https://api-singapore.klingai.com/v1/videos/image2video/${encodeURIComponent(req.params.taskId)}`,
+      'GET',
+      klingAuthHeaders(req)
+    );
+    debugLog('kling-i2v-status', { taskId: req.params.taskId, status: result.status, data: JSON.stringify(result.data).slice(0, 300) });
+    res.status(result.status).json(result.data);
+  } catch (err) {
+    debugLog('kling-i2v-status-err', { error: err.message });
     res.status(502).json({ error: err.message });
   }
 });
@@ -799,6 +947,7 @@ app.listen(PORT, () => {
   console.log(`  GET  /api/download/:id   — Download finished video`);
   console.log(`  GET  /api/health         — Health check`);
   console.log(`  /api/proxy/higgsfield/*  — Higgsfield proxy`);
+  console.log(`  /api/proxy/kling/*       — Kling AI proxy`);
   console.log(`  /api/proxy/metricool/*   — Metricool proxy`);
   console.log(`  /api/proxy/arcads/*      — Arcads proxy`);
   console.log(`  /api/proxy/creatify/*    — Creatify proxy`);
