@@ -548,6 +548,8 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       setStage(1, `FFmpeg auto-stitching ${completedVideos.length} clips with captions…`);
 
       const stitchOptions = {};
+      const audioSel = document.getElementById('audio-select');
+      if (audioSel && audioSel.value) stitchOptions.audioBg = audioSel.value;
       const firstItem = newItems[0];
       if (firstItem && firstItem.aiPrompt && firstItem.aiPrompt.captions) {
         stitchOptions.captions = firstItem.aiPrompt.captions;
@@ -1177,6 +1179,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     msg.classList.remove('hidden');
     setTimeout(() => msg.classList.add('hidden'), 2500);
     renderScheduledPosts();
+  loadAudioTracks();
     checkBackendStatus();
   });
 
@@ -1817,6 +1820,106 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
   }
 
   // ─── Init ───
+
+  // ─── Audio / Music Management ───
+  async function loadAudioTracks() {
+    const select = document.getElementById('audio-select');
+    if (!select) return;
+    try {
+      const res = await fetch(backendUrl('/api/audio/list'));
+      const data = await res.json();
+      const tracks = data.tracks || [];
+      // Preserve current selection
+      const current = select.value;
+      select.innerHTML = '<option value="">No music (silent)</option>';
+      tracks.forEach(t => {
+        const opt = document.createElement('option');
+        opt.value = t.filename;
+        opt.textContent = `${t.filename} (${(t.size / 1024).toFixed(0)} KB)`;
+        select.appendChild(opt);
+      });
+      if (current) select.value = current;
+      // Show/hide preview + delete buttons
+      const previewBtn = document.getElementById('audio-preview-btn');
+      const deleteBtn = document.getElementById('audio-delete-btn');
+      if (previewBtn) previewBtn.style.display = select.value ? '' : 'none';
+      if (deleteBtn) deleteBtn.style.display = select.value ? '' : 'none';
+    } catch (err) {
+      console.log('[Audio] Could not load tracks:', err.message);
+    }
+  }
+
+  // Upload handler
+  const audioUploadInput = document.getElementById('audio-upload');
+  if (audioUploadInput) {
+    audioUploadInput.addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const hint = document.getElementById('audio-hint');
+      if (hint) hint.textContent = `Uploading ${file.name}…`;
+      const form = new FormData();
+      form.append('audio', file);
+      try {
+        const res = await fetch(backendUrl('/api/audio/upload'), { method: 'POST', body: form });
+        const data = await res.json();
+        if (data.ok) {
+          if (hint) hint.textContent = `✓ Uploaded ${data.filename} — saved for future reels.`;
+          await loadAudioTracks();
+          document.getElementById('audio-select').value = data.filename;
+          document.getElementById('audio-preview-btn').style.display = '';
+          document.getElementById('audio-delete-btn').style.display = '';
+        } else {
+          if (hint) hint.textContent = `Upload failed: ${data.error}`;
+        }
+      } catch (err) {
+        if (hint) hint.textContent = `Upload error: ${err.message}`;
+      }
+      audioUploadInput.value = '';
+    });
+  }
+
+  // Select change — show/hide buttons
+  const audioSelect = document.getElementById('audio-select');
+  if (audioSelect) {
+    audioSelect.addEventListener('change', () => {
+      const previewBtn = document.getElementById('audio-preview-btn');
+      const deleteBtn = document.getElementById('audio-delete-btn');
+      const player = document.getElementById('audio-player');
+      if (previewBtn) previewBtn.style.display = audioSelect.value ? '' : 'none';
+      if (deleteBtn) deleteBtn.style.display = audioSelect.value ? '' : 'none';
+      if (player) { player.style.display = 'none'; player.pause(); }
+    });
+  }
+
+  // Preview
+  const audioPreviewBtn = document.getElementById('audio-preview-btn');
+  if (audioPreviewBtn) {
+    audioPreviewBtn.addEventListener('click', () => {
+      const player = document.getElementById('audio-player');
+      const sel = document.getElementById('audio-select');
+      if (!player || !sel || !sel.value) return;
+      player.src = backendUrl(`/audio/${encodeURIComponent(sel.value)}`);
+      player.style.display = '';
+      player.play();
+    });
+  }
+
+  // Delete
+  const audioDeleteBtn = document.getElementById('audio-delete-btn');
+  if (audioDeleteBtn) {
+    audioDeleteBtn.addEventListener('click', async () => {
+      const sel = document.getElementById('audio-select');
+      if (!sel || !sel.value) return;
+      if (!confirm(`Delete "${sel.value}"?`)) return;
+      try {
+        await fetch(backendUrl(`/api/audio/${encodeURIComponent(sel.value)}`), { method: 'DELETE' });
+        await loadAudioTracks();
+        document.getElementById('audio-player').style.display = 'none';
+      } catch (err) {
+        alert('Delete failed: ' + err.message);
+      }
+    });
+  }
   loadApiKeys();
   syncKeysFromBackend().then(() => {
     loadApiKeys();
@@ -1827,6 +1930,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
   renderActivity();
   updateBadge();
   renderScheduledPosts();
+  loadAudioTracks();
   checkBackendStatus();
 
   // Fetch live scheduled posts if Metricool key is set

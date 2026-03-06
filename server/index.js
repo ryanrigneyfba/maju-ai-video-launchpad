@@ -20,8 +20,10 @@ const PORT = process.env.PORT || 3001;
 // ─── Directories ───
 const UPLOAD_DIR = path.join(__dirname, 'uploads');
 const OUTPUT_DIR = path.join(__dirname, 'output');
+const AUDIO_DIR = path.join(__dirname, 'audio');
 fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 fs.mkdirSync(OUTPUT_DIR, { recursive: true });
+fs.mkdirSync(AUDIO_DIR, { recursive: true });
 
 // ─── Middleware ───
 app.use(cors());
@@ -308,7 +310,7 @@ function runStitch(jobId, clips, outputPath, options = {}) {
 
   // Audio background track if provided
   if (options.audioBg) {
-    const audioPath = path.join(UPLOAD_DIR, options.audioBg);
+    const audioPath = fs.existsSync(path.join(AUDIO_DIR, options.audioBg)) ? path.join(AUDIO_DIR, options.audioBg) : path.join(UPLOAD_DIR, options.audioBg);
     if (fs.existsSync(audioPath)) {
       args.push('-i', audioPath, '-shortest');
     }
@@ -370,6 +372,54 @@ function formatSrtTime(seconds) {
   const ms = Math.round((seconds % 1) * 1000);
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')},${String(ms).padStart(3, '0')}`;
 }
+
+// ─── Audio / Music Management ───
+const audioStorage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, AUDIO_DIR),
+  filename: (req, file, cb) => {
+    const safe = file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_');
+    cb(null, safe);
+  },
+});
+const audioUpload = multer({
+  storage: audioStorage,
+  limits: { fileSize: 50 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const allowed = ['.mp3', '.wav', '.aac', '.m4a', '.ogg', '.flac'];
+    const ext = path.extname(file.originalname).toLowerCase();
+    if (allowed.includes(ext)) cb(null, true);
+    else cb(new Error('Audio type ' + ext + ' not allowed'));
+  },
+});
+
+app.post('/api/audio/upload', audioUpload.single('audio'), (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No audio file uploaded' });
+  res.json({ ok: true, filename: req.file.filename, originalName: req.file.originalname, size: req.file.size });
+});
+
+app.get('/api/audio/list', (req, res) => {
+  try {
+    const files = fs.readdirSync(AUDIO_DIR)
+      .filter(f => ['.mp3', '.wav', '.aac', '.m4a', '.ogg', '.flac'].includes(path.extname(f).toLowerCase()))
+      .map(f => {
+        const stat = fs.statSync(path.join(AUDIO_DIR, f));
+        return { filename: f, size: stat.size, modified: stat.mtime };
+      })
+      .sort((a, b) => new Date(b.modified) - new Date(a.modified));
+    res.json({ tracks: files });
+  } catch (err) {
+    res.json({ tracks: [] });
+  }
+});
+
+app.use('/audio', express.static(AUDIO_DIR));
+
+app.delete('/api/audio/:filename', (req, res) => {
+  const filePath = path.join(AUDIO_DIR, req.params.filename);
+  if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'Not found' });
+  fs.unlinkSync(filePath);
+  res.json({ ok: true });
+});
 
 // ─── Auto-Stitch from URLs ───
 // Downloads video clips from URLs (e.g. Higgsfield output) and stitches them automatically
