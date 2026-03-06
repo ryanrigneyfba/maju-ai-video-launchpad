@@ -1,0 +1,17 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "command": "git fetch origin main && git rebase origin/main || echo 'Rebase failed -- resolve conflicts before continuing'",
+        "description": "Sync current branch with latest main on session start"
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "command": "if echo \"$TOOL_INPUT\" | grep -q 'git push'; then echo '--- Branch divergence from main ---' && git diff --stat origin/main...HEAD 2>/dev/null; fi",
+        "description": "Show divergence from main before any git push"
+      }
+    ]
+  }
+}

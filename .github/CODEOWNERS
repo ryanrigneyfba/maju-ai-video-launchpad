@@ -1,0 +1,14 @@
+# Default owners for everything in the repo
+* @ryanrigneyfba
+
+# Frontend
+/index.html @ryanrigneyfba
+/js/ @ryanrigneyfba
+/css/ @ryanrigneyfba
+
+# Backend
+/server/ @ryanrigneyfba
+
+# CI/CD and config
+/.github/ @ryanrigneyfba
+/CLAUDE.md @ryanrigneyfba
