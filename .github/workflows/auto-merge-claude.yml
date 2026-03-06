@@ -50,13 +50,46 @@ jobs:
       contents: write
       pull-requests: write
     steps:
-      - name: Merge PR
+      - name: Check mergeability and merge PR
         uses: actions/github-script@v7
         with:
           script: |
-            await github.rest.pulls.merge({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: context.payload.pull_request.number,
-              merge_method: 'squash',
-            });
+            const prNumber = context.payload.pull_request.number;
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+
+            // Poll for mergeability (GitHub computes it async)
+            let pr;
+            for (let i = 0; i < 5; i++) {
+              const { data } = await github.rest.pulls.get({ owner, repo, pull_number: prNumber });
+              pr = data;
+              if (pr.mergeable !== null) break;
+              await new Promise(r => setTimeout(r, 3000));
+            }
+
+            if (pr.mergeable === false) {
+              const msg = `⚠️ **Auto-merge blocked**: This PR has merge conflicts with \`${pr.base.ref}\`.\n\nPlease rebase or merge \`${pr.base.ref}\` into \`${pr.head.ref}\` to resolve.`;
+              // Post a comment so it's visible
+              await github.rest.issues.createComment({ owner, repo, issue_number: prNumber, body: msg });
+              core.setFailed(`PR #${prNumber} has merge conflicts — cannot auto-merge.`);
+              return;
+            }
+
+            if (pr.mergeable === null) {
+              core.setFailed(`PR #${prNumber} mergeability could not be determined after retries.`);
+              return;
+            }
+
+            // Merge
+            try {
+              await github.rest.pulls.merge({
+                owner, repo,
+                pull_number: prNumber,
+                merge_method: 'squash',
+              });
+              console.log(`Successfully merged PR #${prNumber}`);
+            } catch (err) {
+              const msg = `⚠️ **Auto-merge failed**: \`${err.message}\`\n\nThis likely means a merge conflict or branch protection rule is blocking the merge.`;
+              await github.rest.issues.createComment({ owner, repo, issue_number: prNumber, body: msg });
+              core.setFailed(`Failed to merge PR #${prNumber}: ${err.message}`);
+            }
