@@ -10,7 +10,7 @@ const cors = require('cors');
 const multer = require('multer');
 const { v4: uuidv4 } = require('uuid');
 const { spawn } = require('child_process');
-const path = require('path');
+const path = require('path')
 const fs = require('fs');
 
 const app = express();
@@ -462,20 +462,24 @@ function downloadFile(url, destPath) {
 
 const https = require('https');
 const http = require('http');
-
 function proxyRequest(targetUrl, method, headers, body) {
   return new Promise((resolve, reject) => {
     const url = new URL(targetUrl);
     const transport = url.protocol === 'https:' ? https : http;
+    const bodyStr = body ? (typeof body === 'string' ? body : JSON.stringify(body)) : null;
+    const reqHeaders = { ...headers };
+    if (bodyStr) {
+      reqHeaders['Content-Length'] = Buffer.byteLength(bodyStr, 'utf8');
+    }
     const options = {
       hostname: url.hostname,
       port: url.port || (url.protocol === 'https:' ? 443 : 80),
       path: url.pathname + url.search,
       method,
-      headers,
+      headers: reqHeaders,
     };
 
-    const req = transport.request(options, (res) => {
+    const req = transport.request(opions, (res) => {
       let data = '';
       res.on('data', (chunk) => (data += chunk));
       res.on('end', () => {
@@ -488,7 +492,7 @@ function proxyRequest(targetUrl, method, headers, body) {
     });
 
     req.on('error', (err) => reject(err));
-    if (body) req.write(typeof body === 'string' ? body : JSON.stringify(body));
+    if (bodyStr) req.write(bodyStr);
     req.end();
   });
 }
