@@ -57,6 +57,25 @@
     console.log('[Hydrate] Backfilled instagramCaption/hashtags from aiPrompt on legacy items');
   }
 
+  // Second pass: generate defaults for items still missing caption/hashtags
+  let defaultsAdded = false;
+  queue.forEach(item => {
+    if (!item.instagramCaption) {
+      const pName = item.productName || item.aiPrompt?.segments?.[0]?.textOverlay || 'Black Seed Oil';
+      const hook = item.aiPrompt?.hookVariant || item.typeName || 'wellness snack';
+      item.instagramCaption = hook + ' ✨\nTry this with ' + pName + '. Your skin will thank you! 🖤\nSave & follow @majusuperfoods for more wellness snacks';
+      defaultsAdded = true;
+    }
+    if (!item.hashtags || !item.hashtags.length) {
+      item.hashtags = ['blackseedoil','depuff','facesnack','skincaretips','naturalremedy','antiinflammatory','puffyface','wellnesstips','majublackseedoil','skincareroutine','majusuperfoods','holistichealth'];
+      defaultsAdded = true;
+    }
+  });
+  if (defaultsAdded) {
+    localStorage.setItem(CONFIG.storageKeys.queue, JSON.stringify(queue));
+    console.log('[Hydrate] Generated default instagramCaption/hashtags for items missing them');
+  }
+
   let apiKeys = JSON.parse(localStorage.getItem(CONFIG.storageKeys.apiKeys) || '{}');
   let currentRejectId = null;
   let currentApproveId = null;
@@ -242,7 +261,17 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
         // Try to parse JSON from response
         const jsonMatch = text.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
-          return JSON.parse(jsonMatch[0]);
+          const parsed = JSON.parse(jsonMatch[0]);
+          // Ensure instagramCaption and hashtags always present (Claude Haiku sometimes omits them)
+          if (!parsed.instagramCaption) {
+            const product = parsed.segments?.[0]?.textOverlay || 'Black Seed Oil';
+            const hook = parsed.hookVariant || 'wellness snack';
+            parsed.instagramCaption = hook + ' ✨\nTry this anti-puffy face combo with ' + product + '. Your skin will thank you! 🖤\nSave for later & follow @majusuperfoods for more wellness snacks';
+          }
+          if (!parsed.hashtags || !parsed.hashtags.length) {
+            parsed.hashtags = ['blackseedoil','depuff','facesnack','skincaretips','naturalremedy','antiinflammatory','puffyface','wellnesstips','majublackseedoil','skincareroutine','majusuperfoods','holistichealth'];
+          }
+          return parsed;
         }
         return { script: text, direction: '', reasoning: 'Raw response' };
       }
