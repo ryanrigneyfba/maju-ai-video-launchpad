@@ -359,9 +359,81 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     { name: 'glow', duration: 5, prompt: 'A young woman with hair in a bun wearing a black tank top looks at herself in a mirror, gently touching her glowing dewy face with both hands. She looks serene and satisfied with her skin. A dark bottle labeled "MAJU BLACK SEED OIL" is prominently placed in the foreground near the mirror. Warm soft golden lighting emphasizes her healthy glowing skin. Dark moody background. Vertical 9:16 format, slow smooth motion.', textOverlay: 'anti-puffy face snack\n(onion + black seed oil + salt)', model: 'kling-v2-master' },
   ];
 
-  // Helper: generate a video segment via Kling text-to-video and poll until done
+  // Helper: generate a static image via Higgsfield Nano Banana Pro and poll until done
+  // Returns { url, error } object
+  async function generateSegmentImage(seg, segLabel) {
+    if (seg.image_url) return { url: seg.image_url };
+    const imgResult = await API.higgsfield.generateImage({ prompt: seg.prompt, aspect_ratio: '9:16' });
+    console.log(`[Pipeline] Nano Banana Pro image submit for ${segLabel}:`, imgResult.ok, 'id:', imgResult.id);
+    if (!imgResult.ok || !imgResult.id) {
+      const errDetail = imgResult.error || imgResult.message || JSON.stringify(imgResult).slice(0, 200);
+      debugPanel(`[${segLabel}] Image submit failed: ${errDetail}`);
+      return { url: null, error: `Image submit: ${errDetail}` };
+    }
+    for (let attempt = 0; attempt < 60; attempt++) {
+      await new Promise(r => setTimeout(r, 2000));
+      const imgStatus = await API.higgsfield.getImageStatus(imgResult.id);
+      const st = (imgStatus.status || '').toLowerCase();
+      if (attempt % 5 === 0) console.log(`[Pipeline] ${segLabel} image poll #${attempt}: status=${st}`);
+      if (st === 'completed' || st === 'done') return { url: imgStatus.url };
+      if (st === 'failed' || st === 'error' || st === 'nsfw' || st === 'cancelled') {
+        return { url: null, error: `Image ${st}` };
+      }
+    }
+    console.warn(`[Pipeline] ${segLabel} image timed out after 120s`);
+    return { url: null, error: 'Image timed out after 120s' };
+  }
+
+  // Helper: animate a static image via Kling image-to-video and poll until done
+  // Returns { url, error } object
+  async function animateImageToVideo(seg, imageUrl, segLabel) {
+    const result = await API.kling.generateFromImage({
+      prompt: seg.prompt,
+      image_url: imageUrl,
+      duration: seg.duration <= 5 ? '5' : '10',
+      aspect_ratio: '9:16',
+      model_name: seg.model || 'kling-v2-master',
+      mode: 'std',
+    });
+    console.log(`[Pipeline] Kling i2v submit for ${segLabel}:`, result.ok, 'taskId:', result.taskId);
+    if (!result.ok || !result.taskId) {
+      const errDetail = result.error || result.message || JSON.stringify(result).slice(0, 200);
+      debugPanel(`[${segLabel}] Kling i2v submit failed: ${errDetail}`);
+      return { url: null, error: `Video submit: ${errDetail}` };
+    }
+    for (let attempt = 0; attempt < 120; attempt++) {
+      await new Promise(r => setTimeout(r, 3000));
+      const status = await API.kling.getImageVideoStatus(result.taskId);
+      const st = (status.task_status || '').toLowerCase();
+      if (attempt % 5 === 0) console.log(`[Pipeline] Kling i2v ${segLabel} poll #${attempt}: status=${st}`);
+      if (st === 'succeed') {
+        const videos = status.task_result && status.task_result.videos;
+        const url = videos && videos[0] && videos[0].url;
+        return { url: url || null, error: url ? null : 'No video URL in result' };
+      }
+      if (st === 'failed') {
+        return { url: null, error: `Video failed: ${status.task_status_msg || 'unknown'}` };
+      }
+    }
+    console.warn(`[Pipeline] ${segLabel} video timed out after 360s`);
+    return { url: null, error: 'Video timed out after 360s' };
+  }
+
+  // Helper: full segment pipeline — Higgsfield image → Kling animate (or Kling text2video fallback)
   // Returns { url, error } object
   async function generateSegmentVideo(seg, segLabel) {
+    // If Higgsfield key is set, use hybrid pipeline: Nano Banana Pro image → Kling image2video
+    if (apiKeys.higgsfield) {
+      debugPanel(`[${segLabel}] Generating image via Nano Banana Pro…`);
+      const imageResult = await generateSegmentImage(seg, segLabel);
+      if (imageResult.url) {
+        debugPanel(`[${segLabel}] Image ready — animating via Kling image2video…`);
+        return await animateImageToVideo(seg, imageResult.url, segLabel);
+      }
+      debugPanel(`[${segLabel}] Image failed (${imageResult.error}) — falling back to Kling text2video`);
+    }
+
+    // Fallback: Kling text-to-video (no reference image)
     const result = await API.kling.generateVideo({
       prompt: seg.prompt,
       duration: seg.duration <= 5 ? '5' : '10',
@@ -369,18 +441,17 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       model_name: seg.model || 'kling-v2-master',
       mode: 'std',
     });
-    console.log(`[Pipeline] Kling submit for ${segLabel}:`, result.ok, 'taskId:', result.taskId);
+    console.log(`[Pipeline] Kling t2v submit for ${segLabel}:`, result.ok, 'taskId:', result.taskId);
     if (!result.ok || !result.taskId) {
       const errDetail = result.error || result.message || JSON.stringify(result).slice(0, 200);
       debugPanel(`[${segLabel}] Kling submit failed: ${errDetail}`);
       return { url: null, error: `Submit: ${errDetail}` };
     }
-    // Poll for completion (Kling can take a few minutes)
     for (let attempt = 0; attempt < 120; attempt++) {
       await new Promise(r => setTimeout(r, 3000));
       const status = await API.kling.getVideoStatus(result.taskId);
       const st = (status.task_status || '').toLowerCase();
-      if (attempt % 5 === 0) console.log(`[Pipeline] Kling ${segLabel} poll #${attempt}: status=${st}`);
+      if (attempt % 5 === 0) console.log(`[Pipeline] Kling t2v ${segLabel} poll #${attempt}: status=${st}`);
       if (st === 'succeed') {
         const videos = status.task_result && status.task_result.videos;
         const url = videos && videos[0] && videos[0].url;
@@ -1028,6 +1099,8 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
   function loadApiKeys() {
     if (apiKeys.backendUrl) $('#api-backend-url').value = apiKeys.backendUrl;
     if (apiKeys.claude) $('#api-claude').value = apiKeys.claude;
+    if (apiKeys.higgsfield) $('#api-higgsfield').value = apiKeys.higgsfield;
+    if (apiKeys.higgsfieldSecret) $('#api-higgsfield-secret').value = apiKeys.higgsfieldSecret;
     if (apiKeys.kling) $('#api-kling').value = apiKeys.kling;
     if (apiKeys.klingSecret) $('#api-kling-secret').value = apiKeys.klingSecret;
     if (apiKeys.metricool) $('#api-metricool').value = apiKeys.metricool;
@@ -1094,6 +1167,8 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     apiKeys = {
       backendUrl: $('#api-backend-url').value.trim(),
       claude: $('#api-claude').value.trim(),
+      higgsfield: $('#api-higgsfield').value.trim(),
+      higgsfieldSecret: $('#api-higgsfield-secret').value.trim(),
       kling: $('#api-kling').value.trim(),
       klingSecret: $('#api-kling-secret').value.trim(),
       metricool: $('#api-metricool').value.trim(),
@@ -1153,6 +1228,49 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
   // All API calls route through the backend proxy to avoid CORS issues.
 
   const API = {
+    // ── Higgsfield — Static image generation with Patient Maya avatar (via proxy) ──
+    higgsfield: {
+      async generateImage(params) {
+        console.log('[Higgsfield] Generate image (Nano Banana Pro — Patient Maya):', params);
+        if (!apiKeys.higgsfield) return { ok: false, error: 'No Higgsfield API key set — add in Settings' };
+        const body = {
+          endpoint: params.endpoint || 'nano-banana-pro/text-to-image',
+          input: {
+            prompt: params.prompt || '',
+            aspect_ratio: params.aspect_ratio || '9:16',
+          },
+        };
+        try {
+          const res = await fetch(backendUrl('/api/proxy/higgsfield/generate'), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-api-key-value': apiKeys.higgsfield, 'x-api-secret-value': apiKeys.higgsfieldSecret || '' },
+            body: JSON.stringify(body),
+          });
+          const data = await res.json();
+          console.log('[Higgsfield] Image response:', data);
+          return { ok: res.ok, id: data.request_id || data.id, ...data };
+        } catch (err) {
+          console.error('[Higgsfield] Image error:', err);
+          return { ok: false, error: err.message };
+        }
+      },
+
+      async getImageStatus(requestId) {
+        if (!apiKeys.higgsfield) return { ok: false, error: 'No Higgsfield API key set' };
+        try {
+          const res = await fetch(backendUrl(`/api/proxy/higgsfield/status/${encodeURIComponent(requestId)}`), {
+            headers: { 'x-api-key-value': apiKeys.higgsfield, 'x-api-secret-value': apiKeys.higgsfieldSecret || '' },
+          });
+          const data = await res.json();
+          const imageUrl = (data.output && data.output.images && data.output.images[0]?.url) || data.images?.[0]?.url || data.url;
+          const normalizedStatus = (data.status || '').toLowerCase();
+          return { ok: res.ok, status: normalizedStatus, url: imageUrl, ...data };
+        } catch (err) {
+          return { ok: false, error: err.message };
+        }
+      },
+    },
+
     // ── Kling AI — Video generation (via proxy) ──
     // API: https://api-singapore.klingai.com
     // Auth: JWT (HS256) from AccessKey + SecretKey (handled server-side)
@@ -1190,6 +1308,47 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
         if (!apiKeys.kling) return { task_status: 'failed', task_status_msg: 'No Kling API key' };
         try {
           const res = await fetch(backendUrl(`/api/proxy/kling/text2video/${encodeURIComponent(taskId)}`), {
+            headers: { 'x-api-key-value': apiKeys.kling, 'x-api-secret-value': apiKeys.klingSecret || '' },
+          });
+          const data = await res.json();
+          return data.data || { task_status: 'failed', task_status_msg: data.message || 'Unknown error' };
+        } catch (err) {
+          return { task_status: 'failed', task_status_msg: err.message };
+        }
+      },
+
+      async generateFromImage(params) {
+        console.log('[Kling] Image-to-video:', params);
+        if (!apiKeys.kling) return { ok: false, error: 'No Kling API key set — add in Settings' };
+        const body = {
+          model_name: params.model_name || 'kling-v2-master',
+          image: params.image_url,
+          prompt: params.prompt || '',
+          aspect_ratio: params.aspect_ratio || '9:16',
+          duration: params.duration || '5',
+          mode: params.mode || 'std',
+        };
+        if (params.negative_prompt) body.negative_prompt = params.negative_prompt;
+        try {
+          const res = await fetch(backendUrl('/api/proxy/kling/image2video'), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-api-key-value': apiKeys.kling, 'x-api-secret-value': apiKeys.klingSecret || '' },
+            body: JSON.stringify(body),
+          });
+          const data = await res.json();
+          console.log('[Kling] Image-to-video response:', data);
+          const taskId = data.data && data.data.task_id;
+          return { ok: res.ok && data.code === 0, taskId, ...data };
+        } catch (err) {
+          console.error('[Kling] Image-to-video error:', err);
+          return { ok: false, error: err.message };
+        }
+      },
+
+      async getImageVideoStatus(taskId) {
+        if (!apiKeys.kling) return { task_status: 'failed', task_status_msg: 'No Kling API key' };
+        try {
+          const res = await fetch(backendUrl(`/api/proxy/kling/image2video/${encodeURIComponent(taskId)}`), {
             headers: { 'x-api-key-value': apiKeys.kling, 'x-api-secret-value': apiKeys.klingSecret || '' },
           });
           const data = await res.json();

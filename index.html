@@ -142,7 +142,7 @@
           <span class="status-dot disconnected"></span>
           <span>Backend: Not connected</span>
         </div>
-        <p class="settings-note">Videos are automatically generated via Kling AI and stitched into a 9:16 vertical reel with captions. The pipeline handles everything — generate, stitch, caption, and queue for approval.</p>
+        <p class="settings-note">Pipeline: Higgsfield Nano Banana Pro generates Patient Maya images → Kling AI animates them into video → FFmpeg stitches into a 9:16 reel with captions. Falls back to Kling text-to-video if no Higgsfield key.</p>
 
         <div class="stitch-segments" id="stitch-segments">
           <div class="stitch-segment"><span>1. Hook (0-3s)</span> <span class="file-status" id="seg-hook">Waiting…</span></div>
@@ -283,6 +283,22 @@
           </div>
 
           <div class="api-field">
+            <label>Higgsfield API Key</label>
+            <div class="api-input-row">
+              <input type="password" id="api-higgsfield" placeholder="Enter API Key…">
+              <button class="btn btn-sm btn-toggle-vis" data-target="api-higgsfield">Show</button>
+            </div>
+          </div>
+          <div class="api-field">
+            <label>Higgsfield API Secret</label>
+            <div class="api-input-row">
+              <input type="password" id="api-higgsfield-secret" placeholder="Enter API Secret…">
+              <button class="btn btn-sm btn-toggle-vis" data-target="api-higgsfield-secret">Show</button>
+            </div>
+            <span class="api-hint">Static image generation (Nano Banana Pro — Patient Maya) — <code>cloud.higgsfield.ai</code></span>
+          </div>
+
+          <div class="api-field">
             <label>Kling AI Access Key</label>
             <div class="api-input-row">
               <input type="password" id="api-kling" placeholder="Enter Access Key…">
@@ -295,7 +311,7 @@
               <input type="password" id="api-kling-secret" placeholder="Enter Secret Key…">
               <button class="btn btn-sm btn-toggle-vis" data-target="api-kling-secret">Show</button>
             </div>
-            <span class="api-hint">AI video generation (text-to-video) — get credentials at <code>klingai.com/global/dev</code></span>
+            <span class="api-hint">Video animation (image-to-video) — <code>klingai.com/global/dev</code></span>
           </div>
 
           <div class="api-field">
