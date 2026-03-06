@@ -1,7 +1,7 @@
-/* ═══════════════════════════════════════════
-   MAJU AI Video Launchpad — v1.1
+/* ═══════════════════════════════════════════ 
+   MAJU AI Video Launchpad — v1.1 
    Main application logic
-   ═══════════════════════════════════════════ */
+   ═══════════════════════════════════════════ */ 
 (function () {
   'use strict';
 
@@ -9,7 +9,7 @@
   const CONFIG = {
     higgsfield: {
       asset: 'majurender8oz',
-      avatar: 'pateit',
+      avatar: 'pateit'
     },
     avatarMeta: {
       pateit: { name: 'Patient Maya', ig: '@breealba' },
@@ -26,7 +26,7 @@
   // ─── State ───
   let queue = JSON.parse(localStorage.getItem(CONFIG.storageKeys.queue) || '[]');
 
-  // Cleanup: remove busted pending items that have no stitched video and no segment videos
+  // Cleanup: remove busted pending items that have no stitched video andno segment ideos
   const beforeCount = queue.length;
   queue = queue.filter(item => {
     if (item.status === 'pending' && !item.stitchedVideoUrl && (!item.segmentVideos || item.segmentVideos.length === 0)) {
@@ -193,9 +193,11 @@ Return ONLY a JSON object with these fields:
 - "reasoning": 1 sentence explaining what you optimized based on feedback
 - "captions": array of 5 objects for each segment with { "text": "caption text", "startTime": seconds, "endTime": seconds }
 - "hookVariant": which hook text variant this version uses
+- "instagramCaption": a ready-to-post Instagram caption (hook line + value prop + CTA, 150-300 characters, NO hashtags here)
+- "hashtags": array of 10-15 relevant hashtags (strings without the # prefix, e.g. ["blackseedoil","wellness","skincare"])
 
 Example:
-{"segments":[{"name":"hook","prompt":"A young woman with her hair in a bun wearing a black tank top...","duration":5,"textOverlay":"de-puff your face snack","model":"kling-v2-master"},{"name":"reveal","prompt":"A young woman with hair in a bun wearing a black tank top pours...","duration":5,"textOverlay":"1 red onion\\n+ black seed oil\\n+ salt","model":"kling-v2-master"},{"name":"demo","prompt":"Tight close-up of a young woman with hair in a bun...","duration":5,"textOverlay":null,"model":"kling-v2-master"},{"name":"result","prompt":"A young woman with hair in a bun wearing a black tank top holds...","duration":5,"textOverlay":"drains facial bloat\\nreduces water retention\\ntightens puffy skin","model":"kling-v2-master"},{"name":"glow","prompt":"A young woman with hair in a bun wearing a black tank top looks...","duration":5,"textOverlay":"anti-puffy face snack","model":"kling-v2-master"}],"direction":"Warm, moody kitchen. Authentic reactions.","reasoning":"Used default SOP prompts.","captions":[{"text":"de-puff your face snack","startTime":0,"endTime":5},{"text":"1 red onion + black seed oil + salt","startTime":5,"endTime":10},{"text":"","startTime":10,"endTime":15},{"text":"drains facial bloat, reduces water retention, tightens puffy skin","startTime":15,"endTime":20},{"text":"anti-puffy face snack","startTime":20,"endTime":25}],"hookVariant":"de-puff your face snack"}`;
+{"segments":[{"name":"hook","prompt":"A young woman with her hair in a bun wearing a black tank top...","duration":5,"textOverlay":"de-puff your face snack","model":"kling-v2-master"},{"name":"reveal","prompt":"A young woman with hair in a bun wearing a black tank top pours...","duration":5,"textOverlay":"1 red onion\\n+ black seed oil\\n+ salt","model":"kling-v2-master"},{"name":"demo","prompt":"Tight close-up of a young woman with hair in a bun...","duration":5,"textOverlay":null,"model":"kling-v2-master"},{"name":"result","prompt":"A young woman with hair in a bun wearing a black tank top holds...","duration":5,"textOverlay":"drains facial bloat\\nreduces water retention\\ntightens puffy skin","model":"kling-v2-master"},{"name":"glow","prompt":"A young woman with hair in a bun wearing a black tank top looks...","duration":5,"textOverlay":"anti-puffy face snack","model":"kling-v2-master"}],"direction":"Warm, moody kitchen. Authentic reactions.","reasoning":"Used default SOP prompts.","captions":[{"text":"de-puff your face snack","startTime":0,"endTime":5},{"text":"1 red onion + black seed oil + salt","startTime":5,"endTime":10},{"text":"","startTime":10,"endTime":15},{"text":"drains facial bloat, reduces water retention, tightens puffy skin","startTime":15,"endTime":20},{"text":"anti-puffy face snack","startTime":20,"endTime":25}],"hookVariant":"de-puff your face snack","instagramCaption":"Wake up puffy? Try this anti-bloat snack! Red onion + Maju Black Seed Oil + salt = natural de-puff. Your face will thank you. Save for later!","hashtags":["blackseedoil","depuff","wellness","skincare","naturalremedies","majuoil","antiinflammatory","selfcare","beautyhack","healthysnack","glowup","facialcare","holistic","puffyface","bloatremedy"]}`;
 
     const feedbackContext = relevantFeedback.length
       ? `\n\nPast feedback for this format (${relevantFeedback.length} entries):
@@ -209,7 +211,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
         headers: { 'Content-Type': 'application/json', 'x-api-key-value': apiKeys.claude },
         body: JSON.stringify({
           model: 'claude-haiku-4-5-20251001',
-          max_tokens: 1024,
+          max_tokens: 2048,
           system: systemPrompt,
           messages: [{
             role: 'user',
@@ -270,6 +272,8 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
         schedDate: postMode === 'schedule' ? schedDate : null,
         notes,
         aiPrompt, // Claude-optimized prompt (null if no key)
+        instagramCaption: aiPrompt?.instagramCaption || '',
+        hashtags: aiPrompt?.hashtags || [],
         version: i + 1,
         totalVersions: versions,
         status: 'pending',
@@ -359,18 +363,18 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     { name: 'glow', duration: 5, prompt: 'A young woman with hair in a bun wearing a black tank top looks at herself in a mirror, gently touching her glowing dewy face with both hands. She looks serene and satisfied with her skin. A dark bottle labeled "MAJU BLACK SEED OIL" is prominently placed in the foreground near the mirror. Warm soft golden lighting emphasizes her healthy glowing skin. Dark moody background. Vertical 9:16 format, slow smooth motion.', textOverlay: 'anti-puffy face snack\n(onion + black seed oil + salt)', model: 'kling-v2-master' },
   ];
 
-  // Helper: generate a static image via Higgsfield Nano Banana Pro and poll until done
+  // Helper: generate a static image via Higgsfield Flux Kontext Max and poll until done
   // Returns { url, error } object
   async function generateSegmentImage(seg, segLabel) {
     if (seg.image_url) return { url: seg.image_url };
     const imgResult = await API.higgsfield.generateImage({ prompt: seg.prompt, aspect_ratio: '9:16' });
-    console.log(`[Pipeline] Nano Banana Pro image submit for ${segLabel}:`, imgResult.ok, 'id:', imgResult.id);
+    console.log(`[Pipeline] Flux Kontext Max image submit for ${segLabel}:`, imgResult.ok, 'id:', imgResult.id);
     if (!imgResult.ok || !imgResult.id) {
       const errDetail = imgResult.error || imgResult.message || JSON.stringify(imgResult).slice(0, 200);
       debugPanel(`[${segLabel}] Image submit failed: ${errDetail}`);
       return { url: null, error: `Image submit: ${errDetail}` };
     }
-    for (let attempt = 0; attempt < 60; attempt++) {
+    for (let attempt = 0; attempt < 150; attempt++) {
       await new Promise(r => setTimeout(r, 2000));
       const imgStatus = await API.higgsfield.getImageStatus(imgResult.id);
       const st = (imgStatus.status || '').toLowerCase();
@@ -390,7 +394,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     const result = await API.kling.generateFromImage({
       prompt: seg.prompt,
       image_url: imageUrl,
-      duration: seg.duration <= 5 ? '5' : '10',
+      duration: seg.duration <= 5 ? 5 : 10,
       aspect_ratio: '9:16',
       model_name: seg.model || 'kling-v2-master',
       mode: 'std',
@@ -401,7 +405,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       debugPanel(`[${segLabel}] Kling i2v submit failed: ${errDetail}`);
       return { url: null, error: `Video submit: ${errDetail}` };
     }
-    for (let attempt = 0; attempt < 120; attempt++) {
+    for (let attempt = 0; attempt < 200; attempt++) {
       await new Promise(r => setTimeout(r, 3000));
       const status = await API.kling.getImageVideoStatus(result.taskId);
       const st = (status.task_status || '').toLowerCase();
@@ -409,22 +413,23 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       if (st === 'succeed') {
         const videos = status.task_result && status.task_result.videos;
         const url = videos && videos[0] && videos[0].url;
+              console.log('[Pipeline] t2v succeed, full status:', JSON.stringify({task_status: status.task_status, has_result: !!status.task_result, result_keys: status.task_result ? Object.keys(status.task_result) : null}).substring(0, 300));
         return { url: url || null, error: url ? null : 'No video URL in result' };
       }
       if (st === 'failed') {
         return { url: null, error: `Video failed: ${status.task_status_msg || 'unknown'}` };
       }
     }
-    console.warn(`[Pipeline] ${segLabel} video timed out after 360s`);
-    return { url: null, error: 'Video timed out after 360s' };
+    console.warn(`[Pipeline] ${segLabel} video timed out after 600s`);
+    return { url: null, error: 'Video timed out after 600s' };
   }
 
   // Helper: full segment pipeline — Higgsfield image → Kling animate (or Kling text2video fallback)
   // Returns { url, error } object
   async function generateSegmentVideo(seg, segLabel) {
-    // If Higgsfield key is set, use hybrid pipeline: Nano Banana Pro image → Kling image2video
+    // If Higgsfield key is set, use hybrid pipeline: Flux Kontext Max image → Kling image2video
     if (apiKeys.higgsfield) {
-      debugPanel(`[${segLabel}] Generating image via Nano Banana Pro…`);
+      debugPanel(`[${segLabel}] Generating image via Flux Kontext Max…`);
       const imageResult = await generateSegmentImage(seg, segLabel);
       if (imageResult.url) {
         debugPanel(`[${segLabel}] Image ready — animating via Kling image2video…`);
@@ -436,7 +441,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     // Fallback: Kling text-to-video (no reference image)
     const result = await API.kling.generateVideo({
       prompt: seg.prompt,
-      duration: seg.duration <= 5 ? '5' : '10',
+      duration: seg.duration <= 5 ? 5 : 10,
       aspect_ratio: '9:16',
       model_name: seg.model || 'kling-v2-master',
       mode: 'std',
@@ -447,7 +452,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       debugPanel(`[${segLabel}] Kling submit failed: ${errDetail}`);
       return { url: null, error: `Submit: ${errDetail}` };
     }
-    for (let attempt = 0; attempt < 120; attempt++) {
+    for (let attempt = 0; attempt < 200; attempt++) {
       await new Promise(r => setTimeout(r, 3000));
       const status = await API.kling.getVideoStatus(result.taskId);
       const st = (status.task_status || '').toLowerCase();
@@ -461,8 +466,8 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
         return { url: null, error: `Video failed: ${status.task_status_msg || 'unknown'}` };
       }
     }
-    console.warn(`[Pipeline] ${segLabel} timed out after 360s`);
-    return { url: null, error: 'Timed out after 360s' };
+    console.warn(`[Pipeline] ${segLabel} timed out after 600s`);
+    return { url: null, error: 'Timed out after 600s' };
   }
 
   // Helper: run async tasks with a concurrency limit
@@ -579,8 +584,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
             if (st.status === 'done') {
               stitchDone = true;
               const dlUrl = API.backend.downloadUrl(stitchResult.jobId);
-              newItems[0].stitchJobId = stitchResult.jobId;
-              newItems[0].stitchedVideoUrl = dlUrl;
+              newItems.forEach(ni => { ni.stitchJobId = stitchResult.jobId; ni.stitchedVideoUrl = dlUrl; });
               msg.textContent = 'Stitch complete!';
               stitchPassed = true;
             } else if (st.status === 'error') {
@@ -643,9 +647,17 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
         <div class="queue-info">
           <h4>${item.typeName} — v${item.version}/${item.totalVersions}</h4>
           <p>${item.productName} · ${item.avatarName}</p>
+          ${item.aiPrompt?.hookVariant ? `<span class="queue-hook-label">${item.aiPrompt.hookVariant}</span>` : ''}
           ${item.postMode === 'asap' ? '<p>📌 Post ASAP</p>' : `<p>📅 ${formatDate(item.schedDate)}</p>`}
           ${item.notes ? `<p>"${item.notes}"</p>` : ''}
           ${item.aiPrompt ? `<div class="ai-prompt"><strong>AI Brief:</strong> ${item.aiPrompt.reasoning || ''}<br><em>${(item.aiPrompt.direction || '').substring(0, 120)}</em></div>` : ''}
+          <div class="queue-social-content">
+            <label>Instagram Caption</label>
+            <textarea class="caption-input" data-id="${item.id}" rows="4" placeholder="Instagram caption...">${item.instagramCaption || ''}</textarea>
+            <label>Hashtags <small>(comma-separated)</small></label>
+            <input class="hashtags-input" data-id="${item.id}" type="text" placeholder="blackseedoil, wellness, skincare..." value="${(item.hashtags || []).join(', ')}">
+          </div>
+          ${item.aiPrompt?.segments ? `<div class="queue-segments-preview"><strong>Segment Overlays:</strong> ${item.aiPrompt.segments.filter(s => s.textOverlay).map(s => `<span>${s.name}: "${s.textOverlay.replace(/\n/g, ' ')}"</span>`).join(' \u00b7 ')}</div>` : ''}
           <div class="queue-meta">
             Status: <strong>${item.status.toUpperCase()}</strong> ·
             Created: ${formatDate(item.createdAt)}
@@ -957,7 +969,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
   };
 
   function renderSpendTracker() {
-    const summaryEl = $('#spend-summary');
+    const summaryEl = $('#spend-summary'); 
     const tableEl = $('#spend-table-wrap');
     if (!summaryEl || !tableEl) return;
 
@@ -965,7 +977,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     const spendRows = [];
     for (const item of queue) {
       const segments = (item.aiPrompt && item.aiPrompt.segments) || DEFAULT_SEGMENT_PROMPTS;
-      const segCount = item.segmentVideos ? item.segmentVideos.length : 0;
+      const segCount = item.segmentVideos ? item.segmentVideos.length : 0
       const imageCount = 0; // Kling generates video directly, no separate image step
       const videoCount = segCount;
       const model = (segments[0] && segments[0].model) || 'kling-v2-master';
@@ -1181,6 +1193,25 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     renderScheduledPosts();
   loadAudioTracks();
     checkBackendStatus();
+
+  // ── Debounced save for queue social content edits ──
+  let _queueSaveTimer = null;
+  const queueList = document.getElementById('queue-list');
+  if (queueList) {
+    queueList.addEventListener('input', (e) => {
+      const id = e.target.dataset.id;
+      if (!id) return;
+      const item = queue.find(q => q.id === id);
+      if (!item) return;
+      if (e.target.classList.contains('caption-input')) {
+        item.instagramCaption = e.target.value;
+      } else if (e.target.classList.contains('hashtags-input')) {
+        item.hashtags = e.target.value.split(',').map(t => t.trim()).filter(Boolean);
+      } else { return; }
+      clearTimeout(_queueSaveTimer);
+      _queueSaveTimer = setTimeout(() => saveQueue(), 300);
+    });
+  }
   });
 
   // ─── Helpers ───
@@ -1230,10 +1261,10 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     // ── Higgsfield — Static image generation with Patient Maya avatar (via proxy) ──
     higgsfield: {
       async generateImage(params) {
-        console.log('[Higgsfield] Nano Banana Pro image (Patient Maya):', params);
+        console.log('[Higgsfield] Flux Kontext Max image (Patient Maya):', params);
         if (!apiKeys.higgsfield) return { ok: false, error: 'No Higgsfield API key set — add in Settings' };
         const body = {
-          endpoint: params.endpoint || 'nano_banana_pro/text-to-image',
+          endpoint: params.endpoint || 'flux-pro/kontext/max/text-to-image',
           input: {
             prompt: params.prompt || '',
             aspect_ratio: params.aspect_ratio || '9:16',
@@ -1283,7 +1314,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
           input: {
             prompt: params.prompt || '',
             aspect_ratio: params.aspect_ratio || '9:16',
-            duration: params.duration || '5',
+            duration: parseInt(params.duration) || 5,
           },
         };
         if (params.negative_prompt) body.input.negative_prompt = params.negative_prompt;
@@ -1311,7 +1342,8 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
           });
           const data = await res.json();
           const st = (data.status || '').toLowerCase();
-          const videoUrl = (data.output && data.output.video && data.output.video.url) || data.video_url || data.url;
+          const videoUrl = (data.output && data.output.video_url) || (data.output && data.output.video && data.output.video.url) || (data.output && data.output.url) || (data.video && data.video.url) || data.video_url || (data.images && data.images[0] && data.images[0].url) || data.url || (data.jobs && data.jobs[0] && data.jobs[0].results && (data.jobs[0].results.raw && data.jobs[0].results.raw.url || data.jobs[0].results.min && data.jobs[0].results.min.url)) || (data.result && data.result.videos && data.result.videos[0] && data.result.videos[0].url);
+          if ((st === 'completed' || st === 'done' || st === 'succeed') && !videoUrl) { console.warn('[Kling getVideoStatus] Completed but no videoUrl! Keys:', Object.keys(data), 'output keys:', data.output ? Object.keys(data.output) : 'no output', JSON.stringify(data).substring(0, 500)); }
           return {
             task_status: st === 'completed' || st === 'done' ? 'succeed' : st,
             task_status_msg: data.message || '',
@@ -1333,7 +1365,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
             image_url: params.image_url,
             prompt: params.prompt || '',
             aspect_ratio: params.aspect_ratio || '9:16',
-            duration: params.duration || '5',
+            duration: parseInt(params.duration) || 5,
           },
         };
         if (params.negative_prompt) body.input.negative_prompt = params.negative_prompt;
@@ -1802,20 +1834,30 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       console.log('[Metricool] No API key — skip scheduling');
       return;
     }
+    const caption = item.instagramCaption || `${item.productName} — ${item.typeName}`;
+    const tags = (item.hashtags || []).map(t => `#${t.replace(/^#/, '')}`).join(' ');
+    const fullContent = tags ? `${caption}\n\n${tags}` : caption;
+    const videoSrc = item.stitchedVideoUrl || item.videoUrl;
     const postParams = {
-      content: `${item.productName} — ${item.typeName} by ${item.avatarName}`,
+      content: fullContent,
+      networks: [{ network: 'instagram', type: 'reels' }],
+      media: videoSrc ? [{ url: videoSrc, type: 'video' }] : [],
       publicationDate: item.schedDate
         ? { dateTime: item.schedDate, timezone: Intl.DateTimeFormat().resolvedOptions().timeZone }
         : undefined,
     };
-    API.metricool.schedulePost(postParams).then((res) => {
+    console.log('[Metricool] Scheduling Instagram Reel:', { content: fullContent.substring(0, 80) + '...', hasVideo: !!videoSrc });
+    return API.metricool.schedulePost(postParams).then((res) => {
       if (res.ok) {
         console.log('[Metricool] Post scheduled:', res);
         item.metricoolId = res.postId || res.id;
         saveQueue();
       } else {
-        console.warn('[Metricool] Schedule failed:', res.error);
+        console.warn('[Metricool] Schedule failed:', res);
       }
+      return res;
+    }).catch(err => {
+      console.error('[Metricool] Error scheduling:', err);
     });
   }
 
