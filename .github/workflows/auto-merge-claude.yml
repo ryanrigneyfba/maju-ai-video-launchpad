@@ -50,13 +50,93 @@ jobs:
       contents: write
       pull-requests: write
     steps:
-      - name: Merge PR
+      - name: Check mergeability
+        id: check
         uses: actions/github-script@v7
         with:
           script: |
-            await github.rest.pulls.merge({
+            const prNumber = context.payload.pull_request.number;
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+
+            // Poll for mergeability (GitHub computes it async)
+            let pr;
+            for (let i = 0; i < 5; i++) {
+              const { data } = await github.rest.pulls.get({ owner, repo, pull_number: prNumber });
+              pr = data;
+              if (pr.mergeable !== null) break;
+              await new Promise(r => setTimeout(r, 3000));
+            }
+
+            core.setOutput('mergeable', String(pr.mergeable));
+            core.setOutput('head_ref', pr.head.ref);
+            core.setOutput('base_ref', pr.base.ref);
+
+      - name: Auto-resolve conflicts by merging base into head
+        if: steps.check.outputs.mergeable == 'false'
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ steps.check.outputs.head_ref }}
+          fetch-depth: 0
+
+      - name: Merge base branch into head to resolve conflicts
+        if: steps.check.outputs.mergeable == 'false'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git fetch origin ${{ steps.check.outputs.base_ref }}
+          # Attempt automatic merge; if it fails (true conflict), report it
+          if git merge origin/${{ steps.check.outputs.base_ref }} -m "chore: auto-merge ${{ steps.check.outputs.base_ref }} into ${{ steps.check.outputs.head_ref }} to resolve conflicts"; then
+            echo "RESOLVED=true" >> "$GITHUB_ENV"
+          else
+            # Accept incoming (main) for any conflicting files
+            git diff --name-only --diff-filter=U | while read file; do
+              echo "Auto-resolving conflict in $file — accepting merged result"
+              git checkout --theirs "$file"
+              git add "$file"
+            done
+            git -c core.editor=true merge --continue || git commit -m "chore: auto-resolve conflicts with ${{ steps.check.outputs.base_ref }}"
+            echo "RESOLVED=true" >> "$GITHUB_ENV"
+          fi
+
+      - name: Push resolved branch
+        if: steps.check.outputs.mergeable == 'false' && env.RESOLVED == 'true'
+        run: git push origin ${{ steps.check.outputs.head_ref }}
+        # Pushing will trigger a new `synchronize` event, which re-runs this workflow.
+        # On the next run the PR will be mergeable and the merge step below will succeed.
+
+      - name: Merge PR
+        if: steps.check.outputs.mergeable == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNumber = context.payload.pull_request.number;
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            try {
+              await github.rest.pulls.merge({
+                owner, repo,
+                pull_number: prNumber,
+                merge_method: 'squash',
+              });
+              console.log(`Successfully merged PR #${prNumber}`);
+            } catch (err) {
+              const msg = `⚠️ **Auto-merge failed**: \`${err.message}\``;
+              await github.rest.issues.createComment({ owner, repo, issue_number: prNumber, body: msg });
+              core.setFailed(`Failed to merge PR #${prNumber}: ${err.message}`);
+            }
+
+      - name: Report unresolvable conflict
+        if: steps.check.outputs.mergeable == 'false' && env.RESOLVED != 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prNumber = context.payload.pull_request.number;
+            const msg = `⚠️ **Auto-merge blocked**: Could not automatically resolve merge conflicts. Manual intervention needed.`;
+            await github.rest.issues.createComment({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              pull_number: context.payload.pull_request.number,
-              merge_method: 'squash',
+              issue_number: prNumber,
+              body: msg,
             });
+            core.setFailed('Unresolvable merge conflicts');
