@@ -596,6 +596,24 @@ app.get('/api/proxy/higgsfield/status/:requestId', async (req, res) => {
   }
 });
 
+// ── Higgsfield Motions ──
+app.get('/api/proxy/higgsfield/motions', async (req, res) => {
+  const apiKey = req.headers['x-api-key-value'];
+  if (!apiKey) return res.status(400).json({ error: 'Missing Higgsfield API key' });
+  try {
+    const result = await proxyRequest(
+      'https://platform.higgsfield.ai/v1/motions',
+      'GET',
+      hfAuthHeaders(req)
+    );
+    debugLog('hf-motions-res', { status: result.status, count: Array.isArray(result.data) ? result.data.length : '?' });
+    res.status(result.status).json(result.data);
+  } catch (err) {
+    debugLog('hf-motions-err', { error: err.message });
+    res.status(502).json({ error: err.message });
+  }
+});
+
 // ── Metricool Proxy ──
 app.get('/api/proxy/metricool/posts', async (req, res) => {
   const apiKey = req.headers['x-api-key-value'];

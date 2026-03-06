@@ -1198,17 +1198,27 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
         console.log('[Higgsfield DoP] Generate video:', params);
         if (!apiKeys.higgsfield) return { ok: false, error: 'No Higgsfield API key set — add in Settings' };
         // DoP API body uses { params: { ... } } wrapper
+        // Auto-fetch a motion if none provided (DOP API requires at least 1)
+        let motionId = params.motion_id;
+        if (!motionId) {
+          try {
+            const motions = await this.getMotions();
+            if (Array.isArray(motions) && motions.length > 0) {
+              motionId = motions[0].id || motions[0].motion_id;
+              console.log('[Higgsfield DoP] Using default motion:', motionId);
+            }
+          } catch (e) {
+            console.warn('[Higgsfield DoP] Could not fetch motions:', e.message);
+          }
+        }
         const dopParams = {
           model: params.model || 'dop-turbo',
           prompt: params.prompt || '',
           input_images: [{ type: 'image_url', image_url: params.image_url }],
           enhance_prompt: true,
           input_images_end: [],
-          motions: [],
+          motions: motionId ? [{ motion_id: motionId }] : [],
         };
-        if (params.motion_id) {
-          dopParams.motions = [{ motion_id: params.motion_id }];
-        }
         const body = {
           endpoint: '/v1/image2video/dop',
           input: { params: dopParams },
