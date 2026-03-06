@@ -316,7 +316,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       msg.textContent = text;
     }
 
-    // If no Higgsfield key, simulate the whole pipeline
+    // If no Kling key, simulate the whole pipeline
     console.log('[Pipeline] apiKeys.kling =', apiKeys.kling ? '(set)' : '(empty)', '| All keys:', Object.keys(apiKeys).filter(k => apiKeys[k]));
     if (!apiKeys.kling) {
       let stage = 0;
@@ -696,7 +696,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       item.revisionCount = (item.revisionCount || 0) + 1;
       if (!item.revisionNotes) item.revisionNotes = [];
       item.revisionNotes.push(notes);
-      item.pipelineStage = 'generate'; // back to Higgsfield for revision
+      item.pipelineStage = 'generate'; // back to Kling for revision
 
       // Save to feedback log for AI learning
       saveFeedback({
