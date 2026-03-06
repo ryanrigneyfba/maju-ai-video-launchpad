@@ -370,7 +370,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       debugPanel(`[${segLabel}] Image submit failed: ${errDetail}`);
       return { url: null, error: `Image submit: ${errDetail}` };
     }
-    for (let attempt = 0; attempt < 60; attempt++) {
+    for (let attempt = 0; attempt < 150; attempt++) {
       await new Promise(r => setTimeout(r, 2000));
       const imgStatus = await API.higgsfield.getImageStatus(imgResult.id);
       const st = (imgStatus.status || '').toLowerCase();
@@ -409,6 +409,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       if (st === 'succeed') {
         const videos = status.task_result && status.task_result.videos;
         const url = videos && videos[0] && videos[0].url;
+              console.log('[Pipeline] t2v succeed, full status:', JSON.stringify({task_status: status.task_status, has_result: !!status.task_result, result_keys: status.task_result ? Object.keys(status.task_result) : null}).substring(0, 300));
         return { url: url || null, error: url ? null : 'No video URL in result' };
       }
       if (st === 'failed') {
@@ -1311,7 +1312,8 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
           });
           const data = await res.json();
           const st = (data.status || '').toLowerCase();
-          const videoUrl = (data.output && data.output.video && data.output.video.url) || data.video_url || data.url;
+          const videoUrl = (data.output && data.output.video_url) || (data.output && data.output.video && data.output.video.url) || (data.output && data.output.url) || (data.video && data.video.url) || data.video_url || (data.images && data.images[0] && data.images[0].url) || data.url || (data.jobs && data.jobs[0] && data.jobs[0].results && (data.jobs[0].results.raw && data.jobs[0].results.raw.url || data.jobs[0].results.min && data.jobs[0].results.min.url)) || (data.result && data.result.videos && data.result.videos[0] && data.result.videos[0].url);
+          if ((st === 'completed' || st === 'done' || st === 'succeed') && !videoUrl) { console.warn('[Kling getVideoStatus] Completed but no videoUrl! Keys:', Object.keys(data), 'output keys:', data.output ? Object.keys(data.output) : 'no output', JSON.stringify(data).substring(0, 500)); }
           return {
             task_status: st === 'completed' || st === 'done' ? 'succeed' : st,
             task_status_msg: data.message || '',
