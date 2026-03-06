@@ -359,12 +359,12 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     { name: 'glow', duration: 5, prompt: 'A young woman with hair in a bun wearing a black tank top looks at herself in a mirror, gently touching her glowing dewy face with both hands. She looks serene and satisfied with her skin. A dark bottle labeled "MAJU BLACK SEED OIL" is prominently placed in the foreground near the mirror. Warm soft golden lighting emphasizes her healthy glowing skin. Dark moody background. Vertical 9:16 format, slow smooth motion.', textOverlay: 'anti-puffy face snack\n(onion + black seed oil + salt)', model: 'kling-v2-master' },
   ];
 
-  // Helper: generate a static image via Higgsfield Nano Banana Pro and poll until done
+  // Helper: generate a static image via Higgsfield Flux Kontext Max and poll until done
   // Returns { url, error } object
   async function generateSegmentImage(seg, segLabel) {
     if (seg.image_url) return { url: seg.image_url };
     const imgResult = await API.higgsfield.generateImage({ prompt: seg.prompt, aspect_ratio: '9:16' });
-    console.log(`[Pipeline] Nano Banana Pro image submit for ${segLabel}:`, imgResult.ok, 'id:', imgResult.id);
+    console.log(`[Pipeline] Flux Kontext Max image submit for ${segLabel}:`, imgResult.ok, 'id:', imgResult.id);
     if (!imgResult.ok || !imgResult.id) {
       const errDetail = imgResult.error || imgResult.message || JSON.stringify(imgResult).slice(0, 200);
       debugPanel(`[${segLabel}] Image submit failed: ${errDetail}`);
@@ -390,7 +390,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     const result = await API.kling.generateFromImage({
       prompt: seg.prompt,
       image_url: imageUrl,
-      duration: seg.duration <= 5 ? '5' : '10',
+      duration: seg.duration <= 5 ? 5 : 10,
       aspect_ratio: '9:16',
       model_name: seg.model || 'kling-v2-master',
       mode: 'std',
@@ -422,9 +422,9 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
   // Helper: full segment pipeline — Higgsfield image → Kling animate (or Kling text2video fallback)
   // Returns { url, error } object
   async function generateSegmentVideo(seg, segLabel) {
-    // If Higgsfield key is set, use hybrid pipeline: Nano Banana Pro image → Kling image2video
+    // If Higgsfield key is set, use hybrid pipeline: Flux Kontext Max image → Kling image2video
     if (apiKeys.higgsfield) {
-      debugPanel(`[${segLabel}] Generating image via Nano Banana Pro…`);
+      debugPanel(`[${segLabel}] Generating image via Flux Kontext Max…`);
       const imageResult = await generateSegmentImage(seg, segLabel);
       if (imageResult.url) {
         debugPanel(`[${segLabel}] Image ready — animating via Kling image2video…`);
@@ -436,7 +436,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     // Fallback: Kling text-to-video (no reference image)
     const result = await API.kling.generateVideo({
       prompt: seg.prompt,
-      duration: seg.duration <= 5 ? '5' : '10',
+      duration: seg.duration <= 5 ? 5 : 10,
       aspect_ratio: '9:16',
       model_name: seg.model || 'kling-v2-master',
       mode: 'std',
@@ -1230,10 +1230,10 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     // ── Higgsfield — Static image generation with Patient Maya avatar (via proxy) ──
     higgsfield: {
       async generateImage(params) {
-        console.log('[Higgsfield] Nano Banana Pro image (Patient Maya):', params);
+        console.log('[Higgsfield] Flux Kontext Max image (Patient Maya):', params);
         if (!apiKeys.higgsfield) return { ok: false, error: 'No Higgsfield API key set — add in Settings' };
         const body = {
-          endpoint: params.endpoint || 'nano_banana_pro/text-to-image',
+          endpoint: params.endpoint || 'flux-pro/kontext/max/text-to-image',
           input: {
             prompt: params.prompt || '',
             aspect_ratio: params.aspect_ratio || '9:16',
@@ -1283,7 +1283,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
           input: {
             prompt: params.prompt || '',
             aspect_ratio: params.aspect_ratio || '9:16',
-            duration: params.duration || '5',
+            duration: parseInt(params.duration) || 5,
           },
         };
         if (params.negative_prompt) body.input.negative_prompt = params.negative_prompt;
@@ -1333,7 +1333,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
             image_url: params.image_url,
             prompt: params.prompt || '',
             aspect_ratio: params.aspect_ratio || '9:16',
-            duration: params.duration || '5',
+            duration: parseInt(params.duration) || 5,
           },
         };
         if (params.negative_prompt) body.input.negative_prompt = params.negative_prompt;
