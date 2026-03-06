@@ -209,7 +209,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
         headers: { 'Content-Type': 'application/json', 'x-api-key-value': apiKeys.claude },
         body: JSON.stringify({
           model: 'claude-haiku-4-5-20251001',
-          max_tokens: 1024,
+          max_tokens: 2048,
           system: systemPrompt,
           messages: [{
             role: 'user',
@@ -401,7 +401,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       debugPanel(`[${segLabel}] Kling i2v submit failed: ${errDetail}`);
       return { url: null, error: `Video submit: ${errDetail}` };
     }
-    for (let attempt = 0; attempt < 120; attempt++) {
+    for (let attempt = 0; attempt < 200; attempt++) {
       await new Promise(r => setTimeout(r, 3000));
       const status = await API.kling.getImageVideoStatus(result.taskId);
       const st = (status.task_status || '').toLowerCase();
@@ -415,8 +415,8 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
         return { url: null, error: `Video failed: ${status.task_status_msg || 'unknown'}` };
       }
     }
-    console.warn(`[Pipeline] ${segLabel} video timed out after 360s`);
-    return { url: null, error: 'Video timed out after 360s' };
+    console.warn(`[Pipeline] ${segLabel} video timed out after 600s`);
+    return { url: null, error: 'Video timed out after 600s' };
   }
 
   // Helper: full segment pipeline — Higgsfield image → Kling animate (or Kling text2video fallback)
@@ -447,7 +447,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       debugPanel(`[${segLabel}] Kling submit failed: ${errDetail}`);
       return { url: null, error: `Submit: ${errDetail}` };
     }
-    for (let attempt = 0; attempt < 120; attempt++) {
+    for (let attempt = 0; attempt < 200; attempt++) {
       await new Promise(r => setTimeout(r, 3000));
       const status = await API.kling.getVideoStatus(result.taskId);
       const st = (status.task_status || '').toLowerCase();
@@ -461,8 +461,8 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
         return { url: null, error: `Video failed: ${status.task_status_msg || 'unknown'}` };
       }
     }
-    console.warn(`[Pipeline] ${segLabel} timed out after 360s`);
-    return { url: null, error: 'Timed out after 360s' };
+    console.warn(`[Pipeline] ${segLabel} timed out after 600s`);
+    return { url: null, error: 'Timed out after 600s' };
   }
 
   // Helper: run async tasks with a concurrency limit
