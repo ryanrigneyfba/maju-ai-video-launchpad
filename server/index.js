@@ -2,6 +2,7 @@
    MAJU AI Video Launchpad — Backend Server
    FFmpeg stitching + API proxy + job management
    Deployed on AWS App Runner
+       Auth: Authorization Key format (v2)
    ═══════════════════════════════════════════ */
 
 const express = require('express');
