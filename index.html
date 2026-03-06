@@ -101,9 +101,14 @@
             <textarea id="notes" rows="3" placeholder="Any extra direction for the AI…"></textarea>
           </div>
         </div>
-        <button class="btn btn-primary" id="submit-video">
-          🚀 Generate &amp; Send to Queue
-        </button>
+        <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+          <button class="btn btn-primary" id="submit-video">
+            🚀 Generate &amp; Send to Queue
+          </button>
+          <label style="display:flex; align-items:center; gap:6px; font-size:0.85rem; cursor:pointer;">
+            <input type="checkbox" id="test-mode"> Test mode (1 segment only)
+          </label>
+        </div>
       </div>
 
       <!-- Pipeline Status -->

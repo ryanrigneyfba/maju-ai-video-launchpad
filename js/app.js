@@ -445,7 +445,10 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     const allSegmentVideos = []; // { url, label } for stitching
 
     for (const item of newItems) {
-      const segments = (item.aiPrompt && item.aiPrompt.segments) || DEFAULT_SEGMENT_PROMPTS;
+      const allSegments = (item.aiPrompt && item.aiPrompt.segments) || DEFAULT_SEGMENT_PROMPTS;
+      const testMode = $('#test-mode') && $('#test-mode').checked;
+      const segments = testMode ? allSegments.slice(0, 1) : allSegments;
+      if (testMode) debugPanel('[Test Mode] Generating 1 segment only (hook)');
 
       // Step 1: Generate ALL images in parallel (no concurrency limit — Seedream is separate from DoP)
       msg.textContent = `v${item.version}: Generating ${segments.length} images in parallel… [Seedream]`;
