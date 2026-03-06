@@ -784,4 +784,3 @@ app.listen(PORT, () => {
   console.log(`  /api/proxy/arcads/*      — Arcads proxy`);
   console.log(`  /api/proxy/creatify/*    — Creatify proxy`);
 });
-formattedEndpoint
