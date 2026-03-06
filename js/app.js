@@ -3,7 +3,7 @@
    Main application logic
    ═══════════════════════════════════════════ */ 
 (function () {
-  ' use strict';
+  'use strict';
 
   // ─── Config ───
   const CONFIG = {
@@ -193,9 +193,11 @@ Return ONLY a JSON object with these fields:
 - "reasoning": 1 sentence explaining what you optimized based on feedback
 - "captions": array of 5 objects for each segment with { "text": "caption text", "startTime": seconds, "endTime": seconds }
 - "hookVariant": which hook text variant this version uses
+- "instagramCaption": a ready-to-post Instagram caption (hook line + value prop + CTA, 150-300 characters, NO hashtags here)
+- "hashtags": array of 10-15 relevant hashtags (strings without the # prefix, e.g. ["blackseedoil","wellness","skincare"])
 
 Example:
-{"segments":[{"name":"hook","prompt":"A young woman with her hair in a bun wearing a black tank top...","duration":5,"textOverlay":"de-puff your face snack","model":"kling-v2-master"},{"name":"reveal","prompt":"A young woman with hair in a bun wearing a black tank top pours...","duration":5,"textOverlay":"1 red onion\\n+ black seed oil\\n+ salt","model":"kling-v2-master"},{"name":"demo","prompt":"Tight close-up of a young woman with hair in a bun...","duration":5,"textOverlay":null,"model":"kling-v2-master"},{"name":"result","prompt":"A young woman with hair in a bun wearing a black tank top holds...","duration":5,"textOverlay":"drains facial bloat\\nreduces water retention\\ntightens puffy skin","model":"kling-v2-master"},{"name":"glow","prompt":"A young woman with hair in a bun wearing a black tank top looks...","duration":5,"textOverlay":"anti-puffy face snack","model":"kling-v2-master"}],"direction":"Warm, moody kitchen. Authentic reactions.","reasoning":"Used default SOP prompts.","captions":[{"text":"de-puff your face snack","startTime":0,"endTime":5},{"text":"1 red onion + black seed oil + salt","startTime":5,"endTime":10},{"text":"","startTime":10,"endTime":15},{"text":"drains facial bloat, reduces water retention, tightens puffy skin","startTime":15,"endTime":20},{"text":"anti-puffy face snack","startTime":20,"endTime":25}],"hookVariant":"de-puff your face snack"}`;
+{"segments":[{"name":"hook","prompt":"A young woman with her hair in a bun wearing a black tank top...","duration":5,"textOverlay":"de-puff your face snack","model":"kling-v2-master"},{"name":"reveal","prompt":"A young woman with hair in a bun wearing a black tank top pours...","duration":5,"textOverlay":"1 red onion\\n+ black seed oil\\n+ salt","model":"kling-v2-master"},{"name":"demo","prompt":"Tight close-up of a young woman with hair in a bun...","duration":5,"textOverlay":null,"model":"kling-v2-master"},{"name":"result","prompt":"A young woman with hair in a bun wearing a black tank top holds...","duration":5,"textOverlay":"drains facial bloat\\nreduces water retention\\ntightens puffy skin","model":"kling-v2-master"},{"name":"glow","prompt":"A young woman with hair in a bun wearing a black tank top looks...","duration":5,"textOverlay":"anti-puffy face snack","model":"kling-v2-master"}],"direction":"Warm, moody kitchen. Authentic reactions.","reasoning":"Used default SOP prompts.","captions":[{"text":"de-puff your face snack","startTime":0,"endTime":5},{"text":"1 red onion + black seed oil + salt","startTime":5,"endTime":10},{"text":"","startTime":10,"endTime":15},{"text":"drains facial bloat, reduces water retention, tightens puffy skin","startTime":15,"endTime":20},{"text":"anti-puffy face snack","startTime":20,"endTime":25}],"hookVariant":"de-puff your face snack","instagramCaption":"Wake up puffy? Try this anti-bloat snack! Red onion + Maju Black Seed Oil + salt = natural de-puff. Your face will thank you. Save for later!","hashtags":["blackseedoil","depuff","wellness","skincare","naturalremedies","majuoil","antiinflammatory","selfcare","beautyhack","healthysnack","glowup","facialcare","holistic","puffyface","bloatremedy"]}`;
 
     const feedbackContext = relevantFeedback.length
       ? `\n\nPast feedback for this format (${relevantFeedback.length} entries):
@@ -270,6 +272,8 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
         schedDate: postMode === 'schedule' ? schedDate : null,
         notes,
         aiPrompt, // Claude-optimized prompt (null if no key)
+        instagramCaption: aiPrompt?.instagramCaption || '',
+        hashtags: aiPrompt?.hashtags || [],
         version: i + 1,
         totalVersions: versions,
         status: 'pending',
@@ -580,8 +584,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
             if (st.status === 'done') {
               stitchDone = true;
               const dlUrl = API.backend.downloadUrl(stitchResult.jobId);
-              newItems[0].stitchJobId = stitchResult.jobId;
-              newItems[0].stitchedVideoUrl = dlUrl;
+              newItems.forEach(ni => { ni.stitchJobId = stitchResult.jobId; ni.stitchedVideoUrl = dlUrl; });
               msg.textContent = 'Stitch complete!';
               stitchPassed = true;
             } else if (st.status === 'error') {
@@ -644,9 +647,17 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
         <div class="queue-info">
           <h4>${item.typeName} — v${item.version}/${item.totalVersions}</h4>
           <p>${item.productName} · ${item.avatarName}</p>
+          ${item.aiPrompt?.hookVariant ? `<span class="queue-hook-label">${item.aiPrompt.hookVariant}</span>` : ''}
           ${item.postMode === 'asap' ? '<p>📌 Post ASAP</p>' : `<p>📅 ${formatDate(item.schedDate)}</p>`}
           ${item.notes ? `<p>"${item.notes}"</p>` : ''}
           ${item.aiPrompt ? `<div class="ai-prompt"><strong>AI Brief:</strong> ${item.aiPrompt.reasoning || ''}<br><em>${(item.aiPrompt.direction || '').substring(0, 120)}</em></div>` : ''}
+          <div class="queue-social-content">
+            <label>Instagram Caption</label>
+            <textarea class="caption-input" data-id="${item.id}" rows="4" placeholder="Instagram caption...">${item.instagramCaption || ''}</textarea>
+            <label>Hashtags <small>(comma-separated)</small></label>
+            <input class="hashtags-input" data-id="${item.id}" type="text" placeholder="blackseedoil, wellness, skincare..." value="${(item.hashtags || []).join(', ')}">
+          </div>
+          ${item.aiPrompt?.segments ? `<div class="queue-segments-preview"><strong>Segment Overlays:</strong> ${item.aiPrompt.segments.filter(s => s.textOverlay).map(s => `<span>${s.name}: "${s.textOverlay.replace(/\n/g, ' ')}"</span>`).join(' \u00b7 ')}</div>` : ''}
           <div class="queue-meta">
             Status: <strong>${item.status.toUpperCase()}</strong> ·
             Created: ${formatDate(item.createdAt)}
@@ -1182,6 +1193,25 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     renderScheduledPosts();
   loadAudioTracks();
     checkBackendStatus();
+
+  // ── Debounced save for queue social content edits ──
+  let _queueSaveTimer = null;
+  const queueList = document.getElementById('queue-list');
+  if (queueList) {
+    queueList.addEventListener('input', (e) => {
+      const id = e.target.dataset.id;
+      if (!id) return;
+      const item = queue.find(q => q.id === id);
+      if (!item) return;
+      if (e.target.classList.contains('caption-input')) {
+        item.instagramCaption = e.target.value;
+      } else if (e.target.classList.contains('hashtags-input')) {
+        item.hashtags = e.target.value.split(',').map(t => t.trim()).filter(Boolean);
+      } else { return; }
+      clearTimeout(_queueSaveTimer);
+      _queueSaveTimer = setTimeout(() => saveQueue(), 300);
+    });
+  }
   });
 
   // ─── Helpers ───
@@ -1804,20 +1834,30 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       console.log('[Metricool] No API key — skip scheduling');
       return;
     }
+    const caption = item.instagramCaption || `${item.productName} — ${item.typeName}`;
+    const tags = (item.hashtags || []).map(t => `#${t.replace(/^#/, '')}`).join(' ');
+    const fullContent = tags ? `${caption}\n\n${tags}` : caption;
+    const videoSrc = item.stitchedVideoUrl || item.videoUrl;
     const postParams = {
-      content: `${item.productName} — ${item.typeName} by ${item.avatarName}`,
+      content: fullContent,
+      networks: [{ network: 'instagram', type: 'reels' }],
+      media: videoSrc ? [{ url: videoSrc, type: 'video' }] : [],
       publicationDate: item.schedDate
         ? { dateTime: item.schedDate, timezone: Intl.DateTimeFormat().resolvedOptions().timeZone }
         : undefined,
     };
-    API.metricool.schedulePost(postParams).then((res) => {
+    console.log('[Metricool] Scheduling Instagram Reel:', { content: fullContent.substring(0, 80) + '...', hasVideo: !!videoSrc });
+    return API.metricool.schedulePost(postParams).then((res) => {
       if (res.ok) {
         console.log('[Metricool] Post scheduled:', res);
         item.metricoolId = res.postId || res.id;
         saveQueue();
       } else {
-        console.warn('[Metricool] Schedule failed:', res.error);
+        console.warn('[Metricool] Schedule failed:', res);
       }
+      return res;
+    }).catch(err => {
+      console.error('[Metricool] Error scheduling:', err);
     });
   }
 
