@@ -1,9 +1,9 @@
-/* ═══════════════════════════════════════════
+/* ═══════════════════════════════════════════ 
    MAJU AI Video Launchpad — v1.1 
    Main application logic
    ═══════════════════════════════════════════ */ 
 (function () {
-  'use strict';
+  ' use strict';
 
   // ─── Config ───
   const CONFIG = {
