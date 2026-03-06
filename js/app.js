@@ -957,7 +957,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
   };
 
   function renderSpendTracker() {
-    const summaryEl = $('#spend-summary');
+    const summaryEl = $('#spend-summary'); 
     const tableEl = $('#spend-table-wrap');
     if (!summaryEl || !tableEl) return;
 
@@ -965,7 +965,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     const spendRows = [];
     for (const item of queue) {
       const segments = (item.aiPrompt && item.aiPrompt.segments) || DEFAULT_SEGMENT_PROMPTS;
-      const segCount = item.segmentVideos ? item.segmentVideos.length : 0;
+      const segCount = item.segmentVideos ? item.segmentVideos.length : 0
       const imageCount = 0; // Kling generates video directly, no separate image step
       const videoCount = segCount;
       const model = (segments[0] && segments[0].model) || 'kling-v2-master';
