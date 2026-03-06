@@ -479,7 +479,7 @@ function proxyRequest(targetUrl, method, headers, body) {
       headers: reqHeaders,
     };
 
-    const req = transport.request(opions, (res) => {
+    const req = transport.request(options, (res) => {
       let data = '';
       res.on('data', (chunk) => (data += chunk));
       res.on('end', () => {
