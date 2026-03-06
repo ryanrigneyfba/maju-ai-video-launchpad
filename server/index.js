@@ -519,10 +519,13 @@ app.post('/api/proxy/claude/messages', async (req, res) => {
 // Status polling: /requests/{request_id}/status
 
 // Helper: build Higgsfield auth headers from request
+// Auth format: Authorization: Key KEY_ID:KEY_SECRET (per Higgsfield JS SDK v2)
 function hfAuthHeaders(req) {
+  const apiKey = req.headers['x-api-key-value'] || '';
+  const apiSecret = req.headers['x-api-secret-value'] || '';
+  const credential = apiSecret ? `${apiKey}:${apiSecret}` : apiKey;
   return {
-    'hf-api-key': req.headers['x-api-key-value'] || '',
-    'hf-secret': req.headers['x-api-secret-value'] || '',
+    'Authorization': `Key ${credential}`,
     'Content-Type': 'application/json',
   };
 }
@@ -533,7 +536,8 @@ app.post('/api/proxy/higgsfield/generate', async (req, res) => {
   if (!apiKey) return res.status(400).json({ error: 'Missing Higgsfield API key' });
   const { endpoint, input } = req.body;
   const urlPath = (endpoint || '').replace(/^\/+/, '');
-  debugLog('hf-generate-req', { url: `https://platform.higgsfield.ai/${urlPath}`, hasKey: !!apiKey, hasSecret: !!apiSecret, body: JSON.stringify(input).slice(0, 300) });
+  const credential = apiSecret ? `${apiKey}:${apiSecret}` : apiKey;
+  debugLog('hf-generate-req', { url: `https://platform.higgsfield.ai/${urlPath}`, auth: `Key ${credential.slice(0, 8)}...`, body: JSON.stringify(input).slice(0, 300) });
   try {
     const result = await proxyRequest(
       `https://platform.higgsfield.ai/${urlPath}`,
@@ -577,7 +581,7 @@ app.get('/api/proxy/higgsfield/status/:requestId', async (req, res) => {
     const result = await proxyRequest(
       `https://platform.higgsfield.ai/requests/${encodeURIComponent(req.params.requestId)}/status`,
       'GET',
-      { 'hf-api-key': req.headers['x-api-key-value'] || '', 'hf-secret': req.headers['x-api-secret-value'] || '' }
+      hfAuthHeaders(req)
     );
     debugLog('hf-status-res', { requestId: req.params.requestId, status: result.status, data: JSON.stringify(result.data).slice(0, 300) });
     res.status(result.status).json(result.data);
