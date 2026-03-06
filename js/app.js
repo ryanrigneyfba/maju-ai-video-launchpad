@@ -40,6 +40,23 @@
     console.log(`[Cleanup] Removed ${beforeCount - queue.length} busted pending items from queue`);
   }
 
+  // Hydrate legacy items: backfill instagramCaption & hashtags from aiPrompt
+  let hydrated = false;
+  queue.forEach(item => {
+    if (!item.instagramCaption && item.aiPrompt?.instagramCaption) {
+      item.instagramCaption = item.aiPrompt.instagramCaption;
+      hydrated = true;
+    }
+    if ((!item.hashtags || !item.hashtags.length) && item.aiPrompt?.hashtags?.length) {
+      item.hashtags = item.aiPrompt.hashtags;
+      hydrated = true;
+    }
+  });
+  if (hydrated) {
+    localStorage.setItem(CONFIG.storageKeys.queue, JSON.stringify(queue));
+    console.log('[Hydrate] Backfilled instagramCaption/hashtags from aiPrompt on legacy items');
+  }
+
   let apiKeys = JSON.parse(localStorage.getItem(CONFIG.storageKeys.apiKeys) || '{}');
   let currentRejectId = null;
   let currentApproveId = null;
@@ -643,7 +660,12 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       .map(
         (item) => `
       <div class="queue-item status-${item.status}" data-id="${item.id}">
-        ${item.stitchedVideoUrl ? `<div class="queue-video"><video src="${item.stitchedVideoUrl}" controls preload="metadata" playsinline></video></div>` : item.videoUrl ? `<div class="queue-video"><video src="${item.videoUrl}" controls preload="metadata" playsinline></video></div>` : '<div class="queue-video queue-video-placeholder"><span>Video generating…</span></div>'}
+        ${(() => {
+          const vSrc = item.stitchedVideoUrl || item.videoUrl || (item.segmentVideos && item.segmentVideos[0]?.url);
+          return vSrc
+            ? `<div class="queue-video"><video src="${vSrc}" controls preload="auto" playsinline muted></video></div>`
+            : '<div class="queue-video queue-video-placeholder"><span>Video generating…</span></div>';
+        })()}
         <div class="queue-info">
           <h4>${item.typeName} — v${item.version}/${item.totalVersions}</h4>
           <p>${item.productName} · ${item.avatarName}</p>
