@@ -55,10 +55,10 @@ const jobs = new Map();
 const SOP_SEGMENTS = {
   'selfcare-snack-reel': [
     { name: 'hook', label: 'Hook (0-3s)', maxDuration: 3 },
-    { name: 'reveal', label: 'Reveal (3-8s)', maxDuration: 5 },
-    { name: 'demo', label: 'Application/Demo (8-18s)', maxDuration: 10 },
-    { name: 'result', label: 'Result + CTA (18-25s)', maxDuration: 7 },
-    { name: 'endcard', label: 'End Card (25-30s)', maxDuration: 5 },
+    { name: 'reveal', label: 'Reveal — Ingredients + Pour (3-6s)', maxDuration: 3 },
+    { name: 'demo', label: 'Demo — Eating the Snack (6-11s)', maxDuration: 5 },
+    { name: 'result', label: 'Result + Benefits (11-13s)', maxDuration: 2 },
+    { name: 'glow', label: 'Glow — Result + CTA (13-15s)', maxDuration: 2 },
   ],
 };
 
