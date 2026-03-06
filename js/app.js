@@ -9,7 +9,7 @@
   const CONFIG = {
     higgsfield: {
       asset: 'majurender8oz',
-      avatar: 'pateit',
+      avatar: 'pateit'
     },
     avatarMeta: {
       pateit: { name: 'Patient Maya', ig: '@breealba' },
