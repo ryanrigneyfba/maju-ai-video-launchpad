@@ -10,7 +10,7 @@ const cors = require('cors');
 const multer = require('multer');
 const { v4: uuidv4 } = require('uuid');
 const { spawn } = require('child_process');
-const path = require('path')
+const path = require('path');
 const fs = require('fs');
 
 const app = express();
@@ -784,4 +784,3 @@ app.listen(PORT, () => {
   console.log(`  /api/proxy/arcads/*      — Arcads proxy`);
   console.log(`  /api/proxy/creatify/*    — Creatify proxy`);
 });
-formattedEndpoint
