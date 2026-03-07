@@ -648,6 +648,26 @@ app.get('/api/proxy/higgsfield/status/:requestId', async (req, res) => {
   }
 });
 
+// ── Higgsfield Soul IDs (Character References) ──
+app.get('/api/proxy/higgsfield/soul-ids', async (req, res) => {
+  const apiKey = req.headers['x-api-key-value'];
+  if (!apiKey) return res.status(400).json({ error: 'Missing Higgsfield API key' });
+  try {
+    const page = req.query.page || 1;
+    const pageSize = req.query.pageSize || 20;
+    const result = await proxyRequest(
+      `https://platform.higgsfield.ai/v1/soul-ids?page=${page}&pageSize=${pageSize}`,
+      'GET',
+      hfAuthHeaders(req)
+    );
+    debugLog('hf-soul-ids', { status: result.status, count: Array.isArray(result.data) ? result.data.length : 'n/a' });
+    res.status(result.status).json(result.data);
+  } catch (err) {
+    debugLog('hf-soul-ids-err', { error: err.message });
+    res.status(502).json({ error: err.message });
+  }
+});
+
 // ── Higgsfield Motions ──
 app.get('/api/proxy/higgsfield/motions', async (req, res) => {
   const apiKey = req.headers['x-api-key-value'];
