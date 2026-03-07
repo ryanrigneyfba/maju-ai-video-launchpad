@@ -8,8 +8,8 @@
   // ─── Config ───
   const CONFIG = {
     higgsfield: {
-      asset: 'majurender8oz',
-      avatar: 'pateit'
+      asset: 'majurender8oz',        // Higgsfield product asset ID
+      avatar: 'pateit'               // Higgsfield Soul ID (custom_reference_id) for Patient Maya
     },
     avatarMeta: {
       pateit: { name: 'Patient Maya', ig: '@breealba' },
@@ -423,10 +423,15 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
 
   // Helper: generate a static image via Higgsfield Flux Kontext Max and poll until done
   // Returns { url, error } object
-  async function generateSegmentImage(seg, segLabel) {
+  async function generateSegmentImage(seg, segLabel, characterId) {
     if (seg.image_url) return { url: seg.image_url };
-    const imgResult = await API.higgsfield.generateImage({ prompt: seg.prompt, aspect_ratio: '9:16' });
-    console.log(`[Pipeline] Flux Kontext Max image submit for ${segLabel}:`, imgResult.ok, 'id:', imgResult.id);
+    const imgParams = { prompt: seg.prompt, aspect_ratio: '9:16' };
+    if (characterId) {
+      imgParams.custom_reference_id = characterId;
+      imgParams.custom_reference_strength = 1;
+    }
+    const imgResult = await API.higgsfield.generateImage(imgParams);
+    console.log(`[Pipeline] ${characterId ? 'Soul' : 'Flux Kontext'} image submit for ${segLabel}:`, imgResult.ok, 'id:', imgResult.id);
     if (!imgResult.ok || !imgResult.id) {
       const errDetail = imgResult.error || imgResult.message || JSON.stringify(imgResult).slice(0, 200);
       debugPanel(`[${segLabel}] Image submit failed: ${errDetail}`);
@@ -486,11 +491,11 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
 
   // Helper: full segment pipeline — Higgsfield image → Kling animate (or Kling text2video fallback)
   // Returns { url, error } object
-  async function generateSegmentVideo(seg, segLabel) {
-    // If Higgsfield key is set, use hybrid pipeline: Flux Kontext Max image → Kling image2video
+  async function generateSegmentVideo(seg, segLabel, characterId) {
+    // If Higgsfield key is set, use hybrid pipeline: Soul/Flux image → Kling image2video
     if (apiKeys.higgsfield) {
-      debugPanel(`[${segLabel}] Generating image via Flux Kontext Max…`);
-      const imageResult = await generateSegmentImage(seg, segLabel);
+      debugPanel(`[${segLabel}] Generating image via ${characterId ? 'Soul (character: ' + characterId + ')' : 'Flux Kontext Max'}…`);
+      const imageResult = await generateSegmentImage(seg, segLabel, characterId);
       if (imageResult.url) {
         debugPanel(`[${segLabel}] Image ready — animating via Kling image2video…`);
         return await animateImageToVideo(seg, imageResult.url, segLabel);
@@ -572,9 +577,11 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       msg.textContent = `v${item.version}: Generating ${segments.length} video segments via Kling…`;
       updateSegmentStatus('hook', 'Generating videos…', false);
 
+      const characterId = item.avatar || CONFIG.higgsfield.avatar || null;
+      if (characterId) console.log(`[Pipeline] Using Soul character ID: ${characterId}`);
       const videoTasks = segments.map((seg, si) => () => {
         updateSegmentStatus(seg.name, 'Generating…', false);
-        return generateSegmentVideo(seg, `${seg.name} (${si + 1}/${segments.length})`);
+        return generateSegmentVideo(seg, `${seg.name} (${si + 1}/${segments.length})`, characterId);
       });
       const videoResults = await runWithConcurrency(videoTasks, KLING_CONCURRENCY);
 
@@ -1332,15 +1339,22 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     // ── Higgsfield — Static image generation with Patient Maya avatar (via proxy) ──
     higgsfield: {
       async generateImage(params) {
-        console.log('[Higgsfield] Flux Kontext Max image (Patient Maya):', params);
+        console.log('[Higgsfield] Soul image generation:', params);
         if (!apiKeys.higgsfield) return { ok: false, error: 'No Higgsfield API key set — add in Settings' };
+        // Use Soul endpoint when character_id is available, otherwise fall back to Flux Kontext
+        const useSoul = !!params.custom_reference_id;
+        const endpoint = params.endpoint || (useSoul ? '/v1/text2image/soul' : 'flux-pro/kontext/max/text-to-image');
         const body = {
-          endpoint: params.endpoint || 'flux-pro/kontext/max/text-to-image',
+          endpoint,
           input: {
             prompt: params.prompt || '',
             aspect_ratio: params.aspect_ratio || '9:16',
           },
         };
+        if (params.custom_reference_id) {
+          body.input.custom_reference_id = params.custom_reference_id;
+          body.input.custom_reference_strength = params.custom_reference_strength || 1;
+        }
         try {
           const res = await fetch(backendUrl('/api/proxy/higgsfield/generate'), {
             method: 'POST',
@@ -1353,6 +1367,21 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
         } catch (err) {
           console.error('[Higgsfield] Image error:', err);
           return { ok: false, error: err.message };
+        }
+      },
+
+      async listSoulIds() {
+        if (!apiKeys.higgsfield) return { ok: false, error: 'No Higgsfield API key set', items: [] };
+        try {
+          const res = await fetch(backendUrl('/api/proxy/higgsfield/soul-ids'), {
+            headers: { 'x-api-key-value': apiKeys.higgsfield, 'x-api-secret-value': apiKeys.higgsfieldSecret || '' },
+          });
+          const data = await res.json();
+          console.log('[Higgsfield] Soul IDs:', data);
+          return { ok: res.ok, items: Array.isArray(data) ? data : (data.items || data.data || []), ...data };
+        } catch (err) {
+          console.error('[Higgsfield] listSoulIds error:', err);
+          return { ok: false, error: err.message, items: [] };
         }
       },
 
@@ -2092,6 +2121,20 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     loadApiKeys();
     checkBackendStatus();
     fetchMetricoolBrands();
+    // Verify Soul ID character reference exists
+    if (apiKeys.higgsfield) {
+      API.higgsfield.listSoulIds().then(result => {
+        if (result.ok && result.items.length) {
+          const charId = CONFIG.higgsfield.avatar;
+          const found = result.items.find(s => s.id === charId || s.name === charId);
+          if (found) {
+            console.log(`[Soul ID] Character "${charId}" verified:`, found.name || found.id);
+          } else {
+            console.warn(`[Soul ID] Character "${charId}" not found in account. Available:`, result.items.map(s => `${s.name} (${s.id})`));
+          }
+        }
+      });
+    }
   });
   renderQueue();
   renderTracker();
