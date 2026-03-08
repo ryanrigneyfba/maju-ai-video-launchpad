@@ -8,6 +8,8 @@ on:
       - 'js/**'
       - 'css/**'
       - 'index.html'
+      - 'dashboard/**'
+      - 'ig-research-agent/src/**'
       - 'backend-url.json'
       - '.github/workflows/deploy-apprunner.yml'
   workflow_dispatch:

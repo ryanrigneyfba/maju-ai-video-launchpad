@@ -1,6 +1,52 @@
 // MAJU Command Center — Dashboard Controller
 // Orchestrates all agents from a single bird's-eye view
 
+// --- Auth Gate ---
+// SHA-256 hash of the access code. To change the password:
+// 1. Open browser console
+// 2. Run: crypto.subtle.digest('SHA-256', new TextEncoder().encode('YOUR_NEW_PASSWORD')).then(b => console.log(Array.from(new Uint8Array(b)).map(x => x.toString(16).padStart(2,'0')).join('')))
+// 3. Replace the hash below
+const ACCESS_CODE_HASH = '5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8'; // default: "password"
+
+async function hashCode(code) {
+  const data = new TextEncoder().encode(code);
+  const buf = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(buf)).map(x => x.toString(16).padStart(2, '0')).join('');
+}
+
+async function handleLogin(e) {
+  e.preventDefault();
+  const input = document.getElementById('authPassword');
+  const error = document.getElementById('authError');
+  const hash = await hashCode(input.value);
+
+  if (hash === ACCESS_CODE_HASH) {
+    sessionStorage.setItem('maju_auth', '1');
+    document.getElementById('authGate').style.display = 'none';
+    document.getElementById('dashboardApp').style.display = 'block';
+    initDashboard();
+  } else {
+    error.textContent = 'Invalid access code';
+    input.value = '';
+    input.focus();
+  }
+  return false;
+}
+
+function handleLogout() {
+  sessionStorage.removeItem('maju_auth');
+  document.getElementById('authGate').style.display = 'flex';
+  document.getElementById('dashboardApp').style.display = 'none';
+}
+
+function checkAuth() {
+  if (sessionStorage.getItem('maju_auth') === '1') {
+    document.getElementById('authGate').style.display = 'none';
+    document.getElementById('dashboardApp').style.display = 'block';
+    initDashboard();
+  }
+}
+
 const DASHBOARD_CONFIG = {
   // Agent API endpoints — update these with actual backend URLs
   agents: {
@@ -25,11 +71,15 @@ let logEntries = [];
 
 // --- Initialization ---
 document.addEventListener('DOMContentLoaded', () => {
+  checkAuth();
+});
+
+function initDashboard() {
   updateTimestamp();
   loadDashboardData();
   setInterval(updateTimestamp, 1000);
   setInterval(loadDashboardData, DASHBOARD_CONFIG.refreshInterval);
-});
+}
 
 function updateTimestamp() {
   const el = document.getElementById('lastUpdated');
@@ -157,14 +207,60 @@ async function checkVideoBackend() {
   try {
     const resp = await fetch('/health');
     if (resp.ok) {
+      const health = await resp.json();
+
+      // Update Video Launchpad status
       document.getElementById('videoBackendStatus').textContent = 'Online';
       document.getElementById('videoBackendStatus').style.color = '#34d399';
+      loadVideoStats();
+
+      // Update IG Research Agent live status from health endpoint
+      if (health.agents?.['ig-research']) {
+        const ig = health.agents['ig-research'];
+        const badge = document.querySelector('#igStatus .status-badge');
+        if (ig.status === 'online') {
+          badge.className = 'status-badge success';
+          badge.textContent = 'Online';
+        } else if (ig.status === 'no-data') {
+          badge.className = 'status-badge idle';
+          badge.textContent = 'No Data';
+        } else {
+          badge.className = 'status-badge error';
+          badge.textContent = 'Offline';
+        }
+      }
+
+      // Update system status
+      const allOnline = Object.values(health.agents || {}).every(a => a.status === 'online');
+      document.getElementById('systemStatusText').textContent = allOnline ? 'All Systems Online' : 'Partial';
     } else {
       throw new Error('not ok');
     }
   } catch {
     document.getElementById('videoBackendStatus').textContent = 'Offline';
     document.getElementById('videoBackendStatus').style.color = '#f87171';
+    document.getElementById('systemStatusText').textContent = 'Backend Offline';
+  }
+}
+
+async function loadVideoStats() {
+  try {
+    const resp = await fetch('/api/jobs');
+    if (!resp.ok) return;
+    const jobs = await resp.json();
+    if (!Array.isArray(jobs)) return;
+
+    const totalJobs = jobs.length;
+    const totalClips = jobs.reduce((sum, j) => sum + (j.clipCount || j.clips?.length || 0), 0);
+    const queued = jobs.filter(j => j.status === 'queued' || j.status === 'pending' || j.status === 'processing').length;
+    const published = jobs.filter(j => j.status === 'published' || j.status === 'completed' || j.status === 'done').length;
+
+    document.getElementById('videoJobCount').textContent = formatNumber(totalJobs);
+    document.getElementById('videoClipCount').textContent = formatNumber(totalClips);
+    document.getElementById('videoQueueCount').textContent = formatNumber(queued);
+    document.getElementById('videoPublished').textContent = formatNumber(published);
+  } catch {
+    // Keep existing values if fetch fails
   }
 }
 
@@ -200,26 +296,63 @@ async function sendCommand() {
   const agentId = agentSelect.value;
   const agentName = DASHBOARD_CONFIG.agents[agentId]?.name || agentId;
 
-  addLog(`> [${agentName}] ${command}`, 'command');
+  addLog(`> ${command}`, 'command');
   input.value = '';
 
-  // Map common commands to tool calls
-  const toolMap = {
+  // Direct tool commands — these hit the IG Research API directly
+  const directToolMap = {
     'run research': 'run_research_cycle',
     'research cycle': 'run_research_cycle',
-    'scrape': 'scrape_profile',
-    'briefs': 'get_content_briefs',
     'generate briefs': 'generate_briefs',
-    'hooks': 'get_hooks',
-    'patterns': 'get_patterns',
     'status': 'get_research_status',
-    'dashboard': 'get_dashboard_data',
-    'competitors': 'get_competitor_stats',
-    'top posts': 'get_top_posts',
   };
 
-  const tool = toolMap[command.toLowerCase()] || command;
-  await runCommand(agentId, tool);
+  const directTool = directToolMap[command.toLowerCase()];
+  if (directTool) {
+    await runCommand(agentId, directTool);
+    return;
+  }
+
+  // Everything else goes through the smart console endpoint
+  await sendConsoleMessage(command);
+}
+
+async function sendConsoleMessage(message) {
+  addLog('Thinking...', 'info');
+  try {
+    // Send Claude API key from localStorage if available (same key the Video Launchpad uses)
+    const headers = { 'Content-Type': 'application/json' };
+    try {
+      const keys = JSON.parse(localStorage.getItem('maju_api_keys') || '{}');
+      if (keys.claude) headers['x-api-key-value'] = keys.claude;
+    } catch { /* no keys */ }
+
+    const resp = await fetch('/api/console', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ message }),
+    });
+    if (!resp.ok) {
+      addLog(`Error: ${resp.statusText}`, 'error');
+      return;
+    }
+    const data = await resp.json();
+    const lines = (data.response || 'No response').split('\n');
+    lines.forEach(line => {
+      if (line.startsWith('CONTENT') || line.startsWith('TOP') || line.startsWith('COMPETITOR') || line.startsWith('AVAILABLE')) {
+        addLog(line, 'success');
+      } else if (line.trim().startsWith('>') || line.trim().match(/^\d+\./)) {
+        addLog(line, 'command');
+      } else {
+        addLog(line, 'info');
+      }
+    });
+    if (data.type === 'ai') {
+      addLog('[Powered by Claude AI]', 'system');
+    }
+  } catch {
+    addLog('Console unavailable — backend may be offline', 'error');
+  }
 }
 
 async function runCommand(agentId, tool, args = {}) {

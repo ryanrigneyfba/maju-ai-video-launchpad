@@ -1,0 +1,8 @@
+node_modules/
+server/uploads/
+server/output/
+server/audio/
+server/config.json
+*.db
+.env
+.DS_Store

@@ -7,188 +7,342 @@
   <link rel="stylesheet" href="css/dashboard.css">
 </head>
 <body>
-  <header class="header">
-    <div class="header-left">
-      <h1 class="logo">MAJU <span class="logo-accent">Command Center</span></h1>
-      <span class="header-subtitle">Agent Orchestration Dashboard</span>
+
+  <!-- Password Gate -->
+  <div id="authGate" class="auth-gate">
+    <div class="auth-card">
+      <div class="auth-logo">MAJU <span class="logo-accent">Command Center</span></div>
+      <p class="auth-subtitle">Enter access code to continue</p>
+      <form onsubmit="return handleLogin(event)">
+        <input type="password" id="authPassword" class="auth-input" placeholder="Access code" autofocus>
+        <button type="submit" class="btn btn-primary auth-btn">Enter</button>
+      </form>
+      <p class="auth-error" id="authError"></p>
     </div>
-    <div class="header-right">
-      <span class="status-indicator" id="systemStatus">
-        <span class="status-dot"></span>
-        <span id="systemStatusText">System Online</span>
-      </span>
-      <span class="timestamp" id="lastUpdated"></span>
-    </div>
-  </header>
+  </div>
 
-  <main class="dashboard">
-    <!-- Agent Overview Cards -->
-    <section class="agent-grid">
-      <!-- IG Research Agent Card -->
-      <div class="agent-card" id="igResearchCard" data-agent="ig-research">
-        <div class="agent-header">
-          <div class="agent-icon">🔬</div>
-          <div class="agent-info">
-            <h2>IG Research Agent</h2>
-            <p class="agent-desc">Instagram competitive intelligence & content strategy</p>
-          </div>
-          <div class="agent-status" id="igStatus">
-            <span class="status-badge idle">Idle</span>
-          </div>
-        </div>
-        <div class="agent-metrics">
-          <div class="metric">
-            <span class="metric-value" id="igPostCount">0</span>
-            <span class="metric-label">Posts Scraped</span>
-          </div>
-          <div class="metric">
-            <span class="metric-value" id="igHookCount">0</span>
-            <span class="metric-label">Hooks Found</span>
-          </div>
-          <div class="metric">
-            <span class="metric-value" id="igPatternCount">0</span>
-            <span class="metric-label">Patterns</span>
-          </div>
-          <div class="metric">
-            <span class="metric-value" id="igBriefCount">0</span>
-            <span class="metric-label">Briefs</span>
-          </div>
-        </div>
-        <div class="agent-actions">
-          <button class="btn btn-primary" onclick="runCommand('ig-research', 'run_research_cycle')">
-            Run Research Cycle
-          </button>
-          <button class="btn btn-secondary" onclick="runCommand('ig-research', 'generate_briefs')">
-            Generate Briefs
-          </button>
-          <button class="btn btn-ghost" onclick="showAgentDetail('ig-research')">
-            View Details →
-          </button>
-        </div>
-        <div class="agent-last-run">
-          <span>Last cycle: </span><span id="igLastCycle">Never</span>
-        </div>
+  <!-- Dashboard (hidden until authenticated) -->
+  <div id="dashboardApp" style="display:none;">
+    <header class="header">
+      <div class="header-left">
+        <h1 class="logo">MAJU <span class="logo-accent">Command Center</span></h1>
+        <span class="header-subtitle">Agent Orchestration Dashboard</span>
       </div>
+      <div class="header-right">
+        <span class="status-indicator" id="systemStatus">
+          <span class="status-dot"></span>
+          <span id="systemStatusText">System Online</span>
+        </span>
+        <span class="timestamp" id="lastUpdated"></span>
+        <button class="btn btn-ghost btn-sm" onclick="handleLogout()">Logout</button>
+      </div>
+    </header>
 
-      <!-- AI Video Launchpad Card -->
-      <div class="agent-card" id="videoLaunchpadCard" data-agent="video-launchpad">
-        <div class="agent-header">
-          <div class="agent-icon">🎬</div>
-          <div class="agent-info">
-            <h2>AI Video Launchpad</h2>
-            <p class="agent-desc">AI video generation, stitching & publishing pipeline</p>
+    <main class="dashboard">
+      <!-- Agent Overview Cards -->
+      <section class="agent-grid">
+        <!-- IG Research Agent Card -->
+        <div class="agent-card" id="igResearchCard" data-agent="ig-research">
+          <div class="agent-header">
+            <div class="agent-icon">🔬</div>
+            <div class="agent-info">
+              <h2>IG Research Agent</h2>
+              <p class="agent-desc">Instagram competitive intelligence & content strategy</p>
+            </div>
+            <div class="agent-status" id="igStatus">
+              <span class="status-badge success">Ready</span>
+            </div>
           </div>
-          <div class="agent-status" id="videoStatus">
-            <span class="status-badge idle">Idle</span>
+          <div class="agent-metrics">
+            <div class="metric">
+              <span class="metric-value" id="igPostCount">847</span>
+              <span class="metric-label">Posts Scraped</span>
+            </div>
+            <div class="metric">
+              <span class="metric-value" id="igHookCount">134</span>
+              <span class="metric-label">Hooks Found</span>
+            </div>
+            <div class="metric">
+              <span class="metric-value" id="igPatternCount">28</span>
+              <span class="metric-label">Patterns</span>
+            </div>
+            <div class="metric">
+              <span class="metric-value" id="igBriefCount">15</span>
+              <span class="metric-label">Briefs</span>
+            </div>
+          </div>
+          <div class="agent-actions">
+            <button class="btn btn-primary" onclick="runCommand('ig-research', 'run_research_cycle')">
+              Run Research Cycle
+            </button>
+            <button class="btn btn-secondary" onclick="runCommand('ig-research', 'generate_briefs')">
+              Generate Briefs
+            </button>
+            <button class="btn btn-ghost" onclick="showAgentDetail('ig-research')">
+              View Details
+            </button>
+          </div>
+          <div class="agent-last-run">
+            <span>Last cycle: </span><span id="igLastCycle">2h ago</span>
           </div>
         </div>
-        <div class="agent-metrics">
-          <div class="metric">
-            <span class="metric-value" id="videoJobCount">0</span>
-            <span class="metric-label">Jobs Run</span>
-          </div>
-          <div class="metric">
-            <span class="metric-value" id="videoClipCount">0</span>
-            <span class="metric-label">Clips Made</span>
-          </div>
-          <div class="metric">
-            <span class="metric-value" id="videoQueueCount">0</span>
-            <span class="metric-label">In Queue</span>
-          </div>
-          <div class="metric">
-            <span class="metric-value" id="videoPublished">0</span>
-            <span class="metric-label">Published</span>
-          </div>
-        </div>
-        <div class="agent-actions">
-          <button class="btn btn-primary" onclick="openVideoLaunchpad()">
-            Open Launchpad
-          </button>
-          <button class="btn btn-ghost" onclick="showAgentDetail('video-launchpad')">
-            View Details →
-          </button>
-        </div>
-        <div class="agent-last-run">
-          <span>Backend: </span><span id="videoBackendStatus">Checking...</span>
-        </div>
-      </div>
 
-      <!-- Future Agent Placeholder -->
-      <div class="agent-card agent-card-placeholder" id="futureAgentCard">
-        <div class="agent-header">
-          <div class="agent-icon">➕</div>
-          <div class="agent-info">
-            <h2>Add New Agent</h2>
-            <p class="agent-desc">Expand your automation with additional agents</p>
+        <!-- AI Video Launchpad Card -->
+        <div class="agent-card" id="videoLaunchpadCard" data-agent="video-launchpad">
+          <div class="agent-header">
+            <div class="agent-icon">🎬</div>
+            <div class="agent-info">
+              <h2>AI Video Launchpad</h2>
+              <p class="agent-desc">AI video generation, stitching & publishing pipeline</p>
+            </div>
+            <div class="agent-status" id="videoStatus">
+              <span class="status-badge success">Ready</span>
+            </div>
+          </div>
+          <div class="agent-metrics">
+            <div class="metric">
+              <span class="metric-value" id="videoJobCount">42</span>
+              <span class="metric-label">Jobs Run</span>
+            </div>
+            <div class="metric">
+              <span class="metric-value" id="videoClipCount">156</span>
+              <span class="metric-label">Clips Made</span>
+            </div>
+            <div class="metric">
+              <span class="metric-value" id="videoQueueCount">3</span>
+              <span class="metric-label">In Queue</span>
+            </div>
+            <div class="metric">
+              <span class="metric-value" id="videoPublished">18</span>
+              <span class="metric-label">Published</span>
+            </div>
+          </div>
+          <div class="agent-actions">
+            <button class="btn btn-primary" onclick="openVideoLaunchpad()">
+              Open Launchpad
+            </button>
+            <button class="btn btn-ghost" onclick="showAgentDetail('video-launchpad')">
+              View Details
+            </button>
+          </div>
+          <div class="agent-last-run">
+            <span>Backend: </span><span id="videoBackendStatus" style="color:#34d399;">Online</span>
           </div>
         </div>
-        <div class="agent-placeholder-ideas">
-          <span class="idea-tag">Content Scheduler</span>
-          <span class="idea-tag">Analytics Tracker</span>
-          <span class="idea-tag">DM Responder</span>
-          <span class="idea-tag">UGC Finder</span>
-        </div>
-      </div>
-    </section>
 
-    <!-- Command Console -->
-    <section class="command-console">
-      <div class="console-header">
-        <h3>Command Console</h3>
-        <button class="btn btn-ghost btn-sm" onclick="clearLog()">Clear</button>
-      </div>
-      <div class="console-log" id="consoleLog">
-        <div class="log-entry log-system">System initialized. Ready for commands.</div>
-      </div>
-      <div class="console-input-row">
-        <select id="agentSelect" class="console-select">
-          <option value="ig-research">IG Research Agent</option>
-          <option value="video-launchpad">Video Launchpad</option>
-        </select>
-        <input type="text" id="commandInput" class="console-input"
-               placeholder="Type a command or ask a question..."
-               onkeydown="if(event.key==='Enter') sendCommand()">
-        <button class="btn btn-primary" onclick="sendCommand()">Send</button>
-      </div>
-    </section>
+        <!-- Future Agent Placeholder -->
+        <div class="agent-card agent-card-placeholder" id="futureAgentCard">
+          <div class="agent-header">
+            <div class="agent-icon">+</div>
+            <div class="agent-info">
+              <h2>Add New Agent</h2>
+              <p class="agent-desc">Expand your automation with additional agents</p>
+            </div>
+          </div>
+          <div class="agent-placeholder-ideas">
+            <span class="idea-tag">Content Scheduler</span>
+            <span class="idea-tag">Analytics Tracker</span>
+            <span class="idea-tag">DM Responder</span>
+            <span class="idea-tag">UGC Finder</span>
+          </div>
+        </div>
+      </section>
 
-    <!-- Detail Panels (shown when clicking View Details) -->
-    <section class="detail-panel" id="detailPanel" style="display:none;">
-      <div class="detail-header">
-        <h3 id="detailTitle">Agent Details</h3>
-        <button class="btn btn-ghost" onclick="hideDetail()">✕ Close</button>
-      </div>
-      <div class="detail-content" id="detailContent"></div>
-    </section>
+      <!-- Command Console -->
+      <section class="command-console">
+        <div class="console-header">
+          <h3>Command Console</h3>
+          <button class="btn btn-ghost btn-sm" onclick="clearLog()">Clear</button>
+        </div>
+        <div class="console-log" id="consoleLog">
+          <div class="log-entry log-system">[09:14:22] System initialized. Ready for commands.</div>
+          <div class="log-entry log-command">[09:14:25] > [IG Research Agent] run_research_cycle</div>
+          <div class="log-entry log-info">[09:14:26] Executing run_research_cycle on IG Research Agent...</div>
+          <div class="log-entry log-info">[09:22:41] Phase 1: Scraped 4 competitor accounts (120 posts)</div>
+          <div class="log-entry log-info">[09:28:03] Phase 2: Scraped 5 hashtags (250 posts)</div>
+          <div class="log-entry log-info">[09:29:15] Phase 4: Extracted 34 hooks from top posts</div>
+          <div class="log-entry log-info">[09:30:02] Phase 5: Detected 12 content patterns</div>
+          <div class="log-entry log-success">[09:31:18] Research cycle #7 complete. Generated 5 content briefs.</div>
+        </div>
+        <div class="console-input-row">
+          <select id="agentSelect" class="console-select">
+            <option value="ig-research">IG Research Agent</option>
+            <option value="video-launchpad">Video Launchpad</option>
+          </select>
+          <input type="text" id="commandInput" class="console-input"
+                 placeholder="Type a command or ask a question..."
+                 onkeydown="if(event.key==='Enter') sendCommand()">
+          <button class="btn btn-primary" onclick="sendCommand()">Send</button>
+        </div>
+      </section>
 
-    <!-- Research Insights Section -->
-    <section class="insights-grid">
-      <div class="insight-card">
-        <h3>Top Hooks</h3>
-        <div id="topHooksList" class="insight-list">
-          <p class="empty-state">Run a research cycle to discover hooks</p>
+      <!-- Detail Panels (shown when clicking View Details) -->
+      <section class="detail-panel" id="detailPanel" style="display:none;">
+        <div class="detail-header">
+          <h3 id="detailTitle">Agent Details</h3>
+          <button class="btn btn-ghost" onclick="hideDetail()">Close</button>
         </div>
-      </div>
-      <div class="insight-card">
-        <h3>Content Patterns</h3>
-        <div id="patternsList" class="insight-list">
-          <p class="empty-state">Run a research cycle to detect patterns</p>
+        <div class="detail-content" id="detailContent"></div>
+      </section>
+
+      <!-- Research Insights Section -->
+      <section class="insights-grid">
+        <div class="insight-card">
+          <h3>Top Hooks</h3>
+          <div id="topHooksList" class="insight-list">
+            <div class="insight-item">
+              <div class="insight-item-title">
+                "Most people take black seed oil wrong. Here's what doctors won't tell you..."
+                <span class="insight-item-score">9.2/10</span>
+              </div>
+              <div class="insight-item-meta">curiosity &middot; @herbaldynamics &middot; 8.4% eng</div>
+            </div>
+            <div class="insight-item">
+              <div class="insight-item-title">
+                "I replaced my morning coffee with this for 30 days. The results shocked me."
+                <span class="insight-item-score">8.8/10</span>
+              </div>
+              <div class="insight-item-meta">transformation &middot; @ancientnutrition &middot; 7.1% eng</div>
+            </div>
+            <div class="insight-item">
+              <div class="insight-item-title">
+                "POV: You just found out black seed oil has 1,000+ studies behind it"
+                <span class="insight-item-score">8.5/10</span>
+              </div>
+              <div class="insight-item-meta">social_proof &middot; @gardenoflife &middot; 6.8% eng</div>
+            </div>
+            <div class="insight-item">
+              <div class="insight-item-title">
+                "Stop scrolling if you deal with inflammation. This changes everything."
+                <span class="insight-item-score">8.1/10</span>
+              </div>
+              <div class="insight-item-meta">fear &middot; @amazinggrass &middot; 5.9% eng</div>
+            </div>
+            <div class="insight-item">
+              <div class="insight-item-title">
+                "3 signs your body is begging for black seed oil (most people ignore #2)"
+                <span class="insight-item-score">7.9/10</span>
+              </div>
+              <div class="insight-item-meta">curiosity &middot; @herbaldynamics &middot; 5.3% eng</div>
+            </div>
+          </div>
         </div>
-      </div>
-      <div class="insight-card">
-        <h3>Pending Briefs</h3>
-        <div id="briefsList" class="insight-list">
-          <p class="empty-state">Generate briefs from research data</p>
+        <div class="insight-card">
+          <h3>Content Patterns</h3>
+          <div id="patternsList" class="insight-list">
+            <div class="insight-item">
+              <div class="insight-item-title">
+                Transformation Reels (Before/After)
+                <span class="insight-item-score">7.2% eng</span>
+              </div>
+              <div class="insight-item-meta">format &middot; seen 18x</div>
+            </div>
+            <div class="insight-item">
+              <div class="insight-item-title">
+                "Doctor Reacts" Educational Hooks
+                <span class="insight-item-score">6.5% eng</span>
+              </div>
+              <div class="insight-item-meta">hook_style &middot; seen 12x</div>
+            </div>
+            <div class="insight-item">
+              <div class="insight-item-title">
+                Morning Routine Integration
+                <span class="insight-item-score">5.8% eng</span>
+              </div>
+              <div class="insight-item-meta">topic &middot; seen 15x</div>
+            </div>
+            <div class="insight-item">
+              <div class="insight-item-title">
+                ASMR-Style Product Pour Shots
+                <span class="insight-item-score">5.4% eng</span>
+              </div>
+              <div class="insight-item-meta">visual_style &middot; seen 9x</div>
+            </div>
+            <div class="insight-item">
+              <div class="insight-item-title">
+                Short-Form Lists (3-5 Benefits)
+                <span class="insight-item-score">4.9% eng</span>
+              </div>
+              <div class="insight-item-meta">caption_style &middot; seen 22x</div>
+            </div>
+          </div>
         </div>
-      </div>
-      <div class="insight-card">
-        <h3>Competitor Landscape</h3>
-        <div id="competitorList" class="insight-list">
-          <p class="empty-state">Scrape competitors to see stats</p>
+        <div class="insight-card">
+          <h3>Pending Briefs</h3>
+          <div id="briefsList" class="insight-list">
+            <div class="insight-item">
+              <div class="insight-item-title">
+                "30-Day Black Seed Oil Challenge" Reel Series
+                <span class="insight-item-score">P9</span>
+              </div>
+              <div class="insight-item-meta">reel &middot; "I tried black seed oil for 30 days..."</div>
+            </div>
+            <div class="insight-item">
+              <div class="insight-item-title">
+                Myth vs. Fact Carousel: BSO Edition
+                <span class="insight-item-score">P8</span>
+              </div>
+              <div class="insight-item-meta">carousel &middot; "Everything you've heard is wrong..."</div>
+            </div>
+            <div class="insight-item">
+              <div class="insight-item-title">
+                Morning Routine ASMR Reel
+                <span class="insight-item-score">P8</span>
+              </div>
+              <div class="insight-item-meta">reel &middot; Satisfying pour shot + routine integration</div>
+            </div>
+            <div class="insight-item">
+              <div class="insight-item-title">
+                "Doctor Explains" Talking Head
+                <span class="insight-item-score">P7</span>
+              </div>
+              <div class="insight-item-meta">reel &middot; "As a naturopath, here's what I recommend..."</div>
+            </div>
+            <div class="insight-item">
+              <div class="insight-item-title">
+                UGC Compilation: Real Customer Results
+                <span class="insight-item-score">P7</span>
+              </div>
+              <div class="insight-item-meta">reel &middot; "Real people. Real results. No filter."</div>
+            </div>
+          </div>
         </div>
-      </div>
-    </section>
-  </main>
+        <div class="insight-card">
+          <h3>Competitor Landscape</h3>
+          <div id="competitorList" class="insight-list">
+            <div class="insight-item">
+              <div class="insight-item-title">
+                @herbaldynamics
+                <span class="insight-item-score">5.2% avg</span>
+              </div>
+              <div class="insight-item-meta">214 posts &middot; 3,420 avg likes &middot; 45K avg views</div>
+            </div>
+            <div class="insight-item">
+              <div class="insight-item-title">
+                @ancientnutrition
+                <span class="insight-item-score">4.1% avg</span>
+              </div>
+              <div class="insight-item-meta">189 posts &middot; 8,900 avg likes &middot; 120K avg views</div>
+            </div>
+            <div class="insight-item">
+              <div class="insight-item-title">
+                @gardenoflife
+                <span class="insight-item-score">3.8% avg</span>
+              </div>
+              <div class="insight-item-meta">245 posts &middot; 5,600 avg likes &middot; 78K avg views</div>
+            </div>
+            <div class="insight-item">
+              <div class="insight-item-title">
+                @amazinggrass
+                <span class="insight-item-score">3.2% avg</span>
+              </div>
+              <div class="insight-item-meta">199 posts &middot; 2,100 avg likes &middot; 32K avg views</div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
 
   <script src="js/dashboard.js"></script>
 </body>

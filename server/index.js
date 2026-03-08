@@ -1118,8 +1118,188 @@ app.use(express.static(path.join(__dirname, '..'), {
 // Serve master dashboard
 app.use('/dashboard', express.static(path.join(__dirname, '..', 'dashboard')));
 
-// Health check for dashboard
-app.get('/health', (req, res) => res.json({ status: 'ok', service: 'maju-backend' }));
+// Health check for dashboard — returns status of all services
+app.get('/health', (req, res) => {
+  const services = {
+    status: 'ok',
+    service: 'maju-backend',
+    uptime: process.uptime(),
+    agents: {}
+  };
+
+  // Check IG Research DB
+  try {
+    const Database = require('better-sqlite3');
+    if (fs.existsSync(igResearchDbPath)) {
+      const db = new Database(igResearchDbPath, { readonly: true });
+      const postCount = db.prepare('SELECT COUNT(*) as count FROM posts').get();
+      const cycles = db.prepare('SELECT * FROM research_cycles ORDER BY id DESC LIMIT 1').all();
+      db.close();
+      services.agents['ig-research'] = {
+        status: 'online',
+        posts: postCount.count,
+        lastCycle: cycles[0] || null,
+      };
+    } else {
+      services.agents['ig-research'] = { status: 'no-data', reason: 'Database not found' };
+    }
+  } catch {
+    services.agents['ig-research'] = { status: 'offline', reason: 'better-sqlite3 not available' };
+  }
+
+  // Video pipeline is always available if server is up
+  services.agents['video-launchpad'] = {
+    status: 'online',
+    jobCount: Object.keys(jobs || {}).length,
+  };
+
+  res.json(services);
+});
+
+// AI-powered console — takes natural language, queries data, returns smart answers
+app.post('/api/console', async (req, res) => {
+  const { message, context } = req.body;
+  if (!message) return res.status(400).json({ error: 'No message provided' });
+
+  // Gather current data for context
+  let researchData = null;
+  try {
+    const Database = require('better-sqlite3');
+    if (fs.existsSync(igResearchDbPath)) {
+      const db = new Database(igResearchDbPath, { readonly: true });
+      const hooks = db.prepare(`
+        SELECT h.hook_text, h.hook_type, h.effectiveness_score, p.owner_username, p.engagement_rate
+        FROM hooks h JOIN posts p ON h.post_id = p.id
+        ORDER BY h.effectiveness_score DESC LIMIT 10
+      `).all();
+      const patterns = db.prepare('SELECT pattern_name, pattern_type, avg_engagement_rate, frequency FROM patterns ORDER BY avg_engagement_rate DESC LIMIT 10').all();
+      const briefs = db.prepare('SELECT title, format, hook, priority_score, status FROM content_briefs ORDER BY priority_score DESC LIMIT 10').all();
+      const competitors = db.prepare(`
+        SELECT owner_username, COUNT(*) as total_posts, AVG(engagement_rate) as avg_engagement, AVG(likes) as avg_likes
+        FROM posts WHERE source = 'competitor' GROUP BY owner_username ORDER BY avg_engagement DESC
+      `).all();
+      const topPosts = db.prepare('SELECT caption, owner_username, engagement_rate, likes, views, post_type FROM posts ORDER BY engagement_rate DESC LIMIT 10').all();
+      db.close();
+      researchData = { hooks, patterns, briefs, competitors, topPosts };
+    }
+  } catch { /* no data available */ }
+
+  // Try Claude API if key is configured — check all config sources
+  let claudeKey = null;
+  try {
+    const config = readConfig();
+    claudeKey = config.claude || config.claudeApiKey || config.anthropicApiKey;
+  } catch { /* no config */ }
+  if (!claudeKey) claudeKey = process.env.ANTHROPIC_API_KEY;
+  if (!claudeKey) claudeKey = req.headers['x-api-key-value'];
+
+  if (claudeKey && researchData) {
+    // Use Claude to generate a smart response
+    try {
+      const result = await proxyRequest(
+        'https://api.anthropic.com/v1/messages',
+        'POST',
+        {
+          'x-api-key': claudeKey,
+          'anthropic-version': '2023-06-01',
+          'Content-Type': 'application/json',
+        },
+        {
+          model: 'claude-haiku-4-5-20251001',
+          max_tokens: 1024,
+          system: `You are MAJU Command Center AI — a content strategist assistant for a black seed oil brand. You have access to Instagram research data. Be concise and actionable. When the user asks for ideas, give specific content concepts with hooks. When they ask to "push" or "create" content, output a structured brief. Format responses for a terminal/console (short lines, no markdown).`,
+          messages: [{
+            role: 'user',
+            content: `Research data:\n${JSON.stringify(researchData, null, 2)}\n\nUser command: ${message}`
+          }]
+        }
+      );
+      if (result.status === 200 && result.data?.content?.[0]?.text) {
+        return res.json({ type: 'ai', response: result.data.content[0].text });
+      }
+    } catch { /* fall through to local response */ }
+  }
+
+  // Fallback: local smart responses using research data
+  const cmd = message.toLowerCase();
+  if (!researchData) {
+    return res.json({ type: 'local', response: 'No research data available. Run a research cycle first, or configure your Claude API key in Settings for AI-powered responses.' });
+  }
+
+  if (cmd.includes('idea') || cmd.includes('content') || cmd.includes('what should')) {
+    const top3Hooks = researchData.hooks.slice(0, 3);
+    const top3Patterns = researchData.patterns.slice(0, 3);
+    const lines = ['CONTENT IDEAS (based on top-performing research):', ''];
+    top3Hooks.forEach((h, i) => {
+      lines.push(`${i + 1}. Hook: "${h.hook_text}"`);
+      lines.push(`   Type: ${h.hook_type} | Score: ${h.effectiveness_score}/10 | From: @${h.owner_username}`);
+    });
+    lines.push('', 'Top patterns to use:');
+    top3Patterns.forEach(p => lines.push(`  - ${p.pattern_name} (${p.avg_engagement_rate}% avg eng, seen ${p.frequency}x)`));
+    return res.json({ type: 'local', response: lines.join('\n') });
+  }
+
+  if (cmd.includes('brief') || cmd.includes('push') || cmd.includes('create')) {
+    const brief = researchData.briefs[0];
+    if (brief) {
+      const lines = [
+        `CONTENT BRIEF: ${brief.title}`,
+        `Format: ${brief.format} | Priority: P${brief.priority_score} | Status: ${brief.status}`,
+        `Hook: "${brief.hook || 'Generate hook from top patterns'}"`,
+        '',
+        'Next steps:',
+        '  1. Open Video Launchpad to generate clips',
+        '  2. Use the hook above as your opening frame',
+        '  3. Stitch + publish via the pipeline',
+      ];
+      return res.json({ type: 'local', response: lines.join('\n') });
+    }
+    return res.json({ type: 'local', response: 'No briefs available. Run "generate briefs" first.' });
+  }
+
+  if (cmd.includes('hook')) {
+    const lines = ['TOP HOOKS BY EFFECTIVENESS:', ''];
+    researchData.hooks.slice(0, 5).forEach((h, i) => {
+      lines.push(`${i + 1}. "${h.hook_text}"`);
+      lines.push(`   ${h.hook_type} | ${h.effectiveness_score}/10 | @${h.owner_username} (${h.engagement_rate}% eng)`);
+    });
+    return res.json({ type: 'local', response: lines.join('\n') });
+  }
+
+  if (cmd.includes('competitor') || cmd.includes('who')) {
+    const lines = ['COMPETITOR LANDSCAPE:', ''];
+    researchData.competitors.forEach(c => {
+      lines.push(`@${c.owner_username}: ${c.total_posts} posts | ${c.avg_engagement?.toFixed(1)}% avg eng | ${Math.round(c.avg_likes)} avg likes`);
+    });
+    return res.json({ type: 'local', response: lines.join('\n') });
+  }
+
+  if (cmd.includes('top') || cmd.includes('best') || cmd.includes('post')) {
+    const lines = ['TOP PERFORMING POSTS:', ''];
+    researchData.topPosts.slice(0, 5).forEach((p, i) => {
+      lines.push(`${i + 1}. @${p.owner_username} (${p.post_type}) — ${p.engagement_rate}% eng, ${p.likes} likes`);
+      lines.push(`   "${(p.caption || '').slice(0, 100)}..."`);
+    });
+    return res.json({ type: 'local', response: lines.join('\n') });
+  }
+
+  // Default help
+  return res.json({
+    type: 'local',
+    response: [
+      'AVAILABLE COMMANDS:',
+      '  "ideas" or "what should I post"  — Get content ideas from research',
+      '  "hooks"                          — See top-performing hooks',
+      '  "brief" or "create" or "push"    — Get next content brief',
+      '  "competitors"                    — Competitor analysis',
+      '  "top posts"                      — Best performing posts',
+      '  "run research"                   — Trigger research cycle',
+      '  "generate briefs"                — Create new content briefs',
+      '',
+      'Or type any question — if Claude API key is configured, you\'ll get AI-powered answers.',
+    ].join('\n')
+  });
+});
 
 // IG Research Agent proxy â reads from agent's SQLite DB directly
 const igResearchDbPath = path.join(__dirname, '..', 'ig-research-agent', 'data', 'research.db');
