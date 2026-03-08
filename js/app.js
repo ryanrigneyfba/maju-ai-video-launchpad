@@ -1284,15 +1284,15 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       if (e.target.classList.contains('caption-input')) {
         item.instagramCaption = e.target.value;
       } else if (e.target.classList.contains('hashtags-input')) {
-        item.hashtags = e.target.value.split(',').map(t => t.trim()).filter(Boolean);
-      } else { return; }
+        item.hashtags = e.target.value.split(',').map(t => t.trim()).filter(Boolean)
+      } else { return; }revert file
       clearTimeout(_queueSaveTimer);
       _queueSaveTimer = setTimeout(() => saveQueue(), 300);
     });
-  }
+  
   });
 
-  // ─── Helpers ───
+  // ─── Helpers ──
   function saveQueue() {
     localStorage.setItem(CONFIG.storageKeys.queue, JSON.stringify(queue));
   }

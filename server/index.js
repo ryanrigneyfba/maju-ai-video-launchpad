@@ -490,7 +490,7 @@ function downloadFile(url, destPath) {
         // Follow redirects
         if (response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) {
           doRequest(response.headers.location);
-          return;
+          return
         }
         if (response.statusCode !== 200) {
           reject(new Error(`HTTP ${response.statusCode} downloading ${requestUrl}`));
@@ -656,7 +656,7 @@ app.get('/api/proxy/higgsfield/soul-ids', async (req, res) => {
     const page = req.query.page || 1;
     const pageSize = req.query.pageSize || 20;
     const result = await proxyRequest(
-      `https://platform.higgsfield.ai/v1/soul-ids?page=${page}&pageSize=${pageSize}`,
+      `https://platform.higgsfield.ai/v1/custom-references/list?page=${page}&page_size=${pageSize}`,
       'GET',
       hfAuthHeaders(req)
     );
