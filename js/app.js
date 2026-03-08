@@ -409,29 +409,66 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     { name: 'glow', duration: 5, prompt: 'A young woman with hair in a bun wearing a black tank top looks at herself in a mirror, gently touching her glowing dewy face with both hands. She looks serene and satisfied with her skin. A dark bottle labeled "MAJU BLACK SEED OIL" is prominently placed in the foreground near the mirror. Warm soft golden lighting emphasizes her healthy glowing skin. Dark moody background. Vertical 9:16 format, slow smooth motion.', textOverlay: 'anti-puffy face snack\n(onion + black seed oil + salt)', model: 'kling-v2-master' },
   ];
 
-  // Helper: generate a static image via Higgsfield Flux Kontext Max and poll until done
-  // Returns { url, error } object
-  async function generateSegmentImage(seg, segLabel) {
-    if (seg.image_url) return { url: seg.image_url };
-    const imgResult = await API.higgsfield.generateImage({ prompt: seg.prompt, aspect_ratio: '9:16' });
-    console.log(`[Pipeline] Flux Kontext Max image submit for ${segLabel}:`, imgResult.ok, 'id:', imgResult.id);
-    if (!imgResult.ok || !imgResult.id) {
-      const errDetail = imgResult.error || imgResult.message || JSON.stringify(imgResult).slice(0, 200);
-      debugPanel(`[${segLabel}] Image submit failed: ${errDetail}`);
-      return { url: null, error: `Image submit: ${errDetail}` };
-    }
+  // Helper: poll a Higgsfield image request until done
+  async function pollImageStatus(requestId, segLabel, timeoutLabel) {
     for (let attempt = 0; attempt < 150; attempt++) {
       await new Promise(r => setTimeout(r, 2000));
-      const imgStatus = await API.higgsfield.getImageStatus(imgResult.id);
+      const imgStatus = await API.higgsfield.getImageStatus(requestId);
       const st = (imgStatus.status || '').toLowerCase();
-      if (attempt % 5 === 0) console.log(`[Pipeline] ${segLabel} image poll #${attempt}: status=${st}`);
+      if (attempt % 5 === 0) console.log(`[Pipeline] ${segLabel} ${timeoutLabel || 'image'} poll #${attempt}: status=${st}`);
       if (st === 'completed' || st === 'done') return { url: imgStatus.url };
       if (st === 'failed' || st === 'error' || st === 'nsfw' || st === 'cancelled') {
         return { url: null, error: `Image ${st}` };
       }
     }
-    console.warn(`[Pipeline] ${segLabel} image timed out after 120s`);
-    return { url: null, error: 'Image timed out after 120s' };
+    console.warn(`[Pipeline] ${segLabel} ${timeoutLabel || 'image'} timed out after 300s`);
+    return { url: null, error: `${timeoutLabel || 'Image'} timed out after 300s` };
+  }
+
+  // Helper: generate a static image via Higgsfield and poll until done
+  // Supports Soul ID (character consistency) and product reference image (Kontext i2i refinement)
+  async function generateSegmentImage(seg, segLabel, characterId, productImageUrl) {
+    if (seg.image_url) return { url: seg.image_url };
+    const imgParams = { prompt: seg.prompt, aspect_ratio: '9:16' };
+    if (characterId) {
+      imgParams.custom_reference_id = characterId;
+      imgParams.custom_reference_strength = 1;
+    }
+    const imgResult = await API.higgsfield.generateImage(imgParams);
+    console.log(`[Pipeline] ${characterId ? 'Soul' : 'Flux Kontext'} image submit for ${segLabel}:`, imgResult.ok, 'id:', imgResult.id);
+    if (!imgResult.ok || !imgResult.id) {
+      const errDetail = imgResult.error || imgResult.message || JSON.stringify(imgResult).slice(0, 200);
+      debugPanel(`[${segLabel}] Image submit failed: ${errDetail}`);
+      return { url: null, error: `Image submit: ${errDetail}` };
+    }
+    const baseImage = await pollImageStatus(imgResult.id, segLabel, 'image');
+    if (!baseImage.url) return baseImage;
+
+    // Product refinement pass: use Flux Kontext image-to-image with the product render as reference
+    if (productImageUrl) {
+      debugPanel(`[${segLabel}] Refining product packaging via Kontext image-to-image…`);
+      console.log(`[Pipeline] ${segLabel} product refinement with reference: ${productImageUrl.slice(0, 60)}…`);
+      const editResult = await API.higgsfield.editImageWithProduct(
+        baseImage.url,
+        productImageUrl,
+        `Keep this exact scene, person, pose, lighting, and background unchanged. Replace any dark bottle or generic bottle in the image with the exact Maju Black Seed Oil bottle shown in the second reference image — match the label, shape, color, and packaging precisely. The bottle label should read "BLACK SEED OIL" with the Maju branding clearly visible.`
+      );
+      if (!editResult.ok || !editResult.id) {
+        console.warn(`[Pipeline] ${segLabel} product edit failed, using base image:`, editResult.error);
+        debugPanel(`[${segLabel}] Product edit failed (${editResult.error || 'unknown'}) — using base image`);
+        return baseImage;
+      }
+      const refinedImage = await pollImageStatus(editResult.id, segLabel, 'product-edit');
+      if (!refinedImage.url) {
+        console.warn(`[Pipeline] ${segLabel} product edit poll failed, using base image`);
+        debugPanel(`[${segLabel}] Product edit timed out — using base image`);
+        return baseImage;
+      }
+      debugPanel(`[${segLabel}] Product packaging refined successfully`);
+      return refinedImage;
+    }
+
+    return baseImage;
   }
 
   // Helper: animate a static image via Kling image-to-video and poll until done
@@ -472,11 +509,11 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
 
   // Helper: full segment pipeline — Higgsfield image → Kling animate (or Kling text2video fallback)
   // Returns { url, error } object
-  async function generateSegmentVideo(seg, segLabel) {
-    // If Higgsfield key is set, use hybrid pipeline: Flux Kontext Max image → Kling image2video
+  async function generateSegmentVideo(seg, segLabel, characterId, productImageUrl) {
+    // If Higgsfield key is set, use hybrid pipeline: Soul/Flux image → Kling image2video
     if (apiKeys.higgsfield) {
-      debugPanel(`[${segLabel}] Generating image via Flux Kontext Max…`);
-      const imageResult = await generateSegmentImage(seg, segLabel);
+      debugPanel(`[${segLabel}] Generating image via ${characterId ? 'Soul (character: ' + characterId + ')' : 'Flux Kontext Max'}${productImageUrl ? ' + product reference' : ''}…`);
+      const imageResult = await generateSegmentImage(seg, segLabel, characterId, productImageUrl);
       if (imageResult.url) {
         debugPanel(`[${segLabel}] Image ready — animating via Kling image2video…`);
         return await animateImageToVideo(seg, imageResult.url, segLabel);
@@ -556,9 +593,13 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       msg.textContent = `v${item.version}: Generating ${segments.length} video segments via Kling…`;
       updateSegmentStatus('hook', 'Generating videos…', false);
 
+      const characterId = item.avatar || CONFIG.higgsfield.avatar || null;
+      const productImageUrl = apiKeys.productImageUrl || null;
+      if (characterId) console.log(`[Pipeline] Using Soul character ID: ${characterId}`);
+      if (productImageUrl) console.log(`[Pipeline] Using product reference image: ${productImageUrl.slice(0, 60)}…`);
       const videoTasks = segments.map((seg, si) => () => {
         updateSegmentStatus(seg.name, 'Generating…', false);
-        return generateSegmentVideo(seg, `${seg.name} (${si + 1}/${segments.length})`);
+        return generateSegmentVideo(seg, `${seg.name} (${si + 1}/${segments.length})`, characterId, productImageUrl);
       });
       const videoResults = await runWithConcurrency(videoTasks, KLING_CONCURRENCY);
 
@@ -1169,6 +1210,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     if (apiKeys.metricool) $('#api-metricool').value = apiKeys.metricool;
     if (apiKeys.arcads) $('#api-arcads').value = apiKeys.arcads;
     if (apiKeys.creatify) $('#api-creatify').value = apiKeys.creatify;
+    if (apiKeys.productImageUrl) $('#setting-product-image-url').value = apiKeys.productImageUrl;
   }
 
   // Sync keys from backend on load (so keys work on any device)
@@ -1235,6 +1277,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       metricool: $('#api-metricool').value.trim(),
       arcads: $('#api-arcads').value.trim(),
       creatify: $('#api-creatify').value.trim(),
+      productImageUrl: $('#setting-product-image-url').value.trim(),
     };
     localStorage.setItem(CONFIG.storageKeys.apiKeys, JSON.stringify(apiKeys));
     pushKeysToBackend();
@@ -1312,15 +1355,22 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     // ── Higgsfield — Static image generation with Patient Maya avatar (via proxy) ──
     higgsfield: {
       async generateImage(params) {
-        console.log('[Higgsfield] Flux Kontext Max image (Patient Maya):', params);
+        console.log('[Higgsfield] Soul image generation:', params);
         if (!apiKeys.higgsfield) return { ok: false, error: 'No Higgsfield API key set — add in Settings' };
+        // Use Soul endpoint when character_id is available, otherwise fall back to Flux Kontext
+        const useSoul = !!params.custom_reference_id;
+        const endpoint = params.endpoint || (useSoul ? '/v1/text2image/soul' : 'flux-pro/kontext/max/text-to-image');
         const body = {
-          endpoint: params.endpoint || 'flux-pro/kontext/max/text-to-image',
+          endpoint,
           input: {
             prompt: params.prompt || '',
             aspect_ratio: params.aspect_ratio || '9:16',
           },
         };
+        if (params.custom_reference_id) {
+          body.input.custom_reference_id = params.custom_reference_id;
+          body.input.custom_reference_strength = params.custom_reference_strength || 1;
+        }
         try {
           const res = await fetch(backendUrl('/api/proxy/higgsfield/generate'), {
             method: 'POST',
@@ -1333,6 +1383,49 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
         } catch (err) {
           console.error('[Higgsfield] Image error:', err);
           return { ok: false, error: err.message };
+        }
+      },
+
+      // Flux Kontext Max image-to-image: refine a generated image using a product reference photo
+      async editImageWithProduct(generatedImageUrl, productImageUrl, prompt) {
+        console.log('[Higgsfield] Product refinement via Kontext image-to-image');
+        if (!apiKeys.higgsfield) return { ok: false, error: 'No Higgsfield API key set' };
+        const body = {
+          endpoint: 'flux-pro/kontext/max/image-to-image',
+          input: {
+            prompt: prompt || 'Replace the bottle in this image with the exact product bottle shown in the second reference image. Keep the person, pose, lighting, and background exactly the same.',
+            input_image: generatedImageUrl,
+            input_image_2: productImageUrl,
+            aspect_ratio: '9:16',
+          },
+        };
+        try {
+          const res = await fetch(backendUrl('/api/proxy/higgsfield/generate'), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-api-key-value': apiKeys.higgsfield, 'x-api-secret-value': apiKeys.higgsfieldSecret || '' },
+            body: JSON.stringify(body),
+          });
+          const data = await res.json();
+          console.log('[Higgsfield] Product edit response:', data);
+          return { ok: res.ok, id: data.request_id || data.id, ...data };
+        } catch (err) {
+          console.error('[Higgsfield] Product edit error:', err);
+          return { ok: false, error: err.message };
+        }
+      },
+
+      async listSoulIds() {
+        if (!apiKeys.higgsfield) return { ok: false, error: 'No Higgsfield API key set', items: [] };
+        try {
+          const res = await fetch(backendUrl('/api/proxy/higgsfield/soul-ids'), {
+            headers: { 'x-api-key-value': apiKeys.higgsfield, 'x-api-secret-value': apiKeys.higgsfieldSecret || '' },
+          });
+          const data = await res.json();
+          console.log('[Higgsfield] Soul IDs:', data);
+          return { ok: res.ok, items: Array.isArray(data) ? data : (data.items || data.data || []), ...data };
+        } catch (err) {
+          console.error('[Higgsfield] listSoulIds error:', err);
+          return { ok: false, error: err.message, items: [] };
         }
       },
 
