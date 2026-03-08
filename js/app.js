@@ -242,6 +242,7 @@
         schedField.classList.add('hidden');
       }
     })
+  );
 
   // Scene selector preview
   function updateScenePreview() {
@@ -270,7 +271,6 @@
   // Scene selector preview event listener
   const sceneSelect = $('#scene-select');
   if (sceneSelect) sceneSelect.addEventListener('change', updateScenePreview);
-  );
 
   // ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Claude AI Learning Loop ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ
   async function getClaudeOptimizedPrompt(videoType, avatar, product, userNotes) {
