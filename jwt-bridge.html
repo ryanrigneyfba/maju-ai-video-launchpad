@@ -4,7 +4,7 @@
 <body>
 <script>
 /**
- * JWT Bridge v2.0
+ * JWT Bridge v2.1
  * Two relay modes:
  * 1. URL hash: reads token from location.hash on load (primary)
  * 2. postMessage: receives jwt-relay messages from parent (fallback)
@@ -21,13 +21,16 @@
     fetch(PROXY + '/api/jwt-store', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ sessionToken: t })
+      body: JSON.stringify({ jwt: t })
     })
-    .then(function(res) { return res.json(); })
+    .then(function(res) {
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return res.json();
+    })
     .then(function(r) {
-      document.title = 'BRIDGE:ok:valid=' + r.valid;
+      document.title = 'BRIDGE:ok:stored=' + r.ok;
       if (source && origin) {
-        source.postMessage({ type: 'jwt-relay-ack', ok: true, valid: r.valid }, origin);
+        source.postMessage({ type: 'jwt-relay-ack', ok: true, stored: r.ok }, origin);
       }
     })
     .catch(function(err) {
@@ -59,6 +62,6 @@
   }
 })();
 </script>
-<p style="font-size:11px;color:#999;">MAJU JWT Bridge v2.0</p>
+<p style="font-size:11px;color:#999;">MAJU JWT Bridge v2.1</p>
 </body>
 </html>
