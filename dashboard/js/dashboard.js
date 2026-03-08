@@ -76,7 +76,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function initDashboard() {
   updateTimestamp();
+  loadDashboardData();
   setInterval(updateTimestamp, 1000);
+  setInterval(loadDashboardData, DASHBOARD_CONFIG.refreshInterval);
 }
 
 function updateTimestamp() {
@@ -207,12 +209,35 @@ async function checkVideoBackend() {
     if (resp.ok) {
       document.getElementById('videoBackendStatus').textContent = 'Online';
       document.getElementById('videoBackendStatus').style.color = '#34d399';
+      // Load job stats when backend is online
+      loadVideoStats();
     } else {
       throw new Error('not ok');
     }
   } catch {
     document.getElementById('videoBackendStatus').textContent = 'Offline';
     document.getElementById('videoBackendStatus').style.color = '#f87171';
+  }
+}
+
+async function loadVideoStats() {
+  try {
+    const resp = await fetch('/api/jobs');
+    if (!resp.ok) return;
+    const jobs = await resp.json();
+    if (!Array.isArray(jobs)) return;
+
+    const totalJobs = jobs.length;
+    const totalClips = jobs.reduce((sum, j) => sum + (j.clipCount || j.clips?.length || 0), 0);
+    const queued = jobs.filter(j => j.status === 'queued' || j.status === 'pending' || j.status === 'processing').length;
+    const published = jobs.filter(j => j.status === 'published' || j.status === 'completed' || j.status === 'done').length;
+
+    document.getElementById('videoJobCount').textContent = formatNumber(totalJobs);
+    document.getElementById('videoClipCount').textContent = formatNumber(totalClips);
+    document.getElementById('videoQueueCount').textContent = formatNumber(queued);
+    document.getElementById('videoPublished').textContent = formatNumber(published);
+  } catch {
+    // Keep existing values if fetch fails
   }
 }
 
