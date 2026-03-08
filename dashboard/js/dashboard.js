@@ -207,16 +207,39 @@ async function checkVideoBackend() {
   try {
     const resp = await fetch('/health');
     if (resp.ok) {
+      const health = await resp.json();
+
+      // Update Video Launchpad status
       document.getElementById('videoBackendStatus').textContent = 'Online';
       document.getElementById('videoBackendStatus').style.color = '#34d399';
-      // Load job stats when backend is online
       loadVideoStats();
+
+      // Update IG Research Agent live status from health endpoint
+      if (health.agents?.['ig-research']) {
+        const ig = health.agents['ig-research'];
+        const badge = document.querySelector('#igStatus .status-badge');
+        if (ig.status === 'online') {
+          badge.className = 'status-badge success';
+          badge.textContent = 'Online';
+        } else if (ig.status === 'no-data') {
+          badge.className = 'status-badge idle';
+          badge.textContent = 'No Data';
+        } else {
+          badge.className = 'status-badge error';
+          badge.textContent = 'Offline';
+        }
+      }
+
+      // Update system status
+      const allOnline = Object.values(health.agents || {}).every(a => a.status === 'online');
+      document.getElementById('systemStatusText').textContent = allOnline ? 'All Systems Online' : 'Partial';
     } else {
       throw new Error('not ok');
     }
   } catch {
     document.getElementById('videoBackendStatus').textContent = 'Offline';
     document.getElementById('videoBackendStatus').style.color = '#f87171';
+    document.getElementById('systemStatusText').textContent = 'Backend Offline';
   }
 }
 
@@ -273,26 +296,56 @@ async function sendCommand() {
   const agentId = agentSelect.value;
   const agentName = DASHBOARD_CONFIG.agents[agentId]?.name || agentId;
 
-  addLog(`> [${agentName}] ${command}`, 'command');
+  addLog(`> ${command}`, 'command');
   input.value = '';
 
-  // Map common commands to tool calls
-  const toolMap = {
+  // Direct tool commands — these hit the IG Research API directly
+  const directToolMap = {
     'run research': 'run_research_cycle',
     'research cycle': 'run_research_cycle',
-    'scrape': 'scrape_profile',
-    'briefs': 'get_content_briefs',
     'generate briefs': 'generate_briefs',
-    'hooks': 'get_hooks',
-    'patterns': 'get_patterns',
     'status': 'get_research_status',
-    'dashboard': 'get_dashboard_data',
-    'competitors': 'get_competitor_stats',
-    'top posts': 'get_top_posts',
   };
 
-  const tool = toolMap[command.toLowerCase()] || command;
-  await runCommand(agentId, tool);
+  const directTool = directToolMap[command.toLowerCase()];
+  if (directTool) {
+    await runCommand(agentId, directTool);
+    return;
+  }
+
+  // Everything else goes through the smart console endpoint
+  await sendConsoleMessage(command);
+}
+
+async function sendConsoleMessage(message) {
+  addLog('Thinking...', 'info');
+  try {
+    const resp = await fetch('/api/console', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message }),
+    });
+    if (!resp.ok) {
+      addLog(`Error: ${resp.statusText}`, 'error');
+      return;
+    }
+    const data = await resp.json();
+    const lines = (data.response || 'No response').split('\n');
+    lines.forEach(line => {
+      if (line.startsWith('CONTENT') || line.startsWith('TOP') || line.startsWith('COMPETITOR') || line.startsWith('AVAILABLE')) {
+        addLog(line, 'success');
+      } else if (line.trim().startsWith('>') || line.trim().match(/^\d+\./)) {
+        addLog(line, 'command');
+      } else {
+        addLog(line, 'info');
+      }
+    });
+    if (data.type === 'ai') {
+      addLog('[Powered by Claude AI]', 'system');
+    }
+  } catch {
+    addLog('Console unavailable — backend may be offline', 'error');
+  }
 }
 
 async function runCommand(agentId, tool, args = {}) {
