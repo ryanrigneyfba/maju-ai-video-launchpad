@@ -51,14 +51,14 @@ body{
   padding:.65rem .8rem;border-radius:var(--radius);
   text-align:left;font:inherit;font-size:.9rem;
   cursor:pointer;display:flex;align-items:center;gap:.55rem;
-  transition:all .15s;position:relative;
+  transition:all .15s;position:relative;width:100%;
 }
 .nav-btn:hover{background:var(--bg-input);color:var(--text)}
 .nav-btn.active{background:var(--accent);color:#fff}
 .nav-icon{font-size:1rem;width:1.2rem;text-align:center}
 .badge{
   background:var(--danger);color:#fff;font-size:.7rem;
-  padding:1px 7px;border-radius:50px;margin-left:auto;
+  padding:2px 8px;border-radius:50px;margin-left:auto;
 }
 .badge.pulse{animation:badgePulse .5s ease-in-out 3}
 @keyframes badgePulse{0%,100%{transform:scale(1)}50%{transform:scale(1.4)}}

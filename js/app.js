@@ -23,6 +23,79 @@
     },
   };
 
+  const SCENES = {
+    'scene-1': {
+      name: 'Skincare Application',
+      shareUrl: 'https://higgsfield.ai/s/jCi5uwCyKK4',
+      description: 'Young woman applying black seed oil to her face at a rustic wooden bathroom vanity',
+      prompt: 'Young woman with hair pulled back, standing at a rustic wooden bathroom vanity, gently applying black seed oil to her face with fingertips, glowing dewy skin, wearing soft sage green linen top, warm amber morning light filtering through sheer curtains, dried eucalyptus bundle hanging on wall, apothecary jars and natural skincare products on counter, muted earth tone bathroom with terracotta accents, calming spa-like atmosphere, shot on iPhone 15 Pro, natural iPhone camera quality, slight wide-angle lens distortion, authentic casual selfie in mirror, mobile photography aesthetic, natural skin texture visible, no airbrushing, 9:16 vertical',
+      productPrompt: 'black seed oil bottle sitting on rustic wooden vanity counter among amber glass apothecary jars, clearly visible MAJU label, herbal wellness bathroom setting',
+    },
+    'scene-2': {
+      name: 'Wellness Tea/Drink',
+      shareUrl: 'https://higgsfield.ai/s/nAo2zIqYKXA',
+      description: 'Young woman adding drops of black seed oil into a steaming cup of herbal tea',
+      prompt: 'Young woman in warm earthy kitchen, adding drops of black seed oil into a steaming ceramic cup of herbal tea, wearing cozy oatmeal-colored knit sweater, loose messy bun, warm golden morning light through window, wooden cutting board with fresh lemons, raw honey in glass jar, dried herbs and chamomile scattered on counter, terracotta pots with fresh herbs on windowsill, calming herbal apothecary kitchen aesthetic, steam rising from mug, shot on iPhone 15 Pro, natural iPhone camera quality, slight wide-angle lens distortion, authentic casual photo from across counter, mobile photography aesthetic, natural skin texture visible, no airbrushing, 9:16 vertical',
+      productPrompt: 'black seed oil bottle prominently placed on wooden counter next to herbal tea cup and honey jar, clearly visible MAJU label, warm herbal wellness kitchen setting',
+    },
+    'scene-3': {
+      name: 'Hair Care',
+      shareUrl: 'https://higgsfield.ai/s/8T6-8CspXbQ',
+      description: 'Young woman applying black seed oil to long dark hair at a vintage wooden vanity',
+      prompt: 'Young woman sitting at vintage wooden vanity, applying black seed oil to long dark hair ends with fingertips, wearing cream silk robe, warm amber candlelight glow, dried lavender bundles and natural wooden hairbrush on vanity, sage green wall in background, mirror reflection with soft warm lighting, fresh eucalyptus in vase, calming herbal bedroom aesthetic, muted earth tones throughout, shot on iPhone 15 Pro, natural iPhone camera quality, slight wide-angle lens distortion, authentic casual vanity mirror angle, mobile photography aesthetic, natural skin texture visible, no airbrushing, 9:16 vertical',
+      productPrompt: 'black seed oil bottle prominently placed on vintage wooden vanity next to dried lavender and natural hairbrush, clearly visible MAJU label, herbal beauty ritual setting',
+    },
+    'scene-4': {
+      name: 'Smoothie/Wellness Blend',
+      shareUrl: 'https://higgsfield.ai/s/U-O3_CG0Vtc',
+      description: 'Young woman adding black seed oil drops into a green smoothie blender',
+      prompt: 'Young woman in earthy natural kitchen, adding black seed oil drops into glass blender with green smoothie, wearing loose sage green linen tank, hair in low bun, morning light streaming through window with herb garden visible, wooden cutting board with fresh spinach, avocado, ginger root, natural ceramic bowls, hanging dried herbs above counter, warm wood and stone kitchen aesthetic, calming wellness morning ritual, shot on iPhone 15 Pro, natural iPhone camera quality, slight wide-angle lens distortion, authentic casual photo, mobile photography aesthetic, natural skin texture visible, no airbrushing, iPhone POV, photorealistic, 9:16 vertical',
+      productPrompt: 'black seed oil bottle prominently placed on wooden kitchen counter next to green smoothie ingredients, clearly visible MAJU label, earthy wellness kitchen setting',
+    },
+    'scene-5': {
+      name: 'Close-up Product Showcase',
+      shareUrl: 'https://higgsfield.ai/s/tv9zFXAqTO8',
+      description: 'Close-up of young woman holding black seed oil bottle near her face',
+      prompt: 'Close-up of young woman holding black seed oil bottle near her face with both hands, soft gentle smile, glowing healthy skin with natural dewiness, wearing off-white linen top, soft diffused golden window light, shallow depth of field, background of blurred sage green and warm amber tones, dried botanical elements softly visible behind, herbal calming mood, the bottle is the clear focal point, shot on iPhone 15 Pro, natural iPhone camera quality, slight wide-angle lens distortion, authentic casual iPhone selfie angle, mobile photography aesthetic, natural skin texture visible, no airbrushing, 9:16 vertical',
+      productPrompt: 'black seed oil bottle held prominently in hands near face, clearly visible MAJU label facing camera, bottle is the focal point, herbal calming aesthetic',
+    },
+    'scene-6': {
+      name: 'Cooking/Meal Prep',
+      shareUrl: 'https://higgsfield.ai/s/PHq-AM-ThRs',
+      description: 'Young woman drizzling black seed oil over a fresh Mediterranean salad',
+      prompt: 'Young woman in warm natural kitchen drizzling black seed oil over a fresh Mediterranean salad bowl, wearing earthy olive green apron over white tee, wooden countertop with fresh vegetables, herbs, and cutting board, terracotta pots with fresh basil and rosemary on counter, warm overhead pendant lighting, natural stone backsplash, mortar and pestle nearby, calming earthy kitchen with green and amber tones, shot on iPhone 15 Pro, natural iPhone camera quality, slight wide-angle lens distortion, authentic casual photo, mobile photography aesthetic, natural skin texture visible, no airbrushing, iPhone POV from across island, photorealistic, 9:16 vertical',
+      productPrompt: 'black seed oil bottle prominently placed on wooden counter next to Mediterranean salad and fresh herbs, clearly visible MAJU label, earthy herbal cooking setting',
+    },
+    'scene-7': {
+      name: 'Morning Skincare Routine',
+      shareUrl: 'https://higgsfield.ai/s/_NM-RIKRLxo',
+      description: 'Young woman at bathroom vanity applying black seed oil to her palm in morning light',
+      prompt: 'Young woman at bright bathroom vanity in morning light, fresh face with damp hair in towel, wearing soft white cotton robe, applying black seed oil to palm of hand, marble countertop with amber glass skincare bottles neatly arranged, fresh eucalyptus sprig in small vase, warm wood-framed mirror, soft sage green towels, natural apothecary bathroom aesthetic, calming morning ritual atmosphere, shot on iPhone 15 Pro, natural iPhone camera quality, slight wide-angle lens distortion, authentic casual iPhone mirror selfie angle, mobile photography aesthetic, natural skin texture visible, no airbrushing, 9:16 vertical',
+      productPrompt: 'black seed oil bottle prominently placed on marble vanity among amber glass skincare bottles, clearly visible MAJU label, natural apothecary bathroom setting',
+    },
+    'scene-8': {
+      name: 'Yoga/Meditation Wellness',
+      shareUrl: 'https://higgsfield.ai/s/mytFSTNgXvk',
+      description: 'Young woman in peaceful yoga pose on mat in sunlit room with plants',
+      prompt: 'Young woman in peaceful meditation pose on yoga mat in sunlit room, eyes closed, serene expression, wearing muted sage green athletic set, natural light streaming through sheer white curtains, monstera and pothos plants nearby, natural wood floors, small altar-like setup with candle and crystals beside mat, warm amber and green tones throughout, calming zen atmosphere, shot on iPhone 15 Pro, natural iPhone camera quality, slight wide-angle lens distortion, authentic casual photo, mobile photography aesthetic, natural skin texture visible, no airbrushing, iPhone POV from low angle, photorealistic, 9:16 vertical',
+      productPrompt: 'black seed oil bottle sitting on yoga mat edge next to candle and crystals, clearly visible MAJU label, calming zen wellness setting',
+    },
+    'scene-9': {
+      name: 'Evening Self-Care Wind-Down',
+      shareUrl: 'https://higgsfield.ai/s/yfOuFwHUAgQ',
+      description: 'Young woman relaxing on couch journaling with candles and herbal tea',
+      prompt: 'Young woman relaxing on couch wrapped in soft knit blanket, journaling in leather-bound notebook, wearing cozy sage green pajama set, warm amber glow from beeswax candles on coffee table, dried lavender in small vase, steaming cup of herbal tea on wooden coaster, houseplants in corner, muted earth tones throughout living room, peaceful evening wind-down ritual, calming herbal atmosphere, shot on iPhone 15 Pro, natural iPhone camera quality, slight wide-angle lens distortion, authentic casual photo, mobile photography aesthetic, natural skin texture visible, no airbrushing, iPhone POV from across couch, photorealistic, 9:16 vertical',
+      productPrompt: 'black seed oil bottle sitting on coffee table next to beeswax candles and herbal tea, clearly visible MAJU label, calming evening self-care setting',
+    },
+    'scene-10': {
+      name: 'Post-Workout Recovery',
+      shareUrl: 'https://higgsfield.ai/s/RU2GCS2UpS4',
+      description: 'Young woman post-workout on bench in natural light home gym',
+      prompt: 'Young woman post-workout sitting on wooden bench in bright natural light home gym, towel around shoulders, light sweat glow, wearing muted olive green sports bra and leggings, drinking from glass water bottle, natural wood and concrete gym aesthetic, small potted plant on shelf, warm sunlight from window, resistance bands and yoga mat visible, calming recovery moment, earth tones throughout, shot on iPhone 15 Pro, natural iPhone camera quality, slight wide-angle lens distortion, authentic casual photo, mobile photography aesthetic, natural skin texture visible, no airbrushing, iPhone POV, photorealistic, 9:16 vertical',
+      productPrompt: 'black seed oil bottle sitting on wooden gym bench next to glass water bottle and towel, clearly visible MAJU label, earthy natural recovery setting',
+    },
+  };
+
   // ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ State ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ
   let queue = JSON.parse(localStorage.getItem(CONFIG.storageKeys.queue) || '[]');
 
@@ -169,6 +242,34 @@
         schedField.classList.add('hidden');
       }
     })
+
+  // Scene selector preview
+  function updateScenePreview() {
+    const sel = $('#scene-select');
+    if (!sel) return;
+    const val = sel.value;
+    const area = $('#scene-preview-area');
+    if (val === 'random' || !SCENES[val]) {
+      if (area) area.style.display = 'none';
+      return;
+    }
+    const scene = SCENES[val];
+    if (area) {
+      area.style.display = '';
+      const img = $('#scene-preview-img');
+      const name = $('#scene-preview-name');
+      const desc = $('#scene-preview-desc');
+      // Use share URL as thumbnail via og:image proxy — fallback to placeholder
+      if (img) img.src = scene.shareUrl;
+      if (img) img.onerror = function() { this.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="120" height="213" fill="%231a1a2e"><rect width="120" height="213" rx="8"/><text x="60" y="110" fill="%23888" text-anchor="middle" font-size="12">Scene ' + val.split('-')[1] + '</text></svg>'; };
+      if (name) name.textContent = scene.name;
+      if (desc) desc.textContent = scene.description;
+    }
+  }
+
+  // Scene selector preview event listener
+  const sceneSelect = $('#scene-select');
+  if (sceneSelect) sceneSelect.addEventListener('change', updateScenePreview);
   );
 
   // ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Claude AI Learning Loop ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ
@@ -293,6 +394,10 @@ REJECTED videos ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ what to avoid:\
     const postMode = $('input[name="postMode"]:checked').value;
     const schedDate = $('#schedule-date')?.value || '';
     const notes = $('#notes').value.trim();
+    const sceneVal = $('#scene-select') ? $('#scene-select').value : 'random';
+    const selectedScene = sceneVal === 'random'
+      ? SCENES['scene-' + (Math.floor(Math.random() * 10) + 1)]
+      : SCENES[sceneVal];
 
     // If Claude key is set, get AI-optimized prompt first
     let aiPrompt = null;
@@ -317,6 +422,8 @@ REJECTED videos ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ what to avoid:\
         postMode,
         schedDate: postMode === 'schedule' ? schedDate : null,
         notes,
+        scene: selectedScene,
+        sceneId: sceneVal,
         aiPrompt, // Claude-optimized prompt (null if no key)
         instagramCaption: aiPrompt?.instagramCaption || '',
         hashtags: aiPrompt?.hashtags || [],
