@@ -1,6 +1,52 @@
 // MAJU Command Center — Dashboard Controller
 // Orchestrates all agents from a single bird's-eye view
 
+// --- Auth Gate ---
+// SHA-256 hash of the access code. To change the password:
+// 1. Open browser console
+// 2. Run: crypto.subtle.digest('SHA-256', new TextEncoder().encode('YOUR_NEW_PASSWORD')).then(b => console.log(Array.from(new Uint8Array(b)).map(x => x.toString(16).padStart(2,'0')).join('')))
+// 3. Replace the hash below
+const ACCESS_CODE_HASH = '5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8'; // default: "password"
+
+async function hashCode(code) {
+  const data = new TextEncoder().encode(code);
+  const buf = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(buf)).map(x => x.toString(16).padStart(2, '0')).join('');
+}
+
+async function handleLogin(e) {
+  e.preventDefault();
+  const input = document.getElementById('authPassword');
+  const error = document.getElementById('authError');
+  const hash = await hashCode(input.value);
+
+  if (hash === ACCESS_CODE_HASH) {
+    sessionStorage.setItem('maju_auth', '1');
+    document.getElementById('authGate').style.display = 'none';
+    document.getElementById('dashboardApp').style.display = 'block';
+    initDashboard();
+  } else {
+    error.textContent = 'Invalid access code';
+    input.value = '';
+    input.focus();
+  }
+  return false;
+}
+
+function handleLogout() {
+  sessionStorage.removeItem('maju_auth');
+  document.getElementById('authGate').style.display = 'flex';
+  document.getElementById('dashboardApp').style.display = 'none';
+}
+
+function checkAuth() {
+  if (sessionStorage.getItem('maju_auth') === '1') {
+    document.getElementById('authGate').style.display = 'none';
+    document.getElementById('dashboardApp').style.display = 'block';
+    initDashboard();
+  }
+}
+
 const DASHBOARD_CONFIG = {
   // Agent API endpoints — update these with actual backend URLs
   agents: {
@@ -25,11 +71,13 @@ let logEntries = [];
 
 // --- Initialization ---
 document.addEventListener('DOMContentLoaded', () => {
-  updateTimestamp();
-  loadDashboardData();
-  setInterval(updateTimestamp, 1000);
-  setInterval(loadDashboardData, DASHBOARD_CONFIG.refreshInterval);
+  checkAuth();
 });
+
+function initDashboard() {
+  updateTimestamp();
+  setInterval(updateTimestamp, 1000);
+}
 
 function updateTimestamp() {
   const el = document.getElementById('lastUpdated');
