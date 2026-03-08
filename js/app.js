@@ -282,6 +282,94 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     }
   }
 
+  // ─── Claude UGC Script Generator (for Arcads talking-head videos) ───
+  async function getClaudeUGCScript(videoType, avatar, product, userNotes) {
+    if (!apiKeys.claude) return null;
+
+    const relevantFeedback = feedbackLog
+      .filter((f) => f.videoType === videoType)
+      .slice(-20);
+    const approvals = relevantFeedback.filter((f) => f.action === 'approve');
+    const rejections = relevantFeedback.filter((f) => f.action === 'reject');
+
+    const systemPrompt = `You are a UGC ad script writer for MAJU, a wellness brand. You write short, punchy talking-head scripts for AI avatar videos.
+
+Product: Maju's Black Seed Oil 8oz — dark glass bottle, premium wellness oil
+Format: UGC talking-head ad (one person speaking directly to camera)
+Platform: Instagram Reels / TikTok (9:16 vertical)
+Duration: 30-60 seconds
+Tone: Authentic, conversational, like a real person sharing a discovery — NOT salesy or corporate
+
+The script is for an AI avatar who will speak the lines directly to camera. Write it as natural spoken dialogue.
+
+STRUCTURE:
+1. HOOK (first 3 seconds) — Stop the scroll. Ask a provocative question or make a bold claim.
+2. PROBLEM — Relate to the viewer's pain point (puffy face, inflammation, dull skin, low energy)
+3. DISCOVERY — "I found this..." or "I've been using..." — introduce Black Seed Oil naturally
+4. PROOF/BENEFITS — Share 2-3 specific benefits with conviction
+5. CTA — Clear call to action ("link in bio", "try it yourself", "save this")
+
+RULES:
+- Script should be 80-150 words (30-60 seconds spoken)
+- Use natural contractions (I'm, you're, don't)
+- Include 1-2 pauses or emphasis marks for natural delivery
+- NO hashtags in the script itself
+- Reference the product naturally, don't read the label
+- Make it feel like a genuine testimonial, not an ad read
+
+Return ONLY a JSON object with these fields:
+- "script": the full spoken script as a single string (with \\n for paragraph breaks)
+- "hookLine": the opening hook line (first sentence)
+- "duration": estimated duration in seconds
+- "tone": one-word tone descriptor (excited, calm, confident, conspiratorial, etc.)
+- "direction": brief visual/delivery direction for the avatar
+- "instagramCaption": ready-to-post Instagram caption (150-300 chars, NO hashtags)
+- "hashtags": array of 10-15 relevant hashtags (strings without #)
+- "reasoning": 1 sentence on what you optimized`;
+
+    const feedbackContext = relevantFeedback.length
+      ? `\n\nPast feedback for UGC videos (${relevantFeedback.length} entries):
+APPROVED — what worked:\n${approvals.map((f) => `- "${f.notes}"`).join('\n') || '(none yet)'}
+REJECTED — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).join('\n') || '(none yet)'}`
+      : '\n\nNo past feedback yet — use best practices for UGC talking-head ads.';
+
+    try {
+      const res = await fetch(backendUrl('/api/proxy/claude/messages'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-api-key-value': apiKeys.claude },
+        body: JSON.stringify({
+          model: 'claude-haiku-4-5-20251001',
+          max_tokens: 1024,
+          system: systemPrompt,
+          messages: [{
+            role: 'user',
+            content: `Generate a UGC talking-head ad script for Maju Black Seed Oil.${feedbackContext}\n\nUser notes: "${userNotes || 'No specific notes'}"`,
+          }],
+        }),
+      });
+      const data = await res.json();
+      if (data.content && data.content[0]) {
+        const text = data.content[0].text;
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          const parsed = JSON.parse(jsonMatch[0]);
+          if (!parsed.instagramCaption) {
+            parsed.instagramCaption = (parsed.hookLine || 'Black Seed Oil changed everything') + ' ✨\nTry Maju Black Seed Oil — your skin will thank you! 🖤\nLink in bio @majusuperfoods';
+          }
+          if (!parsed.hashtags || !parsed.hashtags.length) {
+            parsed.hashtags = ['blackseedoil','majusuperfoods','ugc','skincaretips','naturalremedy','wellness','antiinflammatory','glowup','healthylifestyle','selfcare','beautyhack','holistichealth'];
+          }
+          return parsed;
+        }
+        return { script: text, direction: '', reasoning: 'Raw response' };
+      }
+      return null;
+    } catch (err) {
+      console.error('[Claude UGC] Error:', err);
+      return null;
+    }
+  }
+
   // ─── Generate Video ───
   $('#submit-video').addEventListener('click', async () => {
     const type = $('#video-type').value;
@@ -295,12 +383,15 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     const notes = $('#notes').value.trim();
 
     // If Claude key is set, get AI-optimized prompt first
+    const isUGC = type === 'ugc-talking-head';
     let aiPrompt = null;
     if (apiKeys.claude) {
       const btn = $('#submit-video');
       btn.disabled = true;
-      btn.textContent = '🧠 Claude is optimizing your prompt…';
-      aiPrompt = await getClaudeOptimizedPrompt(type, avatar, product, notes);
+      btn.textContent = isUGC ? '🧠 Claude is writing your UGC script…' : '🧠 Claude is optimizing your prompt…';
+      aiPrompt = isUGC
+        ? await getClaudeUGCScript(type, avatar, product, notes)
+        : await getClaudeOptimizedPrompt(type, avatar, product, notes);
       btn.disabled = false;
       btn.textContent = '🚀 Generate & Send to Queue';
     }
@@ -310,6 +401,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
         id: Date.now().toString(36) + '-' + i,
         type,
         typeName: $('#video-type').selectedOptions[0].textContent,
+        pipeline: isUGC ? 'arcads' : 'kling', // which generation pipeline to use
         avatar,
         avatarName,
         product,
@@ -318,6 +410,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
         schedDate: postMode === 'schedule' ? schedDate : null,
         notes,
         aiPrompt, // Claude-optimized prompt (null if no key)
+        ugcScript: isUGC ? (aiPrompt?.script || notes || '') : null, // spoken script for Arcads
         instagramCaption: aiPrompt?.instagramCaption || '',
         hashtags: aiPrompt?.hashtags || [],
         version: i + 1,
@@ -366,9 +459,20 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       msg.textContent = text;
     }
 
-    // If no Higgsfield key, simulate the whole pipeline
+    // Check if any pending items are Arcads UGC pipeline
+    const pendingItems = queue.filter(q => q.pipelineStage === 'generate');
+    const hasArcadsItems = pendingItems.some(q => q.pipeline === 'arcads');
+    const hasKlingItems = pendingItems.some(q => q.pipeline !== 'arcads');
+
+    // Route Arcads UGC items to the Arcads pipeline
+    if (hasArcadsItems && apiKeys.arcads) {
+      runArcadsPipeline(steps, msg, setStage);
+      return;
+    }
+
+    // If no Higgsfield key (and not Arcads), simulate the whole pipeline
     console.log('[Pipeline] apiKeys.higgsfield =', apiKeys.higgsfield ? '(set)' : '(empty)', '| All keys:', Object.keys(apiKeys).filter(k => apiKeys[k]));
-    if (!apiKeys.higgsfield) {
+    if (!apiKeys.higgsfield && !hasArcadsItems) {
       let stage = 0;
       const sim = [
         '⚠️ Higgsfield API key not set — video generation simulated. Add key in Settings.',
@@ -394,8 +498,10 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       return;
     }
 
-    // Real pipeline: Generate → Stitch → Queue
-    runRealPipeline(steps, msg, setStage);
+    // Real Kling pipeline: Generate → Stitch → Queue
+    if (hasKlingItems) {
+      runRealPipeline(steps, msg, setStage);
+    }
   }
 
   // SOP v2.0 default Kling prompts for each segment
@@ -712,6 +818,145 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     }
   }
 
+  // ─── Arcads UGC Pipeline ───
+  // Generates talking-head videos via Arcads AI avatars
+  async function runArcadsPipeline(steps, msg, setStage) {
+    setStage(0, 'Generating UGC talking-head video via Arcads…');
+
+    const newItems = queue.filter(q => q.pipelineStage === 'generate' && q.pipeline === 'arcads');
+    if (!newItems.length) {
+      setStage(2, '⚠️ No Arcads items to generate.');
+      return;
+    }
+
+    for (const item of newItems) {
+      const script = item.ugcScript || item.aiPrompt?.script || item.notes || '';
+      if (!script) {
+        item.pipelineStage = 'failed';
+        item.status = 'failed';
+        msg.textContent = `⚠️ v${item.version}: No script provided for UGC video.`;
+        saveQueue();
+        continue;
+      }
+
+      msg.textContent = `v${item.version}: Submitting script to Arcads…`;
+      debugPanel(`[Arcads] v${item.version}: Submitting UGC video — script length: ${script.length} chars`);
+
+      // Build Arcads video request
+      const arcadsParams = {
+        script: script,
+        aspect_ratio: '9:16',
+      };
+
+      // Add actor ID if available from aiPrompt direction or config
+      if (item.aiPrompt?.actorId) arcadsParams.actor_id = item.aiPrompt.actorId;
+      if (item.aiPrompt?.tone) arcadsParams.tone = item.aiPrompt.tone;
+      if (item.aiPrompt?.language) arcadsParams.language = item.aiPrompt.language;
+
+      try {
+        const submitResult = await API.arcads.generateUGC(arcadsParams);
+        console.log('[Arcads] Submit result:', JSON.stringify(submitResult).slice(0, 300));
+
+        // Extract video ID from response (handle various response shapes)
+        const videoId = submitResult.id || submitResult.video_id || submitResult.videoId ||
+                        (submitResult.data && (submitResult.data.id || submitResult.data.video_id));
+
+        if (!videoId) {
+          const errMsg = submitResult.error || submitResult.message || 'No video ID returned';
+          debugPanel(`[Arcads] v${item.version}: Submit failed — ${errMsg}`);
+          debugPanel(`[Arcads] Full response: ${JSON.stringify(submitResult).slice(0, 500)}`);
+          item.pipelineStage = 'failed';
+          item.status = 'failed';
+          msg.textContent = `⚠️ v${item.version}: Arcads submit failed — ${errMsg}`;
+          saveQueue();
+          continue;
+        }
+
+        item.arcadsVideoId = videoId;
+        debugPanel(`[Arcads] v${item.version}: Video ID = ${videoId} — polling for completion…`);
+        msg.textContent = `v${item.version}: Arcads rendering video (ID: ${videoId})…`;
+
+        // Poll for completion (Arcads videos typically take 1-5 minutes)
+        let completed = false;
+        const MAX_POLLS = 120; // 120 * 5s = 10 minutes max
+        for (let attempt = 0; attempt < MAX_POLLS; attempt++) {
+          await new Promise(r => setTimeout(r, 5000));
+          const status = await API.arcads.getStatus(videoId);
+          const st = (status.status || status.state || '').toLowerCase();
+
+          if (attempt % 6 === 0) {
+            console.log(`[Arcads] v${item.version} poll #${attempt}: status=${st}`);
+            msg.textContent = `v${item.version}: Arcads rendering… (${Math.round(attempt * 5 / 60)}m elapsed)`;
+          }
+
+          if (st === 'completed' || st === 'done' || st === 'ready' || st === 'succeed') {
+            // Extract video URL from response
+            const videoUrl = status.video_url || status.url || status.download_url ||
+                            (status.data && (status.data.video_url || status.data.url || status.data.download_url)) ||
+                            (status.result && (status.result.video_url || status.result.url));
+
+            if (videoUrl) {
+              item.videoUrl = videoUrl;
+              item.stitchedVideoUrl = videoUrl; // Arcads produces a single final video, no stitching needed
+              item.pipelineStage = 'queue';
+              msg.textContent = `v${item.version}: Arcads video ready!`;
+              debugPanel(`[Arcads] v${item.version}: Video complete — ${videoUrl.slice(0, 80)}…`);
+              completed = true;
+            } else {
+              debugPanel(`[Arcads] v${item.version}: Status=done but no video URL found: ${JSON.stringify(status).slice(0, 300)}`);
+              item.pipelineStage = 'failed';
+              item.status = 'failed';
+              msg.textContent = `⚠️ v${item.version}: Arcads completed but no download URL found.`;
+            }
+            break;
+          }
+
+          if (st === 'failed' || st === 'error' || st === 'cancelled') {
+            const errDetail = status.error || status.message || status.reason || st;
+            debugPanel(`[Arcads] v${item.version}: Video failed — ${errDetail}`);
+            item.pipelineStage = 'failed';
+            item.status = 'failed';
+            msg.textContent = `⚠️ v${item.version}: Arcads video failed — ${errDetail}`;
+            break;
+          }
+        }
+
+        if (!completed && item.pipelineStage !== 'failed') {
+          debugPanel(`[Arcads] v${item.version}: Timed out after ${MAX_POLLS * 5}s`);
+          item.pipelineStage = 'failed';
+          item.status = 'failed';
+          msg.textContent = `⚠️ v${item.version}: Arcads timed out after 10 minutes.`;
+        }
+      } catch (err) {
+        console.error('[Arcads] Pipeline error:', err);
+        debugPanel(`[Arcads] v${item.version}: Error — ${err.message}`);
+        item.pipelineStage = 'failed';
+        item.status = 'failed';
+        msg.textContent = `⚠️ v${item.version}: Arcads error — ${err.message}`;
+      }
+
+      saveQueue();
+    }
+
+    // Final status
+    const succeeded = newItems.filter(i => i.pipelineStage === 'queue').length;
+    const failed = newItems.filter(i => i.pipelineStage === 'failed').length;
+
+    if (succeeded > 0) {
+      // Skip stitch step (step 1) — Arcads produces final videos directly
+      setStage(1, 'Stitch skipped — Arcads produces final video directly.');
+      setStage(2, `✓ Pipeline complete — ${succeeded} UGC video(s) ready for approval.`);
+      renderQueue();
+      renderTracker();
+      updateBadge();
+    } else {
+      setStage(1, '');
+      setStage(2, `⚠️ All ${failed} Arcads video(s) failed. Check API key and script.`);
+      renderTracker();
+      updateBadge();
+    }
+  }
+
   // ─── Queue Rendering ───
   function renderQueue(filter = 'all') {
     const list = $('#queue-list');
@@ -873,7 +1118,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       item.revisionCount = (item.revisionCount || 0) + 1;
       if (!item.revisionNotes) item.revisionNotes = [];
       item.revisionNotes.push(notes);
-      item.pipelineStage = 'generate'; // back to Kling for revision
+      item.pipelineStage = 'generate'; // back to generation pipeline for revision
 
       // Save to feedback log for AI learning
       saveFeedback({
@@ -1604,6 +1849,91 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
         if (!apiKeys.arcads) return { ok: false, error: 'No API key set' };
         try {
           const res = await fetch(backendUrl(`/api/proxy/arcads/videos/${encodeURIComponent(videoId)}`), {
+            headers: { 'x-api-key-value': apiKeys.arcads },
+          });
+          const data = await res.json();
+          return { ok: res.ok, ...data };
+        } catch (err) {
+          return { ok: false, error: err.message };
+        }
+      },
+
+      async createProduct(params) {
+        if (!apiKeys.arcads) return { ok: false, error: 'No API key set' };
+        try {
+          const res = await fetch(backendUrl('/api/proxy/arcads/products'), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-api-key-value': apiKeys.arcads },
+            body: JSON.stringify(params),
+          });
+          const data = await res.json();
+          return { ok: res.ok, ...data };
+        } catch (err) {
+          return { ok: false, error: err.message };
+        }
+      },
+
+      async listProducts() {
+        if (!apiKeys.arcads) return { ok: false, error: 'No API key set' };
+        try {
+          const res = await fetch(backendUrl('/api/proxy/arcads/products'), {
+            headers: { 'x-api-key-value': apiKeys.arcads },
+          });
+          const data = await res.json();
+          return { ok: res.ok, ...data };
+        } catch (err) {
+          return { ok: false, error: err.message };
+        }
+      },
+
+      async createFolder(params) {
+        if (!apiKeys.arcads) return { ok: false, error: 'No API key set' };
+        try {
+          const res = await fetch(backendUrl('/api/proxy/arcads/folders'), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-api-key-value': apiKeys.arcads },
+            body: JSON.stringify(params),
+          });
+          const data = await res.json();
+          return { ok: res.ok, ...data };
+        } catch (err) {
+          return { ok: false, error: err.message };
+        }
+      },
+
+      async listSituations(page) {
+        if (!apiKeys.arcads) return { ok: false, error: 'No API key set' };
+        try {
+          const qs = page ? `?page=${page}` : '';
+          const res = await fetch(backendUrl(`/api/proxy/arcads/situations${qs}`), {
+            headers: { 'x-api-key-value': apiKeys.arcads },
+          });
+          const data = await res.json();
+          return { ok: res.ok, ...data };
+        } catch (err) {
+          return { ok: false, error: err.message };
+        }
+      },
+
+      async createScript(params) {
+        if (!apiKeys.arcads) return { ok: false, error: 'No API key set' };
+        try {
+          const res = await fetch(backendUrl('/api/proxy/arcads/scripts'), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-api-key-value': apiKeys.arcads },
+            body: JSON.stringify(params),
+          });
+          const data = await res.json();
+          return { ok: res.ok, ...data };
+        } catch (err) {
+          return { ok: false, error: err.message };
+        }
+      },
+
+      async getScript(scriptId) {
+        if (!apiKeys.arcads) return { ok: false, error: 'No API key set' };
+        try {
+          const res = await fetch(backendUrl(`/api/proxy/arcads/scripts/${encodeURIComponent(scriptId)}`), {
             headers: { 'x-api-key-value': apiKeys.arcads },
           });
           const data = await res.json();

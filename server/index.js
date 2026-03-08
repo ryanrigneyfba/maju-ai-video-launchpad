@@ -915,6 +915,106 @@ app.get('/api/proxy/arcads/videos/:videoId', async (req, res) => {
   }
 });
 
+// Arcads: Create product
+app.post('/api/proxy/arcads/products', async (req, res) => {
+  const apiKey = req.headers['x-api-key-value'];
+  if (!apiKey) return res.status(400).json({ error: 'Missing API key' });
+  try {
+    const result = await proxyRequest(
+      'https://api.arcads.ai/v1/products',
+      'POST',
+      { 'Authorization': `Basic ${apiKey}`, 'Content-Type': 'application/json' },
+      req.body
+    );
+    res.status(result.status).json(result.data);
+  } catch (err) {
+    res.status(502).json({ error: err.message });
+  }
+});
+
+// Arcads: List products
+app.get('/api/proxy/arcads/products', async (req, res) => {
+  const apiKey = req.headers['x-api-key-value'];
+  if (!apiKey) return res.status(400).json({ error: 'Missing API key' });
+  try {
+    const result = await proxyRequest(
+      'https://api.arcads.ai/v1/products',
+      'GET',
+      { 'Authorization': `Basic ${apiKey}` }
+    );
+    res.status(result.status).json(result.data);
+  } catch (err) {
+    res.status(502).json({ error: err.message });
+  }
+});
+
+// Arcads: Create folder within a product
+app.post('/api/proxy/arcads/folders', async (req, res) => {
+  const apiKey = req.headers['x-api-key-value'];
+  if (!apiKey) return res.status(400).json({ error: 'Missing API key' });
+  try {
+    const result = await proxyRequest(
+      'https://api.arcads.ai/v1/folders',
+      'POST',
+      { 'Authorization': `Basic ${apiKey}`, 'Content-Type': 'application/json' },
+      req.body
+    );
+    res.status(result.status).json(result.data);
+  } catch (err) {
+    res.status(502).json({ error: err.message });
+  }
+});
+
+// Arcads: List situations (paginated)
+app.get('/api/proxy/arcads/situations', async (req, res) => {
+  const apiKey = req.headers['x-api-key-value'];
+  if (!apiKey) return res.status(400).json({ error: 'Missing API key' });
+  const qs = req.url.includes('?') ? req.url.split('?')[1] : '';
+  try {
+    const result = await proxyRequest(
+      `https://api.arcads.ai/v1/situations${qs ? '?' + qs : ''}`,
+      'GET',
+      { 'Authorization': `Basic ${apiKey}` }
+    );
+    res.status(result.status).json(result.data);
+  } catch (err) {
+    res.status(502).json({ error: err.message });
+  }
+});
+
+// Arcads: Create script
+app.post('/api/proxy/arcads/scripts', async (req, res) => {
+  const apiKey = req.headers['x-api-key-value'];
+  if (!apiKey) return res.status(400).json({ error: 'Missing API key' });
+  try {
+    const result = await proxyRequest(
+      'https://api.arcads.ai/v1/scripts',
+      'POST',
+      { 'Authorization': `Basic ${apiKey}`, 'Content-Type': 'application/json' },
+      req.body
+    );
+    res.status(result.status).json(result.data);
+  } catch (err) {
+    res.status(502).json({ error: err.message });
+  }
+});
+
+// Arcads: Get script by ID
+app.get('/api/proxy/arcads/scripts/:scriptId', async (req, res) => {
+  const apiKey = req.headers['x-api-key-value'];
+  if (!apiKey) return res.status(400).json({ error: 'Missing API key' });
+  try {
+    const result = await proxyRequest(
+      `https://api.arcads.ai/v1/scripts/${encodeURIComponent(req.params.scriptId)}`,
+      'GET',
+      { 'Authorization': `Basic ${apiKey}` }
+    );
+    res.status(result.status).json(result.data);
+  } catch (err) {
+    res.status(502).json({ error: err.message });
+  }
+});
+
 // ── Creatify Proxy ──
 app.post('/api/proxy/creatify/gen-image', async (req, res) => {
   const apiId = req.headers['x-creatify-id'];
