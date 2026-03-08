@@ -1285,7 +1285,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
         item.instagramCaption = e.target.value;
       } else if (e.target.classList.contains('hashtags-input')) {
         item.hashtags = e.target.value.split(',').map(t => t.trim()).filter(Boolean)
-      } else { return; }revert file
+      } else { return; }
       clearTimeout(_queueSaveTimer);
       _queueSaveTimer = setTimeout(() => saveQueue(), 300);
     });
