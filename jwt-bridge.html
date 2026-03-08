@@ -4,27 +4,20 @@
 <body>
 <script>
 /**
- * JWT Bridge v1.0
- * Receives JWT from parent (higgsfield.ai) via postMessage
+ * JWT Bridge v2.0
+ * Two relay modes:
+ * 1. URL hash: reads token from location.hash on load (primary)
+ * 2. postMessage: receives jwt-relay messages from parent (fallback)
  * Forwards to backend proxy via fetch (CORS-allowed from github.io)
  */
 (function() {
   'use strict';
-  
+
   var PROXY = 'https://vekraapzv3.us-east-1.awsapprunner.com';
   var ALLOWED_ORIGIN = 'https://higgsfield.ai';
-  
-  window.addEventListener('message', function(event) {
-    // Only accept from higgsfield.ai
-    if (event.origin !== ALLOWED_ORIGIN) return;
-    
-    var data = event.data;
-    if (!data || data.type !== 'jwt-relay') return;
-    
-    var t = data.payload;
+
+  function sendToProxy(t, source, origin) {
     if (!t || t.length < 50) return;
-    
-    // Send to proxy
     fetch(PROXY + '/api/jwt-store', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -32,28 +25,40 @@
     })
     .then(function(res) { return res.json(); })
     .then(function(r) {
-      // Notify parent of success
-      event.source.postMessage({
-        type: 'jwt-relay-ack',
-        ok: true,
-        valid: r.valid
-      }, event.origin);
+      document.title = 'BRIDGE:ok:valid=' + r.valid;
+      if (source && origin) {
+        source.postMessage({ type: 'jwt-relay-ack', ok: true, valid: r.valid }, origin);
+      }
     })
     .catch(function(err) {
-      event.source.postMessage({
-        type: 'jwt-relay-ack',
-        ok: false,
-        error: err.message
-      }, event.origin);
+      document.title = 'BRIDGE:err:' + err.message;
+      if (source && origin) {
+        source.postMessage({ type: 'jwt-relay-ack', ok: false, error: err.message }, origin);
+      }
     });
+  }
+
+  // Mode 1: URL hash (primary)
+  var hash = location.hash;
+  if (hash && hash.length > 50) {
+    var token = decodeURIComponent(hash.substring(1));
+    sendToProxy(token, null, null);
+  }
+
+  // Mode 2: postMessage listener (fallback)
+  window.addEventListener('message', function(event) {
+    if (event.origin !== ALLOWED_ORIGIN) return;
+    var data = event.data;
+    if (!data || data.type !== 'jwt-relay') return;
+    sendToProxy(data.payload, event.source, event.origin);
   });
-  
+
   // Signal ready to parent
   if (window.parent !== window) {
     window.parent.postMessage({ type: 'jwt-bridge-ready' }, '*');
   }
 })();
 </script>
-<p style="font-size:11px;color:#999;">MAJU JWT Bridge v1.0</p>
+<p style="font-size:11px;color:#999;">MAJU JWT Bridge v2.0</p>
 </body>
 </html>
