@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MAJU Command Center</title>
+  <link rel="stylesheet" href="css/dashboard.css">
+</head>
+<body>
+  <header class="header">
+    <div class="header-left">
+      <h1 class="logo">MAJU <span class="logo-accent">Command Center</span></h1>
+      <span class="header-subtitle">Agent Orchestration Dashboard</span>
+    </div>
+    <div class="header-right">
+      <span class="status-indicator" id="systemStatus">
+        <span class="status-dot"></span>
+        <span id="systemStatusText">System Online</span>
+      </span>
+      <span class="timestamp" id="lastUpdated"></span>
+    </div>
+  </header>
+
+  <main class="dashboard">
+    <!-- Agent Overview Cards -->
+    <section class="agent-grid">
+      <!-- IG Research Agent Card -->
+      <div class="agent-card" id="igResearchCard" data-agent="ig-research">
+        <div class="agent-header">
+          <div class="agent-icon">🔬</div>
+          <div class="agent-info">
+            <h2>IG Research Agent</h2>
+            <p class="agent-desc">Instagram competitive intelligence & content strategy</p>
+          </div>
+          <div class="agent-status" id="igStatus">
+            <span class="status-badge idle">Idle</span>
+          </div>
+        </div>
+        <div class="agent-metrics">
+          <div class="metric">
+            <span class="metric-value" id="igPostCount">0</span>
+            <span class="metric-label">Posts Scraped</span>
+          </div>
+          <div class="metric">
+            <span class="metric-value" id="igHookCount">0</span>
+            <span class="metric-label">Hooks Found</span>
+          </div>
+          <div class="metric">
+            <span class="metric-value" id="igPatternCount">0</span>
+            <span class="metric-label">Patterns</span>
+          </div>
+          <div class="metric">
+            <span class="metric-value" id="igBriefCount">0</span>
+            <span class="metric-label">Briefs</span>
+          </div>
+        </div>
+        <div class="agent-actions">
+          <button class="btn btn-primary" onclick="runCommand('ig-research', 'run_research_cycle')">
+            Run Research Cycle
+          </button>
+          <button class="btn btn-secondary" onclick="runCommand('ig-research', 'generate_briefs')">
+            Generate Briefs
+          </button>
+          <button class="btn btn-ghost" onclick="showAgentDetail('ig-research')">
+            View Details →
+          </button>
+        </div>
+        <div class="agent-last-run">
+          <span>Last cycle: </span><span id="igLastCycle">Never</span>
+        </div>
+      </div>
+
+      <!-- AI Video Launchpad Card -->
+      <div class="agent-card" id="videoLaunchpadCard" data-agent="video-launchpad">
+        <div class="agent-header">
+          <div class="agent-icon">🎬</div>
+          <div class="agent-info">
+            <h2>AI Video Launchpad</h2>
+            <p class="agent-desc">AI video generation, stitching & publishing pipeline</p>
+          </div>
+          <div class="agent-status" id="videoStatus">
+            <span class="status-badge idle">Idle</span>
+          </div>
+        </div>
+        <div class="agent-metrics">
+          <div class="metric">
+            <span class="metric-value" id="videoJobCount">0</span>
+            <span class="metric-label">Jobs Run</span>
+          </div>
+          <div class="metric">
+            <span class="metric-value" id="videoClipCount">0</span>
+            <span class="metric-label">Clips Made</span>
+          </div>
+          <div class="metric">
+            <span class="metric-value" id="videoQueueCount">0</span>
+            <span class="metric-label">In Queue</span>
+          </div>
+          <div class="metric">
+            <span class="metric-value" id="videoPublished">0</span>
+            <span class="metric-label">Published</span>
+          </div>
+        </div>
+        <div class="agent-actions">
+          <button class="btn btn-primary" onclick="openVideoLaunchpad()">
+            Open Launchpad
+          </button>
+          <button class="btn btn-ghost" onclick="showAgentDetail('video-launchpad')">
+            View Details →
+          </button>
+        </div>
+        <div class="agent-last-run">
+          <span>Backend: </span><span id="videoBackendStatus">Checking...</span>
+        </div>
+      </div>
+
+      <!-- Future Agent Placeholder -->
+      <div class="agent-card agent-card-placeholder" id="futureAgentCard">
+        <div class="agent-header">
+          <div class="agent-icon">➕</div>
+          <div class="agent-info">
+            <h2>Add New Agent</h2>
+            <p class="agent-desc">Expand your automation with additional agents</p>
+          </div>
+        </div>
+        <div class="agent-placeholder-ideas">
+          <span class="idea-tag">Content Scheduler</span>
+          <span class="idea-tag">Analytics Tracker</span>
+          <span class="idea-tag">DM Responder</span>
+          <span class="idea-tag">UGC Finder</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Command Console -->
+    <section class="command-console">
+      <div class="console-header">
+        <h3>Command Console</h3>
+        <button class="btn btn-ghost btn-sm" onclick="clearLog()">Clear</button>
+      </div>
+      <div class="console-log" id="consoleLog">
+        <div class="log-entry log-system">System initialized. Ready for commands.</div>
+      </div>
+      <div class="console-input-row">
+        <select id="agentSelect" class="console-select">
+          <option value="ig-research">IG Research Agent</option>
+          <option value="video-launchpad">Video Launchpad</option>
+        </select>
+        <input type="text" id="commandInput" class="console-input"
+               placeholder="Type a command or ask a question..."
+               onkeydown="if(event.key==='Enter') sendCommand()">
+        <button class="btn btn-primary" onclick="sendCommand()">Send</button>
+      </div>
+    </section>
+
+    <!-- Detail Panels (shown when clicking View Details) -->
+    <section class="detail-panel" id="detailPanel" style="display:none;">
+      <div class="detail-header">
+        <h3 id="detailTitle">Agent Details</h3>
+        <button class="btn btn-ghost" onclick="hideDetail()">✕ Close</button>
+      </div>
+      <div class="detail-content" id="detailContent"></div>
+    </section>
+
+    <!-- Research Insights Section -->
+    <section class="insights-grid">
+      <div class="insight-card">
+        <h3>Top Hooks</h3>
+        <div id="topHooksList" class="insight-list">
+          <p class="empty-state">Run a research cycle to discover hooks</p>
+        </div>
+      </div>
+      <div class="insight-card">
+        <h3>Content Patterns</h3>
+        <div id="patternsList" class="insight-list">
+          <p class="empty-state">Run a research cycle to detect patterns</p>
+        </div>
+      </div>
+      <div class="insight-card">
+        <h3>Pending Briefs</h3>
+        <div id="briefsList" class="insight-list">
+          <p class="empty-state">Generate briefs from research data</p>
+        </div>
+      </div>
+      <div class="insight-card">
+        <h3>Competitor Landscape</h3>
+        <div id="competitorList" class="insight-list">
+          <p class="empty-state">Scrape competitors to see stats</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="js/dashboard.js"></script>
+</body>
+</html>

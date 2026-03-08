@@ -1113,10 +1113,115 @@ app.use(express.static(path.join(__dirname, '..'), {
   },
 }));
 
+
+// âââ Dashboard & IG Research Agent API âââ
+// Serve master dashboard
+app.use('/dashboard', express.static(path.join(__dirname, '..', 'dashboard')));
+
+// Health check for dashboard
+app.get('/health', (req, res) => res.json({ status: 'ok', service: 'maju-backend' }));
+
+// IG Research Agent proxy â reads from agent's SQLite DB directly
+const igResearchDbPath = path.join(__dirname, '..', 'ig-research-agent', 'data', 'research.db');
+
+app.post('/api/ig-research/:tool', (req, res) => {
+  try {
+    let Database;
+    try {
+      Database = require('better-sqlite3');
+    } catch {
+      return res.status(503).json({ error: 'better-sqlite3 not installed in server' });
+    }
+
+    if (!fs.existsSync(igResearchDbPath)) {
+      return res.status(404).json({ error: 'Research database not found. Run a research cycle first.' });
+    }
+
+    const db = new Database(igResearchDbPath, { readonly: true });
+    db.pragma('journal_mode = WAL');
+    const tool = req.params.tool;
+    let result;
+
+    switch (tool) {
+      case 'get_dashboard_data': {
+        const postCount = db.prepare('SELECT COUNT(*) as count FROM posts').get();
+        const hookCount = db.prepare('SELECT COUNT(*) as count FROM hooks').get();
+        const patternCount = db.prepare('SELECT COUNT(*) as count FROM patterns').get();
+        const briefCount = db.prepare('SELECT COUNT(*) as count FROM content_briefs').get();
+        const cycles = db.prepare('SELECT * FROM research_cycles ORDER BY id DESC LIMIT 10').all();
+        const topHooks = db.prepare(`
+          SELECT h.*, p.caption, p.owner_username, p.engagement_rate as post_engagement, p.likes, p.views, p.post_type
+          FROM hooks h JOIN posts p ON h.post_id = p.id
+          ORDER BY h.effectiveness_score DESC LIMIT 5
+        `).all();
+        const topPatterns = db.prepare('SELECT * FROM patterns ORDER BY avg_engagement_rate DESC LIMIT 5').all();
+        const topBriefs = db.prepare("SELECT * FROM content_briefs WHERE status = 'draft' ORDER BY priority_score DESC LIMIT 5").all();
+        const competitors = db.prepare(`
+          SELECT owner_username, COUNT(*) as total_posts, AVG(engagement_rate) as avg_engagement,
+            MAX(engagement_rate) as max_engagement, AVG(likes) as avg_likes, AVG(views) as avg_views
+          FROM posts WHERE source = 'competitor' GROUP BY owner_username ORDER BY avg_engagement DESC
+        `).all();
+        const topPosts = db.prepare('SELECT * FROM posts ORDER BY engagement_rate DESC LIMIT 5').all();
+        result = {
+          overview: { totalPosts: postCount.count, totalHooks: hookCount.count, totalPatterns: patternCount.count, totalBriefs: briefCount.count, totalCycles: cycles.length, lastCycle: cycles[0] || null },
+          topHooks, topPatterns, pendingBriefs: topBriefs, competitorLandscape: competitors, topPosts,
+        };
+        break;
+      }
+      case 'get_research_status': {
+        const postCount = db.prepare('SELECT COUNT(*) as count FROM posts').get();
+        const hookCount = db.prepare('SELECT COUNT(*) as count FROM hooks').get();
+        const patternCount = db.prepare('SELECT COUNT(*) as count FROM patterns').get();
+        const briefCount = db.prepare('SELECT COUNT(*) as count FROM content_briefs').get();
+        const cycles = db.prepare('SELECT * FROM research_cycles ORDER BY id DESC LIMIT 5').all();
+        result = { database: { totalPosts: postCount.count, totalHooks: hookCount.count, totalPatterns: patternCount.count, totalBriefs: briefCount.count }, recentCycles: cycles };
+        break;
+      }
+      case 'get_top_posts': {
+        result = db.prepare('SELECT * FROM posts ORDER BY engagement_rate DESC LIMIT 20').all();
+        break;
+      }
+      case 'get_hooks': {
+        result = db.prepare(`
+          SELECT h.*, p.caption, p.owner_username, p.engagement_rate as post_engagement
+          FROM hooks h JOIN posts p ON h.post_id = p.id
+          ORDER BY h.effectiveness_score DESC LIMIT 20
+        `).all();
+        break;
+      }
+      case 'get_patterns': {
+        result = db.prepare('SELECT * FROM patterns ORDER BY avg_engagement_rate DESC LIMIT 20').all();
+        break;
+      }
+      case 'get_content_briefs': {
+        result = db.prepare('SELECT * FROM content_briefs ORDER BY priority_score DESC LIMIT 10').all();
+        break;
+      }
+      case 'get_competitor_stats': {
+        result = db.prepare(`
+          SELECT owner_username, COUNT(*) as total_posts, AVG(engagement_rate) as avg_engagement,
+            AVG(likes) as avg_likes, AVG(views) as avg_views
+          FROM posts WHERE source = 'competitor' GROUP BY owner_username ORDER BY avg_engagement DESC
+        `).all();
+        break;
+      }
+      default:
+        db.close();
+        return res.status(400).json({ error: `Unknown tool: ${tool}` });
+    }
+
+    db.close();
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // âââ Start âââ
 app.listen(PORT, () => {
   console.log(`MAJU Backend running on http://localhost:${PORT}`);
   console.log(`  Frontend:  http://localhost:${PORT} (serves index.html)`);
+  console.log(`  Dashboard: http://localhost:${PORT}/dashboard`);
   console.log(`  POST /api/upload         â Upload clips`);
   console.log(`  POST /api/stitch         â Stitch clips into final video`);
   console.log(`  POST /api/pipeline       â Upload + stitch in one step`);
