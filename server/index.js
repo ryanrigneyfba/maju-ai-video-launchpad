@@ -490,7 +490,7 @@ function downloadFile(url, destPath) {
         // Follow redirects
         if (response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) {
           doRequest(response.headers.location);
-          return;
+          return
         }
         if (response.statusCode !== 200) {
           reject(new Error(`HTTP ${response.statusCode} downloading ${requestUrl}`));
@@ -803,12 +803,31 @@ app.get('/api/proxy/metricool/posts', async (req, res) => {
 app.post('/api/proxy/metricool/posts', async (req, res) => {
   const apiKey = req.headers['x-api-key-value'];
   if (!apiKey) return res.status(400).json({ error: 'Missing API key' });
+  const blogId = req.query.blogId || '';
+  const userId = req.query.userId || '';
   try {
     const result = await proxyRequest(
-      'https://app.metricool.com/api/v2/scheduler/posts',
+      `https://app.metricool.com/api/v2/scheduler/posts?blogId=${blogId}&userId=${userId}&integrationSource=MCP`,
       'POST',
       { 'X-Mc-Auth': apiKey, 'Content-Type': 'application/json' },
       req.body
+    );
+    res.status(result.status).json(result.data);
+  } catch (err) {
+    res.status(502).json({ error: err.message });
+  }
+});
+
+app.get('/api/proxy/metricool/brands', async (req, res) => {
+  const apiKey = req.headers['x-api-key-value'];
+  if (!apiKey) return res.status(400).json({ error: 'Missing API key' });
+  const userId = req.query.userId || '';
+  try {
+    const result = await proxyRequest(
+      `https://app.metricool.com/api/v2/settings/brands?userId=${userId}&integrationSource=MCP`,
+      'GET',
+      { 'X-Mc-Auth': apiKey },
+      null
     );
     res.status(result.status).json(result.data);
   } catch (err) {
