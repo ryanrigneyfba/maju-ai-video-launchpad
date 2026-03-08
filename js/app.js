@@ -1289,7 +1289,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       clearTimeout(_queueSaveTimer);
       _queueSaveTimer = setTimeout(() => saveQueue(), 300);
     });
-  
+  }  
   });
 
   // ─── Helpers ──
