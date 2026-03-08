@@ -1,9 +1,9 @@
-/* ═══════════════════════════════════════════
-   MAJU AI Video Launchpad — Backend Server
+/* âââââââââââââââââââââââââââââââââââââââââââ
+   MAJU AI Video Launchpad â Backend Server
    FFmpeg stitching + API proxy + job management
    Deployed on AWS App Runner
        Auth: Authorization Key format (v2)
-   ═══════════════════════════════════════════ */
+   âââââââââââââââââââââââââââââââââââââââââââ */
 
 // chore: trigger deploy
 const express = require('express');
@@ -17,7 +17,7 @@ const fs = require('fs');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// ─── Directories ───
+// âââ Directories âââ
 const UPLOAD_DIR = path.join(__dirname, 'uploads');
 const OUTPUT_DIR = path.join(__dirname, 'output');
 const AUDIO_DIR = path.join(__dirname, 'audio');
@@ -25,12 +25,12 @@ fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 fs.mkdirSync(OUTPUT_DIR, { recursive: true });
 fs.mkdirSync(AUDIO_DIR, { recursive: true });
 
-// ─── Middleware ───
+// âââ Middleware âââ
 app.use(cors());
 app.use(express.json());
 app.use('/output', express.static(OUTPUT_DIR));
 
-// ─── File Upload ───
+// âââ File Upload âââ
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, UPLOAD_DIR),
   filename: (req, file, cb) => {
@@ -49,22 +49,22 @@ const upload = multer({
   },
 });
 
-// ─── Job Tracking ───
+// âââ Job Tracking âââ
 const jobs = new Map();
 
-// ─── SOP Segment Definitions ───
+// âââ SOP Segment Definitions âââ
 // Based on Selfcare Snack Reel SOP
 const SOP_SEGMENTS = {
   'selfcare-snack-reel': [
     { name: 'hook', label: 'Hook (0-3s)', maxDuration: 3 },
-    { name: 'reveal', label: 'Reveal — Ingredients + Pour (3-6s)', maxDuration: 3 },
-    { name: 'demo', label: 'Demo — Eating the Snack (6-11s)', maxDuration: 5 },
+    { name: 'reveal', label: 'Reveal â Ingredients + Pour (3-6s)', maxDuration: 3 },
+    { name: 'demo', label: 'Demo â Eating the Snack (6-11s)', maxDuration: 5 },
     { name: 'result', label: 'Result + Benefits (11-13s)', maxDuration: 2 },
-    { name: 'glow', label: 'Glow — Result + CTA (13-15s)', maxDuration: 2 },
+    { name: 'glow', label: 'Glow â Result + CTA (13-15s)', maxDuration: 2 },
   ],
 };
 
-// ─── Persistent Config (API keys synced across devices) ───
+// âââ Persistent Config (API keys synced across devices) âââ
 const CONFIG_PATH = path.join(__dirname, '.maju-config.json');
 
 function readConfig() {
@@ -76,7 +76,7 @@ function writeConfig(data) {
   fs.writeFileSync(CONFIG_PATH, JSON.stringify(data, null, 2));
 }
 
-// ─── Debug Log (in-memory ring buffer) ───
+// âââ Debug Log (in-memory ring buffer) âââ
 const DEBUG_LOG = [];
 const DEBUG_MAX = 200;
 function debugLog(tag, data) {
@@ -90,7 +90,7 @@ app.get('/api/debug/log', (req, res) => {
   res.json(DEBUG_LOG.slice(-(parseInt(req.query.n) || 50)));
 });
 
-// ─── Routes ───
+// âââ Routes âââ
 
 // Get stored API keys
 app.get('/api/config', (req, res) => {
@@ -253,7 +253,7 @@ app.get('/api/download/:id', (req, res) => {
   res.download(filePath);
 });
 
-// ─── FFmpeg Stitching Logic ───
+// âââ FFmpeg Stitching Logic âââ
 function runStitch(jobId, clips, outputPath, options = {}) {
   const job = jobs.get(jobId);
   const resolution = options.resolution || '1080x1920'; // 9:16 vertical default
@@ -284,7 +284,7 @@ function runStitch(jobId, clips, outputPath, options = {}) {
     }).join('\n');
     fs.writeFileSync(srtPath, srtContent);
 
-    // Burn subtitles with bold white text, black outline — reel-style captions
+    // Burn subtitles with bold white text, black outline â reel-style captions
     const escapedSrt = srtPath.replace(/\\/g, '/').replace(/:/g, '\\:');
     vfParts.push(
       `subtitles='${escapedSrt}':force_style='FontSize=22,FontName=Arial,Bold=1,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,Outline=2,Shadow=1,Alignment=2,MarginV=80'`
@@ -373,7 +373,7 @@ function formatSrtTime(seconds) {
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')},${String(ms).padStart(3, '0')}`;
 }
 
-// ─── Audio / Music Management ───
+// âââ Audio / Music Management âââ
 const audioStorage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, AUDIO_DIR),
   filename: (req, file, cb) => {
@@ -421,11 +421,11 @@ app.delete('/api/audio/:filename', (req, res) => {
   res.json({ ok: true });
 });
 
-// ─── Auto-Stitch from URLs ───
+// âââ Auto-Stitch from URLs âââ
 // Downloads video clips from URLs (e.g. Higgsfield output) and stitches them automatically
 app.post('/api/auto-stitch', async (req, res) => {
   const { clips, options = {} } = req.body;
-  // clips: array of { url, label } — each is a video URL to download
+  // clips: array of { url, label } â each is a video URL to download
   if (!clips || !clips.length) {
     return res.status(400).json({ error: 'No clips provided' });
   }
@@ -507,7 +507,7 @@ function downloadFile(url, destPath) {
   });
 }
 
-// ─── API Proxy Routes ───
+// âââ API Proxy Routes âââ
 // Proxy third-party API calls to avoid CORS issues from the browser.
 // Frontend sends API keys in x-api-key-value header; backend forwards them properly.
 
@@ -549,7 +549,7 @@ function proxyRequest(targetUrl, method, headers, body) {
   });
 }
 
-// ── Claude (Anthropic) Proxy — AI Learning Loop ──
+// ââ Claude (Anthropic) Proxy â AI Learning Loop ââ
 app.post('/api/proxy/claude/messages', async (req, res) => {
   const apiKey = req.headers['x-api-key-value'];
   if (!apiKey) return res.status(400).json({ error: 'Missing Claude API key' });
@@ -570,7 +570,7 @@ app.post('/api/proxy/claude/messages', async (req, res) => {
   }
 });
 
-// ── Higgsfield Proxy ──
+// ââ Higgsfield Proxy ââ
 // API: https://platform.higgsfield.ai
 // Auth: Authorization: Key KEY_ID:KEY_SECRET
 // Status polling: /requests/{request_id}/status
@@ -587,20 +587,42 @@ function hfAuthHeaders(req) {
   };
 }
 
+// V1 Auth: separate hf-api-key + hf-secret headers (for Soul, motions, custom-references)
+function hfV1AuthHeaders(req) {
+  const apiKey = req.headers['x-api-key-value'] || '';
+  const apiSecret = req.headers['x-api-secret-value'] || '';
+  return {
+    'hf-api-key': apiKey,
+    'hf-secret': apiSecret,
+    'Content-Type': 'application/json',
+  };
+}
+
+// Detect V1 endpoints that need V1 auth and params wrapper
+function isV1Endpoint(endpoint) {
+  const ep = (endpoint || '').replace(/^\/+/, '');
+  return ep.startsWith('v1/');
+}
+
 app.post('/api/proxy/higgsfield/generate', async (req, res) => {
   const apiKey = req.headers['x-api-key-value'];
-  const apiSecret = req.headers['x-api-secret-value'];
   if (!apiKey) return res.status(400).json({ error: 'Missing Higgsfield API key' });
+
   const { endpoint, input } = req.body;
   const urlPath = (endpoint || '').replace(/^\/+/, '');
-  const credential = apiSecret ? `${apiKey}:${apiSecret}` : apiKey;
-  debugLog('hf-generate-req', { url: `https://platform.higgsfield.ai/${urlPath}`, auth: `Key ${credential.slice(0, 8)}...`, body: JSON.stringify(input).slice(0, 300) });
+  const useV1 = isV1Endpoint(endpoint);
+  const headers = useV1 ? hfV1AuthHeaders(req) : hfAuthHeaders(req);
+  // V1 endpoints require { params: { ...input } } wrapper; V2 sends input flat
+  const body = useV1 ? { params: input || {} } : (input || {});
+
+  debugLog('hf-generate-req', { url: 'https://platform.higgsfield.ai/' + urlPath, v1: useV1, bodyPreview: JSON.stringify(body).slice(0, 300) });
+
   try {
     const result = await proxyRequest(
-      `https://platform.higgsfield.ai/${urlPath}`,
+      'https://platform.higgsfield.ai/' + urlPath,
       'POST',
-      hfAuthHeaders(req),
-      input || {}
+      headers,
+      body
     );
     debugLog('hf-generate-res', { status: result.status, data: JSON.stringify(result.data).slice(0, 500) });
     res.status(result.status).json(result.data);
@@ -648,7 +670,7 @@ app.get('/api/proxy/higgsfield/status/:requestId', async (req, res) => {
   }
 });
 
-// ── Higgsfield Soul IDs (Character References) ──
+// ââ Higgsfield Soul IDs (Character References) ââ
 app.get('/api/proxy/higgsfield/soul-ids', async (req, res) => {
   const apiKey = req.headers['x-api-key-value'];
   if (!apiKey) return res.status(400).json({ error: 'Missing Higgsfield API key' });
@@ -668,7 +690,7 @@ app.get('/api/proxy/higgsfield/soul-ids', async (req, res) => {
   }
 });
 
-// ── Higgsfield Motions ──
+// ââ Higgsfield Motions ââ
 app.get('/api/proxy/higgsfield/motions', async (req, res) => {
   const apiKey = req.headers['x-api-key-value'];
   if (!apiKey) return res.status(400).json({ error: 'Missing Higgsfield API key' });
@@ -686,7 +708,7 @@ app.get('/api/proxy/higgsfield/motions', async (req, res) => {
   }
 });
 
-// ── Kling AI Proxy ──
+// ââ Kling AI Proxy ââ
 // API: https://api-singapore.klingai.com
 // Auth: JWT (HS256) generated from AccessKey + SecretKey
 
@@ -783,7 +805,7 @@ app.get('/api/proxy/kling/image2video/:taskId', async (req, res) => {
   }
 });
 
-// ── Metricool Proxy ──
+// ââ Metricool Proxy ââ
 app.get('/api/proxy/metricool/posts', async (req, res) => {
   const apiKey = req.headers['x-api-key-value'];
   if (!apiKey) return res.status(400).json({ error: 'Missing API key' });
@@ -835,7 +857,7 @@ app.get('/api/proxy/metricool/brands', async (req, res) => {
   }
 });
 
-// ── Metricool Analytics Proxy ──
+// ââ Metricool Analytics Proxy ââ
 app.get('/api/proxy/metricool/networks', async (req, res) => {
   const apiKey = req.headers['x-api-key-value'];
   if (!apiKey) return res.status(400).json({ error: 'Missing API key' });
@@ -883,7 +905,7 @@ app.get('/api/proxy/metricool/top-posts', async (req, res) => {
   }
 });
 
-// ── Arcads Proxy ──
+// ââ Arcads Proxy ââ
 app.post('/api/proxy/arcads/videos', async (req, res) => {
   const apiKey = req.headers['x-api-key-value'];
   if (!apiKey) return res.status(400).json({ error: 'Missing API key' });
@@ -915,7 +937,7 @@ app.get('/api/proxy/arcads/videos/:videoId', async (req, res) => {
   }
 });
 
-// ── Creatify Proxy ──
+// ââ Creatify Proxy ââ
 app.post('/api/proxy/creatify/gen-image', async (req, res) => {
   const apiId = req.headers['x-creatify-id'];
   const apiKey = req.headers['x-creatify-key'];
@@ -966,7 +988,7 @@ app.get('/api/proxy/creatify/:taskId/status', async (req, res) => {
   }
 });
 
-// ─── Serve Frontend (for local dev) ───
+// âââ Serve Frontend (for local dev) âââ
 app.use(express.static(path.join(__dirname, '..'), {
   etag: false,
   maxAge: 0,
@@ -975,19 +997,90 @@ app.use(express.static(path.join(__dirname, '..'), {
   },
 }));
 
-// ─── Start ───
+// âââ Start âââ
 app.listen(PORT, () => {
   console.log(`MAJU Backend running on http://localhost:${PORT}`);
   console.log(`  Frontend:  http://localhost:${PORT} (serves index.html)`);
-  console.log(`  POST /api/upload         — Upload clips`);
-  console.log(`  POST /api/stitch         — Stitch clips into final video`);
-  console.log(`  POST /api/pipeline       — Upload + stitch in one step`);
-  console.log(`  GET  /api/jobs/:id       — Check job status`);
-  console.log(`  GET  /api/download/:id   — Download finished video`);
-  console.log(`  GET  /api/health         — Health check`);
-  console.log(`  /api/proxy/higgsfield/*  — Higgsfield proxy`);
-  console.log(`  /api/proxy/kling/*       — Kling AI proxy`);
-  console.log(`  /api/proxy/metricool/*   — Metricool proxy`);
-  console.log(`  /api/proxy/arcads/*      — Arcads proxy`);
-  console.log(`  /api/proxy/creatify/*    — Creatify proxy`);
+  console.log(`  POST /api/upload         â Upload clips`);
+  console.log(`  POST /api/stitch         â Stitch clips into final video`);
+  console.log(`  POST /api/pipeline       â Upload + stitch in one step`);
+  console.log(`  GET  /api/jobs/:id       â Check job status`);
+  console.log(`  GET  /api/download/:id   â Download finished video`);
+  console.log(`  GET  /api/health         â Health check`);
+  console.log(`  /api/proxy/higgsfield/*  â Higgsfield proxy`);
+  console.log(`  /api/proxy/kling/*       â Kling AI proxy`);
+  console.log(`  /api/proxy/metricool/*   â Metricool proxy`);
+  console.log(`  /api/proxy/arcads/*      â Arcads proxy`);
+  console.log(`  /api/proxy/creatify/*    â Creatify proxy`);
+});// ── Higgsfield Soul ID CRUD (V1 Auth) ──
+app.post('/api/proxy/higgsfield/soul-ids', async (req, res) => {
+  const apiKey = req.headers['x-api-key-value'];
+  if (!apiKey) return res.status(400).json({ error: 'Missing Higgsfield API key' });
+  try {
+    const result = await proxyRequest(
+      'https://platform.higgsfield.ai/v1/custom-references',
+      'POST',
+      hfV1AuthHeaders(req),
+      req.body
+    );
+    debugLog('hf-create-soul', { status: result.status, data: JSON.stringify(result.data).slice(0, 300) });
+    res.status(result.status).json(result.data);
+  } catch (err) {
+    debugLog('hf-create-soul-err', { error: err.message });
+    res.status(502).json({ error: err.message });
+  }
 });
+
+app.get('/api/proxy/higgsfield/soul-ids/:id', async (req, res) => {
+  const apiKey = req.headers['x-api-key-value'];
+  if (!apiKey) return res.status(400).json({ error: 'Missing Higgsfield API key' });
+  try {
+    const result = await proxyRequest(
+      'https://platform.higgsfield.ai/v1/custom-references/' + encodeURIComponent(req.params.id),
+      'GET',
+      hfV1AuthHeaders(req)
+    );
+    debugLog('hf-soul-status', { id: req.params.id, status: result.status });
+    res.status(result.status).json(result.data);
+  } catch (err) {
+    debugLog('hf-soul-status-err', { error: err.message });
+    res.status(502).json({ error: err.message });
+  }
+});
+
+app.get('/api/proxy/higgsfield/soul-styles', async (req, res) => {
+  const apiKey = req.headers['x-api-key-value'];
+  if (!apiKey) return res.status(400).json({ error: 'Missing Higgsfield API key' });
+  try {
+    const result = await proxyRequest(
+      'https://platform.higgsfield.ai/v1/text2image/soul-styles',
+      'GET',
+      hfV1AuthHeaders(req)
+    );
+    debugLog('hf-soul-styles', { status: result.status });
+    res.status(result.status).json(result.data);
+  } catch (err) {
+    debugLog('hf-soul-styles-err', { error: err.message });
+    res.status(502).json({ error: err.message });
+  }
+});
+
+app.post('/api/proxy/higgsfield/upload-url', async (req, res) => {
+  const apiKey = req.headers['x-api-key-value'];
+  if (!apiKey) return res.status(400).json({ error: 'Missing Higgsfield API key' });
+  try {
+    const result = await proxyRequest(
+      'https://platform.higgsfield.ai/files/generate-upload-url',
+      'POST',
+      hfV1AuthHeaders(req),
+      req.body
+    );
+    debugLog('hf-upload-url', { status: result.status });
+    res.status(result.status).json(result.data);
+  } catch (err) {
+    debugLog('hf-upload-url-err', { error: err.message });
+    res.status(502).json({ error: err.message });
+  }
+});
+
+
