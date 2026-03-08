@@ -1184,17 +1184,13 @@ app.post('/api/console', async (req, res) => {
     }
   } catch { /* no data available */ }
 
-  // Try Claude API if key is configured
-  const configPath = path.join(__dirname, 'config.json');
+  // Try Claude API if key is configured — check all config sources
   let claudeKey = null;
   try {
-    if (fs.existsSync(configPath)) {
-      const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-      claudeKey = config.claudeApiKey || config.anthropicApiKey;
-    }
+    const config = readConfig();
+    claudeKey = config.claudeApiKey || config.anthropicApiKey || config.claude_api_key;
   } catch { /* no config */ }
-
-  // Also check x-api-key-value header
+  if (!claudeKey) claudeKey = process.env.ANTHROPIC_API_KEY;
   if (!claudeKey) claudeKey = req.headers['x-api-key-value'];
 
   if (claudeKey && researchData) {
