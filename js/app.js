@@ -8,8 +8,8 @@
   // ─── Config ───
   const CONFIG = {
     higgsfield: {
-      asset: 'majurender8oz',        // Higgsfield product asset ID
-      avatar: 'pateit'               // Higgsfield Soul ID (custom_reference_id) for Patient Maya
+      asset: 'majurender8oz',
+      avatar: 'pateit'
     },
     avatarMeta: {
       pateit: { name: 'Patient Maya', ig: '@breealba' },
@@ -183,67 +183,57 @@
     const approvals = relevantFeedback.filter((f) => f.action === 'approve');
     const rejections = relevantFeedback.filter((f) => f.action === 'reject');
 
-    const systemPrompt = `You are a video production AI assistant for MAJU, a wellness brand. You generate optimized Kling AI image-to-video prompts.
+    const systemPrompt = `You are a video production AI assistant for MAJU, a wellness brand. You generate optimized Kling AI text-to-video prompts.
 
 Format: ${videoType}
-Avatar: ${avatar} (Patient Maya / Bree Alba — mixed race woman, late 20s, hair pulled back in a messy bun, wearing a casual black tank top, minimal/no visible makeup, natural dewy skin)
-Product: ${product} (Maju's Black Seed Oil 8oz — dark amber glass bottle with cream/gold label reading "BLACK SEED OIL")
-Video model: Kling 2.6 (kling-v2-6) — pro mode for quality
-Image model: Flux Kontext Max — photorealistic, natural skin, high detail
+Avatar: ${avatar} (Patient Maya / Bree Alba — young woman, hair in bun, black tank top, minimal makeup, natural look)
+Product: ${product} (Maju's Black Seed Oil 8oz — dark glass bottle with "MAJU BLACK SEED OIL" label)
+Video model: Kling v2 Master (text-to-video, 5s per segment)
 
-This is the "Anti-Puffy Face Snack" Selfcare Snack Reel — red onion + Maju Black Seed Oil + salt. Total duration: 15 seconds (5 segments with varying durations), 9:16 vertical.
+This is the "Anti-Puffy Face Snack" Selfcare Snack Reel — red onion + Maju Black Seed Oil + salt. Total duration: 25 seconds (5 segments x 5s each), 9:16 vertical.
 
-The video has exactly 5 segments. Images are generated via Flux Kontext Max, then animated via Kling 2.6 image-to-video. Prompts must be rich and descriptive but grounded in realism — this must look like iPhone UGC footage, NOT a production.
+The video has exactly 5 segments. Each segment is generated as a 5-second Kling text-to-video clip. Prompts must be rich, descriptive, and cinematic — Kling generates from text alone (no reference image).
 
-SEGMENT 1: HOOK — Stop the Scroll (0-3s) — Duration: 3 seconds
-Shot: Medium close-up, Bree Alba holding a whole halved red onion near her face at chin level, looking at it with curiosity then glancing at camera with a confident half-smile. Shot on iPhone, handheld, selfie-style.
+SEGMENT 1: HOOK (0-5s) — Stop the scroll
 Text overlay: "de-puff your face snack" OR "wake up puffy? eat this"
 
-SEGMENT 2: THE REVEAL — Ingredients + Pour (3-6s) — Duration: 3 seconds
-Shot: Slightly wider (waist-up), Bree Alba pouring black seed oil from the Maju bottle onto a halved red onion on a wooden cutting board. Shot on iPhone, handheld. Bottle label "BLACK SEED OIL" must face camera and be readable.
+SEGMENT 2: THE REVEAL — Ingredients + Pour (5-10s) — Product placement money shot
 Text overlay: "1 red onion\\n+ black seed oil\\n+ salt"
 
-SEGMENT 3: THE DEMO — Eating the Snack (6-11s) — Duration: 5 seconds
-Shot: Tight close-up, Bree Alba's face from nose to chin, bringing the oiled onion half to her mouth and taking a big bite. Authentic reaction — slight wince at raw onion taste, then acceptance/confidence.
-Text overlay: NONE (let the visual shock do the work)
+SEGMENT 3: THE DEMO — Eating the Snack (10-15s) — Viral hook, authentic reaction
+Text overlay: NONE (let the visual do the work)
 
-SEGMENT 4: RESULT + BENEFITS — Educate (11-13s) — Duration: 2 seconds
-Shot: Medium close-up, Bree Alba holding the bitten onion near her face at cheek level, free hand gently touching her cheekbone. Calm expression, eye contact with camera.
+SEGMENT 4: RESULT + BENEFITS (15-20s) — Educate on benefits
 Text overlay: "drains facial bloat\\nreduces water retention\\ntightens puffy skin"
 
-SEGMENT 5: THE GLOW — CTA + Payoff (13-15s) — Duration: 2 seconds
-Shot: Medium close-up, Bree Alba's face with both hands framing/touching her face, serene expression, dewy skin. Maju bottle placed prominently nearby.
+SEGMENT 5: THE GLOW — Result + CTA (20-25s) — Payoff beauty shot
 Text overlay: "anti-puffy face snack\\n(onion + black seed oil + salt)" + CTA
 
 CRITICAL RULES FOR EVERY PROMPT:
-- EVERY prompt MUST describe Patient Maya accurately: "Bree Alba, a mixed race woman in her late 20s with her hair pulled back in a messy bun, wearing a casual black tank top, minimal makeup, natural dewy skin"
-- EVERY prompt MUST include the Maju bottle: "a dark amber glass bottle with cream/gold label reading BLACK SEED OIL"
+- EVERY prompt MUST describe Patient Maya: "a young woman with her hair in a bun wearing a black tank top"
+- EVERY prompt MUST include the Maju bottle: "a dark bottle labeled MAJU BLACK SEED OIL"
 - The bottle MUST be visible in EVERY segment — on the counter, in her hand, or in the foreground
 - Bottle label must be readable in at least Reveal + Glow segments
-- Kitchen: ALWAYS normal, clean kitchen — light or neutral countertops, everyday appliances visible, lived-in but tidy. NOT a studio set. NOT dark/moody.
-- Lighting: ALWAYS natural daylight from a window, soft and even. Normal indoor lighting like a real kitchen at 11am. NEVER dramatic golden-hour, NEVER moody shadows, NEVER ring light halos.
-- Camera: iPhone/UGC style — handheld micro-shake, NOT stabilized or gimbal-smooth. ABSOLUTELY NO ZOOM. Static framing only.
-- Eating reaction must be AUTHENTIC — slight grimace then acceptance, NOT polished or fake-smiling
-- Movement: subject moves naturally, camera stays STATIC (handheld micro-shake only)
-- Each prompt should be 2-3 sentences of rich visual description
-- Include "Vertical 9:16 format, iPhone handheld, natural daylight" in each prompt
-- Props REQUIRED in every segment: Maju bottle, halved red onion, wooden cutting board, pinch of salt
+- Kitchen: ALWAYS dark/moody (dark cabinets, warm wood), NEVER bright/white
+- Lighting: ALWAYS warm golden-hour (3200-4000K), soft, flattering
+- Eating reaction must be AUTHENTIC — slight grimace then acceptance, NOT polished
+- Movement: smooth, natural, never robotic
+- Each prompt should be 2-3 sentences of rich visual description for Kling text-to-video
+- Include "Vertical 9:16 format" in each prompt
 
-NEGATIVE PROMPT (apply to ALL segments): "spinning, rotating, 360 turn, slow zoom, zoom in, zoom out, dolly zoom, push in, pull out, crane shot, slider, gimbal, stabilized, unnatural motion, distorted face, blurry, low quality, morphing, glitch, cartoon, anime, overexposed, bright white kitchen, fluorescent lighting, dramatic lighting, golden hour, ring light, studio lighting, cinematic color grade"
-
-For A/B testing, vary: hook text, CTA ("save for later" / "link in bio" / "shop now"), background music style, segment pacing.
+For A/B testing, vary: hook text, CTA ("save for later" / "link in bio" / "shop now"), and lighting intensity.
 
 Return ONLY a JSON object with these fields:
-- "segments": array of 5 objects, each with { "name": segment name, "prompt": optimized prompt, "duration": SOP duration in seconds (3,3,5,2,2), "textOverlay": text to show or null, "model": "kling-v2-6", "negative_prompt": negative prompt string }
+- "segments": array of 5 objects, each with { "name": segment name, "prompt": optimized Kling text-to-video prompt, "duration": 5, "textOverlay": text to show or null, "model": "kling-v2-master" }
 - "direction": overall visual/pacing/tone direction
 - "reasoning": 1 sentence explaining what you optimized based on feedback
-- "captions": array of 5 objects for each segment with { "text": "caption text", "startTime": seconds, "endTime": seconds } using correct SOP timings (0-3, 3-6, 6-11, 11-13, 13-15)
+- "captions": array of 5 objects for each segment with { "text": "caption text", "startTime": seconds, "endTime": seconds }
 - "hookVariant": which hook text variant this version uses
 - "instagramCaption": a ready-to-post Instagram caption (hook line + value prop + CTA, 150-300 characters, NO hashtags here)
 - "hashtags": array of 10-15 relevant hashtags (strings without the # prefix, e.g. ["blackseedoil","wellness","skincare"])
 
 Example:
-{"segments":[{"name":"hook","prompt":"Bree Alba, a mixed race woman in her late 20s with a messy bun and black tank top, stands in a normal clean kitchen with light countertops. She holds a halved red onion near her face, looking curious then glancing at camera with a confident half-smile. A dark amber glass bottle with cream/gold label reading BLACK SEED OIL sits on the counter behind her. Natural daylight from a window, soft and even. Vertical 9:16 format, iPhone handheld, natural daylight.","duration":3,"textOverlay":"wake up puffy? eat this","model":"kling-v2-6","negative_prompt":"spinning, rotating, 360 turn, slow zoom, zoom in, zoom out, dolly zoom, push in, pull out, crane shot, slider, gimbal, stabilized, unnatural motion, distorted face, blurry, low quality, morphing, glitch, cartoon, anime, overexposed, bright white kitchen, fluorescent lighting, dramatic lighting, golden hour, ring light, studio lighting, cinematic color grade"}],"direction":"Normal kitchen, natural daylight, iPhone UGC feel. Authentic reactions.","reasoning":"Aligned prompts to SOP v2 — natural daylight, clean kitchen, correct durations.","captions":[{"text":"wake up puffy? eat this","startTime":0,"endTime":3},{"text":"1 red onion + black seed oil + salt","startTime":3,"endTime":6},{"text":"","startTime":6,"endTime":11},{"text":"drains facial bloat reduces water retention tightens puffy skin","startTime":11,"endTime":13},{"text":"anti-puffy face snack (onion + black seed oil + salt)","startTime":13,"endTime":15}],"hookVariant":"wake up puffy? eat this","instagramCaption":"Wake up puffy? This anti-bloat snack actually works. Red onion + Maju Black Seed Oil + salt = natural de-puff. Save this one!","hashtags":["blackseedoil","depuff","facesnack","skincaretips","naturalremedy","antiinflammatory","puffyface","wellnesstips","majublackseedoil","skincareroutine","majusuperfoods","holistichealth"]}`;
+{"segments":[{"name":"hook","prompt":"A young woman with her hair in a bun wearing a black tank top...","duration":5,"textOverlay":"de-puff your face snack","model":"kling-v2-master"},{"name":"reveal","prompt":"A young woman with hair in a bun wearing a black tank top pours...","duration":5,"textOverlay":"1 red onion\\n+ black seed oil\\n+ salt","model":"kling-v2-master"},{"name":"demo","prompt":"Tight close-up of a young woman with hair in a bun...","duration":5,"textOverlay":null,"model":"kling-v2-master"},{"name":"result","prompt":"A young woman with hair in a bun wearing a black tank top holds...","duration":5,"textOverlay":"drains facial bloat\\nreduces water retention\\ntightens puffy skin","model":"kling-v2-master"},{"name":"glow","prompt":"A young woman with hair in a bun wearing a black tank top looks...","duration":5,"textOverlay":"anti-puffy face snack","model":"kling-v2-master"}],"direction":"Warm, moody kitchen. Authentic reactions.","reasoning":"Used default SOP prompts.","captions":[{"text":"de-puff your face snack","startTime":0,"endTime":5},{"text":"1 red onion + black seed oil + salt","startTime":5,"endTime":10},{"text":"","startTime":10,"endTime":15},{"text":"drains facial bloat, reduces water retention, tightens puffy skin","startTime":15,"endTime":20},{"text":"anti-puffy face snack","startTime":20,"endTime":25}],"hookVariant":"de-puff your face snack","instagramCaption":"Wake up puffy? Try this anti-bloat snack! Red onion + Maju Black Seed Oil + salt = natural de-puff. Your face will thank you. Save for later!","hashtags":["blackseedoil","depuff","wellness","skincare","naturalremedies","majuoil","antiinflammatory","selfcare","beautyhack","healthysnack","glowup","facialcare","holistic","puffyface","bloatremedy"]}`;
 
     const feedbackContext = relevantFeedback.length
       ? `\n\nPast feedback for this format (${relevantFeedback.length} entries):
@@ -409,21 +399,35 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
   }
 
   // SOP v2.0 default Kling prompts for each segment
-  // Avatar: Patient Maya (Bree Alba) — mixed race woman, late 20s, messy bun, black tank top, natural dewy skin
-  // Product: Maju's Black Seed Oil 8oz — dark amber glass bottle, cream/gold label
-  // Kitchen: normal, clean, light countertops, natural daylight — NOT dark/moody
-  const NEGATIVE_PROMPT = 'spinning, zooming, morphing, extra fingers, distorted face, blurry, overexposed, underexposed, text, watermark, logo, dark moody lighting, golden-hour filter, cinematic color grade';
+  // Avatar: Patient Maya (Bree Alba) — young woman, black tank top, hair in bun, minimal makeup, natural look
+  // Product: Maju's Black Seed Oil 8oz dark bottle with "MAJU BLACK SEED OIL" label
   const DEFAULT_SEGMENT_PROMPTS = [
-    { name: 'hook', duration: 3, prompt: 'A mixed race woman in her late 20s with a messy bun and black tank top stands in a normal clean kitchen with light countertops and natural daylight from a window. She holds a whole red onion near her face, looking at it curiously then turning to camera with a confident knowing smile. A dark amber glass bottle with a cream and gold label reading "MAJU BLACK SEED OIL" sits on the counter beside her. Vertical 9:16 format, smooth natural motion, static camera, natural indoor lighting.', textOverlay: 'de-puff your face snack', model: 'kling-v2-6', negative_prompt: NEGATIVE_PROMPT },
-    { name: 'reveal', duration: 3, prompt: 'A mixed race woman in her late 20s with a messy bun and black tank top pours dark oil from a dark amber glass bottle with a cream and gold label reading "MAJU BLACK SEED OIL" onto a halved red onion on a cutting board. Camera slightly wider showing her waist up. Normal clean kitchen with light countertops, natural daylight. Smooth satisfying pour motion, oil glistening on the onion. Vertical 9:16 format, static camera.', textOverlay: '1 red onion\n+ black seed oil\n+ salt', model: 'kling-v2-6', negative_prompt: NEGATIVE_PROMPT },
-    { name: 'demo', duration: 5, prompt: 'Tight close-up of a mixed race woman in her late 20s with a messy bun and black tank top biting into a raw red onion half glistening with dark oil. She takes a big crunchy bite, chews with a slight grimace then settles into it and nods approvingly. A dark amber glass bottle with a cream and gold label reading "MAJU BLACK SEED OIL" is visible on the counter behind her. Normal clean kitchen, natural daylight, light countertops. Authentic unpolished eating reaction. Vertical 9:16 format, static camera, natural motion.', textOverlay: null, model: 'kling-v2-6', negative_prompt: NEGATIVE_PROMPT },
-    { name: 'result', duration: 2, prompt: 'A mixed race woman in her late 20s with a messy bun and black tank top holds a bitten red onion near her face, looking confidently at camera. She gently touches her cheek with her free hand, feeling her dewy natural skin. A dark amber glass bottle with a cream and gold label reading "MAJU BLACK SEED OIL" is visible on the counter beside her. Normal clean kitchen, natural daylight. Calm, satisfied expression. Vertical 9:16 format, static camera.', textOverlay: 'drains facial bloat\nreduces water retention\ntightens puffy skin', model: 'kling-v2-6', negative_prompt: NEGATIVE_PROMPT },
-    { name: 'glow', duration: 2, prompt: 'A mixed race woman in her late 20s with a messy bun and black tank top looks at herself in a mirror, gently touching her glowing dewy face with both hands. She looks serene and satisfied with her skin. A dark amber glass bottle with a cream and gold label reading "MAJU BLACK SEED OIL" is prominently placed in the foreground near the mirror. Soft natural daylight emphasizes her healthy glowing skin. Clean bright background. Vertical 9:16 format, static camera, slow smooth motion.', textOverlay: 'anti-puffy face snack\n(onion + black seed oil + salt)', model: 'kling-v2-6', negative_prompt: NEGATIVE_PROMPT },
+    { name: 'hook', duration: 5, prompt: 'A young woman with her hair in a bun wearing a black tank top stands in a dark moody kitchen with warm golden lighting. She holds a whole red onion near her face, looking at it curiously then turning to camera with a confident knowing smile. A dark glass bottle labeled "MAJU BLACK SEED OIL" sits prominently on the wooden counter beside her. She slowly raises the onion. Cinematic warm golden-hour lighting from a window, dark cabinets in background. Vertical 9:16 format, smooth natural motion.', textOverlay: 'de-puff your face snack', model: 'kling-v2-master' },
+    { name: 'reveal', duration: 5, prompt: 'A young woman with hair in a bun wearing a black tank top pours dark oil from a bottle labeled "MAJU BLACK SEED OIL" onto a halved red onion on a wooden cutting board. Camera slightly wider showing her waist up. She looks down at the onion as she pours, the bottle label clearly readable facing camera. Dark moody kitchen with warm golden lighting, dark cabinets behind her. Smooth satisfying pour motion, oil glistening on the onion. Vertical 9:16 format.', textOverlay: '1 red onion\n+ black seed oil\n+ salt', model: 'kling-v2-master' },
+    { name: 'demo', duration: 5, prompt: 'Tight close-up of a young woman with hair in a bun wearing a black tank top biting into a raw red onion half glistening with dark oil. She takes a big crunchy bite, chews with a slight grimace then settles into it and nods approvingly. A dark bottle labeled "MAJU BLACK SEED OIL" is visible on the counter behind her. Warm golden kitchen lighting, dark moody background. Authentic unpolished eating reaction. Vertical 9:16 format, natural motion.', textOverlay: null, model: 'kling-v2-master' },
+    { name: 'result', duration: 5, prompt: 'A young woman with hair in a bun wearing a black tank top holds a bitten red onion near her face, looking confidently at camera. She gently touches her cheek with her free hand, feeling her skin. A dark bottle labeled "MAJU BLACK SEED OIL" is visible on the counter beside her. Warm golden lighting in a dark moody kitchen. Calm, satisfied expression on her face. Vertical 9:16 format.', textOverlay: 'drains facial bloat\nreduces water retention\ntightens puffy skin', model: 'kling-v2-master' },
+    { name: 'glow', duration: 5, prompt: 'A young woman with hair in a bun wearing a black tank top looks at herself in a mirror, gently touching her glowing dewy face with both hands. She looks serene and satisfied with her skin. A dark bottle labeled "MAJU BLACK SEED OIL" is prominently placed in the foreground near the mirror. Warm soft golden lighting emphasizes her healthy glowing skin. Dark moody background. Vertical 9:16 format, slow smooth motion.', textOverlay: 'anti-puffy face snack\n(onion + black seed oil + salt)', model: 'kling-v2-master' },
   ];
 
-  // Helper: generate a static image via Higgsfield Flux Kontext Max and poll until done
-  // Returns { url, error } object
-  async function generateSegmentImage(seg, segLabel, characterId) {
+  // Helper: poll a Higgsfield image request until done
+  async function pollImageStatus(requestId, segLabel, timeoutLabel) {
+    for (let attempt = 0; attempt < 150; attempt++) {
+      await new Promise(r => setTimeout(r, 2000));
+      const imgStatus = await API.higgsfield.getImageStatus(requestId);
+      const st = (imgStatus.status || '').toLowerCase();
+      if (attempt % 5 === 0) console.log(`[Pipeline] ${segLabel} ${timeoutLabel || 'image'} poll #${attempt}: status=${st}`);
+      if (st === 'completed' || st === 'done') return { url: imgStatus.url };
+      if (st === 'failed' || st === 'error' || st === 'nsfw' || st === 'cancelled') {
+        return { url: null, error: `Image ${st}` };
+      }
+    }
+    console.warn(`[Pipeline] ${segLabel} ${timeoutLabel || 'image'} timed out after 300s`);
+    return { url: null, error: `${timeoutLabel || 'Image'} timed out after 300s` };
+  }
+
+  // Helper: generate a static image via Higgsfield and poll until done
+  // Supports Soul ID (character consistency) and product reference image (Kontext i2i refinement)
+  async function generateSegmentImage(seg, segLabel, characterId, productImageUrl) {
     if (seg.image_url) return { url: seg.image_url };
     const imgParams = { prompt: seg.prompt, aspect_ratio: '9:16' };
     if (characterId) {
@@ -437,18 +441,34 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       debugPanel(`[${segLabel}] Image submit failed: ${errDetail}`);
       return { url: null, error: `Image submit: ${errDetail}` };
     }
-    for (let attempt = 0; attempt < 150; attempt++) {
-      await new Promise(r => setTimeout(r, 2000));
-      const imgStatus = await API.higgsfield.getImageStatus(imgResult.id);
-      const st = (imgStatus.status || '').toLowerCase();
-      if (attempt % 5 === 0) console.log(`[Pipeline] ${segLabel} image poll #${attempt}: status=${st}`);
-      if (st === 'completed' || st === 'done') return { url: imgStatus.url };
-      if (st === 'failed' || st === 'error' || st === 'nsfw' || st === 'cancelled') {
-        return { url: null, error: `Image ${st}` };
+    const baseImage = await pollImageStatus(imgResult.id, segLabel, 'image');
+    if (!baseImage.url) return baseImage;
+
+    // Product refinement pass: use Flux Kontext image-to-image with the product render as reference
+    if (productImageUrl) {
+      debugPanel(`[${segLabel}] Refining product packaging via Kontext image-to-image…`);
+      console.log(`[Pipeline] ${segLabel} product refinement with reference: ${productImageUrl.slice(0, 60)}…`);
+      const editResult = await API.higgsfield.editImageWithProduct(
+        baseImage.url,
+        productImageUrl,
+        `Keep this exact scene, person, pose, lighting, and background unchanged. Replace any dark bottle or generic bottle in the image with the exact Maju Black Seed Oil bottle shown in the second reference image — match the label, shape, color, and packaging precisely. The bottle label should read "BLACK SEED OIL" with the Maju branding clearly visible.`
+      );
+      if (!editResult.ok || !editResult.id) {
+        console.warn(`[Pipeline] ${segLabel} product edit failed, using base image:`, editResult.error);
+        debugPanel(`[${segLabel}] Product edit failed (${editResult.error || 'unknown'}) — using base image`);
+        return baseImage;
       }
+      const refinedImage = await pollImageStatus(editResult.id, segLabel, 'product-edit');
+      if (!refinedImage.url) {
+        console.warn(`[Pipeline] ${segLabel} product edit poll failed, using base image`);
+        debugPanel(`[${segLabel}] Product edit timed out — using base image`);
+        return baseImage;
+      }
+      debugPanel(`[${segLabel}] Product packaging refined successfully`);
+      return refinedImage;
     }
-    console.warn(`[Pipeline] ${segLabel} image timed out after 120s`);
-    return { url: null, error: 'Image timed out after 120s' };
+
+    return baseImage;
   }
 
   // Helper: animate a static image via Kling image-to-video and poll until done
@@ -459,10 +479,8 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       image_url: imageUrl,
       duration: seg.duration <= 5 ? 5 : 10,
       aspect_ratio: '9:16',
-      model_name: seg.model || 'kling-v2-6',
-      mode: 'pro',
-      negative_prompt: seg.negative_prompt || '',
-      cfg_scale: 0.5,
+      model_name: seg.model || 'kling-v2-master',
+      mode: 'std',
     });
     console.log(`[Pipeline] Kling i2v submit for ${segLabel}:`, result.ok, 'taskId:', result.taskId);
     if (!result.ok || !result.taskId) {
@@ -491,11 +509,11 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
 
   // Helper: full segment pipeline — Higgsfield image → Kling animate (or Kling text2video fallback)
   // Returns { url, error } object
-  async function generateSegmentVideo(seg, segLabel, characterId) {
+  async function generateSegmentVideo(seg, segLabel, characterId, productImageUrl) {
     // If Higgsfield key is set, use hybrid pipeline: Soul/Flux image → Kling image2video
     if (apiKeys.higgsfield) {
-      debugPanel(`[${segLabel}] Generating image via ${characterId ? 'Soul (character: ' + characterId + ')' : 'Flux Kontext Max'}…`);
-      const imageResult = await generateSegmentImage(seg, segLabel, characterId);
+      debugPanel(`[${segLabel}] Generating image via ${characterId ? 'Soul (character: ' + characterId + ')' : 'Flux Kontext Max'}${productImageUrl ? ' + product reference' : ''}…`);
+      const imageResult = await generateSegmentImage(seg, segLabel, characterId, productImageUrl);
       if (imageResult.url) {
         debugPanel(`[${segLabel}] Image ready — animating via Kling image2video…`);
         return await animateImageToVideo(seg, imageResult.url, segLabel);
@@ -508,10 +526,8 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       prompt: seg.prompt,
       duration: seg.duration <= 5 ? 5 : 10,
       aspect_ratio: '9:16',
-      model_name: seg.model || 'kling-v2-6',
-      mode: 'pro',
-      negative_prompt: seg.negative_prompt || '',
-      cfg_scale: 0.5,
+      model_name: seg.model || 'kling-v2-master',
+      mode: 'std',
     });
     console.log(`[Pipeline] Kling t2v submit for ${segLabel}:`, result.ok, 'taskId:', result.taskId);
     if (!result.ok || !result.taskId) {
@@ -578,10 +594,12 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       updateSegmentStatus('hook', 'Generating videos…', false);
 
       const characterId = item.avatar || CONFIG.higgsfield.avatar || null;
+      const productImageUrl = apiKeys.productImageUrl || null;
       if (characterId) console.log(`[Pipeline] Using Soul character ID: ${characterId}`);
+      if (productImageUrl) console.log(`[Pipeline] Using product reference image: ${productImageUrl.slice(0, 60)}…`);
       const videoTasks = segments.map((seg, si) => () => {
         updateSegmentStatus(seg.name, 'Generating…', false);
-        return generateSegmentVideo(seg, `${seg.name} (${si + 1}/${segments.length})`, characterId);
+        return generateSegmentVideo(seg, `${seg.name} (${si + 1}/${segments.length})`, characterId, productImageUrl);
       });
       const videoResults = await runWithConcurrency(videoTasks, KLING_CONCURRENCY);
 
@@ -738,7 +756,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
             ${(item.revisionCount || 0) > 0 ? `<div class="revision-count">🔄 Revision ${item.revisionCount}</div>` : ''}
           </div>
           ${(item.revisionNotes || []).length ? (item.revisionNotes || []).map((n, i) => `<div class="rejection-notes">Rev ${i + 1}: ${n}</div>`).join('') : ''}
-          ${(Array.isArray(item.approvalNotes) ? item.approvalNotes : (item.approvalNotes ? [item.approvalNotes] : [])).length ? (Array.isArray(item.approvalNotes) ? item.approvalNotes : (item.approvalNotes ? [item.approvalNotes] : [])).map((n) => `<div class="approval-notes">Approved: ${n}</div>`).join('') : ''}
+          ${(item.approvalNotes || []).length ? (item.approvalNotes || []).map((n) => `<div class="approval-notes">Approved: ${n}</div>`).join('') : ''}
         </div>
         <div class="queue-actions">
           ${item.status === 'pending' || item.status === 'revision'
@@ -1026,7 +1044,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
           <p>${formatDate(item.createdAt)}</p>
           ${item.postMode === 'asap' ? '<p>Post ASAP</p>' : `<p>Scheduled: ${formatDate(item.schedDate)}</p>`}
           ${item.metricoolId ? '<p style="color:var(--success)">Posted to Metricool</p>' : ''}
-          ${(Array.isArray(item.approvalNotes) ? item.approvalNotes : (item.approvalNotes ? [item.approvalNotes] : [])).map(n => `<div class="approved-card-notes">${n}</div>`).join('')}
+          ${(item.approvalNotes || []).map(n => `<div class="approved-card-notes">${n}</div>`).join('')}
         </div>
       </div>`;
     }).join('');
@@ -1054,7 +1072,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       const segCount = item.segmentVideos ? item.segmentVideos.length : 0
       const imageCount = 0; // Kling generates video directly, no separate image step
       const videoCount = segCount;
-      const model = (segments[0] && segments[0].model) || 'kling-v2-6';
+      const model = (segments[0] && segments[0].model) || 'kling-v2-master';
       const imageCost = 0;
       const videoCost = videoCount * (COST_ESTIMATES[model] || COST_ESTIMATES.default_video);
       const totalCost = imageCost + videoCost;
@@ -1190,10 +1208,9 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     if (apiKeys.higgsfield) $('#api-higgsfield').value = apiKeys.higgsfield;
     if (apiKeys.higgsfieldSecret) $('#api-higgsfield-secret').value = apiKeys.higgsfieldSecret;
     if (apiKeys.metricool) $('#api-metricool').value = apiKeys.metricool;
-    if (apiKeys.metricoolBlogId) $('#setting-metricool-blog-id').value = apiKeys.metricoolBlogId;
-    if (apiKeys.metricoolUserId) $('#setting-metricool-user-id').value = apiKeys.metricoolUserId;
     if (apiKeys.arcads) $('#api-arcads').value = apiKeys.arcads;
     if (apiKeys.creatify) $('#api-creatify').value = apiKeys.creatify;
+    if (apiKeys.productImageUrl) $('#setting-product-image-url').value = apiKeys.productImageUrl;
   }
 
   // Sync keys from backend on load (so keys work on any device)
@@ -1258,10 +1275,9 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       higgsfield: $('#api-higgsfield').value.trim(),
       higgsfieldSecret: $('#api-higgsfield-secret').value.trim(),
       metricool: $('#api-metricool').value.trim(),
-      metricoolBlogId: $('#setting-metricool-blog-id').value.trim(),
-      metricoolUserId: $('#setting-metricool-user-id').value.trim(),
       arcads: $('#api-arcads').value.trim(),
       creatify: $('#api-creatify').value.trim(),
+      productImageUrl: $('#setting-product-image-url').value.trim(),
     };
     localStorage.setItem(CONFIG.storageKeys.apiKeys, JSON.stringify(apiKeys));
     pushKeysToBackend();
@@ -1284,15 +1300,15 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       if (e.target.classList.contains('caption-input')) {
         item.instagramCaption = e.target.value;
       } else if (e.target.classList.contains('hashtags-input')) {
-        item.hashtags = e.target.value.split(',').map(t => t.trim()).filter(Boolean)
+        item.hashtags = e.target.value.split(',').map(t => t.trim()).filter(Boolean);
       } else { return; }
       clearTimeout(_queueSaveTimer);
       _queueSaveTimer = setTimeout(() => saveQueue(), 300);
     });
-  }  
+  }
   });
 
-  // ─── Helpers ──
+  // ─── Helpers ───
   function saveQueue() {
     localStorage.setItem(CONFIG.storageKeys.queue, JSON.stringify(queue));
   }
@@ -1366,6 +1382,34 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
           return { ok: res.ok, id: data.request_id || data.id, ...data };
         } catch (err) {
           console.error('[Higgsfield] Image error:', err);
+          return { ok: false, error: err.message };
+        }
+      },
+
+      // Flux Kontext Max image-to-image: refine a generated image using a product reference photo
+      async editImageWithProduct(generatedImageUrl, productImageUrl, prompt) {
+        console.log('[Higgsfield] Product refinement via Kontext image-to-image');
+        if (!apiKeys.higgsfield) return { ok: false, error: 'No Higgsfield API key set' };
+        const body = {
+          endpoint: 'flux-pro/kontext/max/image-to-image',
+          input: {
+            prompt: prompt || 'Replace the bottle in this image with the exact product bottle shown in the second reference image. Keep the person, pose, lighting, and background exactly the same.',
+            input_image: generatedImageUrl,
+            input_image_2: productImageUrl,
+            aspect_ratio: '9:16',
+          },
+        };
+        try {
+          const res = await fetch(backendUrl('/api/proxy/higgsfield/generate'), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-api-key-value': apiKeys.higgsfield, 'x-api-secret-value': apiKeys.higgsfieldSecret || '' },
+            body: JSON.stringify(body),
+          });
+          const data = await res.json();
+          console.log('[Higgsfield] Product edit response:', data);
+          return { ok: res.ok, id: data.request_id || data.id, ...data };
+        } catch (err) {
+          console.error('[Higgsfield] Product edit error:', err);
           return { ok: false, error: err.message };
         }
       },
@@ -1520,12 +1564,10 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       },
 
       async schedulePost(params) {
-        const blogId = apiKeys.metricoolBlogId || '';
-        const userId = apiKeys.metricoolUserId || '';
         console.log('[Metricool] Schedule post:', params);
         if (!apiKeys.metricool) return { ok: false, error: 'No API key set' };
         try {
-          const res = await fetch(backendUrl(`/api/proxy/metricool/posts?blogId=${blogId}&userId=${userId}`), {
+          const res = await fetch(backendUrl('/api/proxy/metricool/posts'), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'x-api-key-value': apiKeys.metricool },
             body: JSON.stringify(params),
@@ -1931,81 +1973,29 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
   // Analytics is loaded lazily — triggered from nav click handler below
 
   // ─── Wire Approve → Metricool Post ───
-  async function fetchMetricoolBrands() {
-    if (!apiKeys.metricool) return;
-    if (apiKeys.metricoolBlogId && apiKeys.metricoolUserId) return; // already discovered
-    try {
-      const url = backendUrl('/api/proxy/metricool/brands' + (apiKeys.metricoolUserId ? `?userId=${apiKeys.metricoolUserId}` : ''));
-      const res = await fetch(url, {
-        method: 'GET',
-        headers: { 'x-api-key-value': apiKeys.metricool }
-      });
-      if (!res.ok) { console.warn('[Metricool] Brands fetch failed:', res.status); return; }
-      const json = await res.json();
-      const brands = json.data || json;
-      if (Array.isArray(brands) && brands.length > 0) {
-        const brand = brands[0];
-        apiKeys.metricoolBlogId = brand.id || brand.blogId;
-        apiKeys.metricoolUserId = brand.userId;
-        localStorage.setItem(CONFIG.storageKeys.apiKeys, JSON.stringify(apiKeys));
-        console.log('[Metricool] Auto-discovered blogId:', apiKeys.metricoolBlogId, 'userId:', apiKeys.metricoolUserId);
-      }
-    } catch (err) {
-      console.error('[Metricool] Error fetching brands:', err);
-    }
-  }
-
   function scheduleApprovedItem(item) {
     if (!apiKeys.metricool) {
       console.log('[Metricool] No API key — skip scheduling');
       return;
     }
-    if (!apiKeys.metricoolBlogId) {
-      console.warn('[Metricool] No blogId — attempting auto-discovery first');
-      return fetchMetricoolBrands().then(() => {
-        if (apiKeys.metricoolBlogId) return scheduleApprovedItem(item);
-        console.error('[Metricool] Still no blogId after discovery — cannot schedule');
-      });
-    }
     const caption = item.instagramCaption || `${item.productName} — ${item.typeName}`;
     const tags = (item.hashtags || []).map(t => `#${t.replace(/^#/, '')}`).join(' ');
-    const fullText = tags ? `${caption}\n\n${tags}` : caption;
+    const fullContent = tags ? `${caption}\n\n${tags}` : caption;
     const videoSrc = item.stitchedVideoUrl || item.videoUrl;
-    // publicationDate is REQUIRED — use schedDate if set, otherwise 1 hour from now
-    let scheduleDateISO;
-    if (item.schedDate) {
-      // Normalize to yyyy-MM-ddTHH:mm:ss — input may be missing T or seconds
-      const d = new Date(item.schedDate);
-      const y = d.getFullYear(), pad = n => String(n).padStart(2, '0');
-      scheduleDateISO = `${y}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:00`;
-    } else {
-      const future = new Date(Date.now() + 60 * 60 * 1000);
-      scheduleDateISO = future.toISOString().split('.')[0]; // "YYYY-MM-DDTHH:MM:SS"
-    }
-    const postPayload = {
-      text: fullText,
-      autoPublish: true,
-      draft: false,
-      providers: [{ network: 'instagram' }],
-      instagramData: { type: 'REEL', showReelOnFeed: true },
-      media: videoSrc ? [videoSrc] : [],
-      mediaAltText: [],
-      publicationDate: {
-        dateTime: scheduleDateISO,
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
-      },
-      shortener: false,
-      smartLinkData: { ids: [] },
-      firstCommentText: '',
-      hasNotReadNotes: false,
-      descendants: []
+    const postParams = {
+      content: fullContent,
+      networks: [{ network: 'instagram', type: 'reels' }],
+      media: videoSrc ? [{ url: videoSrc, type: 'video' }] : [],
+      publicationDate: item.schedDate
+        ? { dateTime: item.schedDate, timezone: Intl.DateTimeFormat().resolvedOptions().timeZone }
+        : undefined,
     };
-    console.log('[Metricool] Scheduling Instagram Reel:', { text: fullText.substring(0, 80) + '...', hasVideo: !!videoSrc });
-    return API.metricool.schedulePost(postPayload).then((res) => {
+    console.log('[Metricool] Scheduling Instagram Reel:', { content: fullContent.substring(0, 80) + '...', hasVideo: !!videoSrc });
+    return API.metricool.schedulePost(postParams).then((res) => {
       if (res.ok) {
+        console.log('[Metricool] Post scheduled:', res);
         item.metricoolId = res.postId || res.id;
         saveQueue();
-        console.log('[Metricool] Post scheduled successfully:', res);
       } else {
         console.warn('[Metricool] Schedule failed:', res);
       }
@@ -2120,21 +2110,6 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
   syncKeysFromBackend().then(() => {
     loadApiKeys();
     checkBackendStatus();
-    fetchMetricoolBrands();
-    // Verify Soul ID character reference exists
-    if (apiKeys.higgsfield) {
-      API.higgsfield.listSoulIds().then(result => {
-        if (result.ok && result.items.length) {
-          const charId = CONFIG.higgsfield.avatar;
-          const found = result.items.find(s => s.id === charId || s.name === charId);
-          if (found) {
-            console.log(`[Soul ID] Character "${charId}" verified:`, found.name || found.id);
-          } else {
-            console.warn(`[Soul ID] Character "${charId}" not found in account. Available:`, result.items.map(s => `${s.name} (${s.id})`));
-          }
-        }
-      });
-    }
   });
   renderQueue();
   renderTracker();
