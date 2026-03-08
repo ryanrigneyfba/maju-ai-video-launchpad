@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head><title>MAJU JWT Bridge</title></head>
+<body>
+<script>
+/**
+ * JWT Bridge v1.0
+ * Receives JWT from parent (higgsfield.ai) via postMessage
+ * Forwards to backend proxy via fetch (CORS-allowed from github.io)
+ */
+(function() {
+  'use strict';
+  
+  var PROXY = 'https://vekraapzv3.us-east-1.awsapprunner.com';
+  var ALLOWED_ORIGIN = 'https://higgsfield.ai';
+  
+  window.addEventListener('message', function(event) {
+    // Only accept from higgsfield.ai
+    if (event.origin !== ALLOWED_ORIGIN) return;
+    
+    var data = event.data;
+    if (!data || data.type !== 'jwt-relay') return;
+    
+    var t = data.payload;
+    if (!t || t.length < 50) return;
+    
+    // Send to proxy
+    fetch(PROXY + '/api/jwt-store', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sessionToken: t })
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(r) {
+      // Notify parent of success
+      event.source.postMessage({
+        type: 'jwt-relay-ack',
+        ok: true,
+        valid: r.valid
+      }, event.origin);
+    })
+    .catch(function(err) {
+      event.source.postMessage({
+        type: 'jwt-relay-ack',
+        ok: false,
+        error: err.message
+      }, event.origin);
+    });
+  });
+  
+  // Signal ready to parent
+  if (window.parent !== window) {
+    window.parent.postMessage({ type: 'jwt-bridge-ready' }, '*');
+  }
+})();
+</script>
+<p style="font-size:11px;color:#999;">MAJU JWT Bridge v1.0</p>
+</body>
+</html>
