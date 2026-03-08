@@ -599,6 +599,122 @@ function hfV1AuthHeaders(req) {
 }
 
 // Detect V1 endpoints that need V1 auth and params wrapper
+
+// ============================================================
+// FNF (fnf.higgsfield.ai) SOUL GENERATION — JWT Token Bridge
+// ============================================================
+let storedJWT = { token: null, storedAt: 0 };
+const JWT_MAX_AGE_MS = 55000;
+
+function isJWTValid() {
+  return storedJWT.token && (Date.now() - storedJWT.storedAt) < JWT_MAX_AGE_MS;
+}
+
+app.options('/api/jwt-store', (req, res) => {
+  res.set('Access-Control-Allow-Origin', '*');
+  res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.set('Access-Control-Allow-Headers', 'Content-Type');
+  res.sendStatus(204);
+});
+
+app.post('/api/jwt-store', (req, res) => {
+  res.set('Access-Control-Allow-Origin', '*');
+  const { jwt } = req.body;
+  if (!jwt || typeof jwt !== 'string' || jwt.length < 100) {
+    return res.status(400).json({ error: 'Invalid JWT' });
+  }
+  storedJWT = { token: jwt, storedAt: Date.now() };
+  console.log('[JWT Store] Token stored, length:', jwt.length);
+  res.json({ ok: true, expiresIn: JWT_MAX_AGE_MS / 1000 });
+});
+
+app.get('/api/jwt-status', (req, res) => {
+  res.set('Access-Control-Allow-Origin', '*');
+  res.json({
+    valid: isJWTValid(),
+    age: storedJWT.token ? Math.floor((Date.now() - storedJWT.storedAt) / 1000) : null,
+    maxAge: JWT_MAX_AGE_MS / 1000,
+  });
+});
+
+app.post('/api/proxy/higgsfield/fnf-generate', async (req, res) => {
+  res.set('Access-Control-Allow-Origin', '*');
+  let jwt = req.headers['x-hf-jwt'] || null;
+  if (!jwt && isJWTValid()) jwt = storedJWT.token;
+  if (!jwt) return res.status(401).json({ error: 'No valid Higgsfield session token. Run the bookmarklet on higgsfield.ai first.', needsToken: true });
+
+  const { params } = req.body;
+  if (!params || !params.prompt) return res.status(400).json({ error: 'Missing params.prompt' });
+
+  const body = {
+    params: {
+      quality: params.quality || '1080p',
+      aspect_ratio: params.aspect_ratio || '9:16',
+      prompt: params.prompt,
+      enhance_prompt: params.enhance_prompt !== false,
+      style_id: params.style_id || '1cb4b936-77bf-4f9a-9039-f3d349a4cdbe',
+      fashion_factory_id: params.fashion_factory_id || null,
+      style_strength: params.style_strength || 0.6,
+      custom_reference_id: params.custom_reference_id || null,
+      custom_reference_strength: params.custom_reference_strength || 0.9,
+      seed: params.seed || Math.floor(Math.random() * 1000000),
+      width: params.width || 1152, height: params.height || 2048,
+      steps: params.steps || 50, batch_size: params.batch_size || 1,
+      sample_shift: params.sample_shift || 4, sample_guide_scale: params.sample_guide_scale || 4,
+      negative_prompt: params.negative_prompt || '', version: params.version || 3,
+      use_unlim: false,
+    },
+    use_unlim: false,
+  };
+
+  try {
+    console.log('[FNF Generate] Calling fnf.higgsfield.ai/jobs/text2image-soul');
+    const response = await fetch('https://fnf.higgsfield.ai/jobs/text2image-soul', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + jwt },
+      body: JSON.stringify(body),
+    });
+    const data = await response.json();
+    console.log('[FNF Generate] Status:', response.status, 'ID:', data.id);
+    res.status(response.status).json(data);
+  } catch (err) {
+    console.error('[FNF Generate] Error:', err.message);
+    res.status(500).json({ error: 'FNF proxy error: ' + err.message });
+  }
+});
+
+app.get('/api/proxy/higgsfield/fnf-job-set/:id', async (req, res) => {
+  res.set('Access-Control-Allow-Origin', '*');
+  let jwt = req.headers['x-hf-jwt'] || null;
+  if (!jwt && isJWTValid()) jwt = storedJWT.token;
+  if (!jwt) return res.status(401).json({ error: 'No valid session token', needsToken: true });
+  try {
+    const response = await fetch('https://fnf.higgsfield.ai/job-sets/' + req.params.id, {
+      headers: { 'Authorization': 'Bearer ' + jwt },
+    });
+    const data = await response.json();
+    res.status(response.status).json(data);
+  } catch (err) {
+    res.status(500).json({ error: 'FNF poll error: ' + err.message });
+  }
+});
+
+app.get('/api/proxy/higgsfield/fnf-custom-references', async (req, res) => {
+  res.set('Access-Control-Allow-Origin', '*');
+  let jwt = req.headers['x-hf-jwt'] || null;
+  if (!jwt && isJWTValid()) jwt = storedJWT.token;
+  if (!jwt) return res.status(401).json({ error: 'No valid session token', needsToken: true });
+  try {
+    const response = await fetch('https://fnf.higgsfield.ai/custom-references', {
+      headers: { 'Authorization': 'Bearer ' + jwt },
+    });
+    const data = await response.json();
+    res.status(response.status).json(data);
+  } catch (err) {
+    res.status(500).json({ error: 'FNF custom-refs error: ' + err.message });
+  }
+});
+
 function isV1Endpoint(endpoint) {
   const ep = (endpoint || '').replace(/^\/+/, '');
   return ep.startsWith('v1/');
