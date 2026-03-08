@@ -320,9 +320,16 @@ async function sendCommand() {
 async function sendConsoleMessage(message) {
   addLog('Thinking...', 'info');
   try {
+    // Send Claude API key from localStorage if available (same key the Video Launchpad uses)
+    const headers = { 'Content-Type': 'application/json' };
+    try {
+      const keys = JSON.parse(localStorage.getItem('maju_api_keys') || '{}');
+      if (keys.claude) headers['x-api-key-value'] = keys.claude;
+    } catch { /* no keys */ }
+
     const resp = await fetch('/api/console', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({ message }),
     });
     if (!resp.ok) {

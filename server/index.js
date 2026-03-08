@@ -1188,7 +1188,7 @@ app.post('/api/console', async (req, res) => {
   let claudeKey = null;
   try {
     const config = readConfig();
-    claudeKey = config.claudeApiKey || config.anthropicApiKey || config.claude_api_key;
+    claudeKey = config.claude || config.claudeApiKey || config.anthropicApiKey;
   } catch { /* no config */ }
   if (!claudeKey) claudeKey = process.env.ANTHROPIC_API_KEY;
   if (!claudeKey) claudeKey = req.headers['x-api-key-value'];
