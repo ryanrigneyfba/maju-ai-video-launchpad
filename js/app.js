@@ -1,18 +1,18 @@
-/* ═══════════════════════════════════════════ 
-   MAJU AI Video Launchpad — v1.1 
+/* âââââââââââââââââââââââââââââââââââââââââââ 
+   MAJU AI Video Launchpad â v1.1 
    Main application logic
-   ═══════════════════════════════════════════ */ 
+   âââââââââââââââââââââââââââââââââââââââââââ */ 
 (function () {
   'use strict';
 
-  // ─── Config ───
+  // âââ Config âââ
   const CONFIG = {
     higgsfield: {
       asset: 'majurender8oz',
-      avatar: 'pateit'
+      avatar: 'b262e935-4460-4026-980b-926aa0babdec'
     },
     avatarMeta: {
-      pateit: { name: 'Patient Maya', ig: '@breealba' },
+      'b262e935-4460-4026-980b-926aa0babdec': { name: 'Patient Maya', ig: '@breealba' },
     },
     productMeta: {
       majurender8oz: { name: "Maju's Black Seed Oil 8oz" },
@@ -23,7 +23,7 @@
     },
   };
 
-  // ─── State ───
+  // âââ State âââ
   let queue = JSON.parse(localStorage.getItem(CONFIG.storageKeys.queue) || '[]');
 
   // Cleanup: remove busted pending items that have no stitched video andno segment ideos
@@ -63,7 +63,7 @@
     if (!item.instagramCaption) {
       const pName = item.productName || item.aiPrompt?.segments?.[0]?.textOverlay || 'Black Seed Oil';
       const hook = item.aiPrompt?.hookVariant || item.typeName || 'wellness snack';
-      item.instagramCaption = hook + ' ✨\nTry this with ' + pName + '. Your skin will thank you! 🖤\nSave & follow @majusuperfoods for more wellness snacks';
+      item.instagramCaption = hook + ' â¨\nTry this with ' + pName + '. Your skin will thank you! ð¤\nSave & follow @majusuperfoods for more wellness snacks';
       defaultsAdded = true;
     }
     if (!item.hashtags || !item.hashtags.length) {
@@ -81,7 +81,7 @@
   let currentApproveId = null;
   let analyticsLoaded = false;
 
-  // ─── Feedback Log (persisted for AI learning) ───
+  // âââ Feedback Log (persisted for AI learning) âââ
   const FEEDBACK_KEY = 'maju_feedback_log';
   let feedbackLog = JSON.parse(localStorage.getItem(FEEDBACK_KEY) || '[]');
 
@@ -93,11 +93,11 @@
     localStorage.setItem(FEEDBACK_KEY, JSON.stringify(feedbackLog));
   }
 
-  // ─── DOM Refs ───
+  // âââ DOM Refs âââ
   const $ = (sel) => document.querySelector(sel);
   const $$ = (sel) => document.querySelectorAll(sel);
 
-  // ─── Navigation ───
+  // âââ Navigation âââ
   const viewMap = {
     dashboard: 'view-dashboard',
     tracker: 'view-tracker',
@@ -159,7 +159,7 @@
     });
   }
 
-  // ─── Posting Toggle ───
+  // âââ Posting Toggle âââ
   $$('input[name="postMode"]').forEach((radio) =>
     radio.addEventListener('change', () => {
       const schedField = $('#schedule-field');
@@ -171,7 +171,7 @@
     })
   );
 
-  // ─── Claude AI Learning Loop ───
+  // âââ Claude AI Learning Loop âââ
   async function getClaudeOptimizedPrompt(videoType, avatar, product, userNotes) {
     if (!apiKeys.claude) return null;
 
@@ -186,37 +186,37 @@
     const systemPrompt = `You are a video production AI assistant for MAJU, a wellness brand. You generate optimized Kling AI text-to-video prompts.
 
 Format: ${videoType}
-Avatar: ${avatar} (Patient Maya / Bree Alba — young woman, hair in bun, black tank top, minimal makeup, natural look)
-Product: ${product} (Maju's Black Seed Oil 8oz — dark glass bottle with "MAJU BLACK SEED OIL" label)
+Avatar: ${avatar} (Patient Maya / Bree Alba â young woman, hair in bun, black tank top, minimal makeup, natural look)
+Product: ${product} (Maju's Black Seed Oil 8oz â dark glass bottle with "MAJU BLACK SEED OIL" label)
 Video model: Kling v2 Master (text-to-video, 5s per segment)
 
-This is the "Anti-Puffy Face Snack" Selfcare Snack Reel — red onion + Maju Black Seed Oil + salt. Total duration: 25 seconds (5 segments x 5s each), 9:16 vertical.
+This is the "Anti-Puffy Face Snack" Selfcare Snack Reel â red onion + Maju Black Seed Oil + salt. Total duration: 25 seconds (5 segments x 5s each), 9:16 vertical.
 
-The video has exactly 5 segments. Each segment is generated as a 5-second Kling text-to-video clip. Prompts must be rich, descriptive, and cinematic — Kling generates from text alone (no reference image).
+The video has exactly 5 segments. Each segment is generated as a 5-second Kling text-to-video clip. Prompts must be rich, descriptive, and cinematic â Kling generates from text alone (no reference image).
 
-SEGMENT 1: HOOK (0-5s) — Stop the scroll
+SEGMENT 1: HOOK (0-5s) â Stop the scroll
 Text overlay: "de-puff your face snack" OR "wake up puffy? eat this"
 
-SEGMENT 2: THE REVEAL — Ingredients + Pour (5-10s) — Product placement money shot
+SEGMENT 2: THE REVEAL â Ingredients + Pour (5-10s) â Product placement money shot
 Text overlay: "1 red onion\\n+ black seed oil\\n+ salt"
 
-SEGMENT 3: THE DEMO — Eating the Snack (10-15s) — Viral hook, authentic reaction
+SEGMENT 3: THE DEMO â Eating the Snack (10-15s) â Viral hook, authentic reaction
 Text overlay: NONE (let the visual do the work)
 
-SEGMENT 4: RESULT + BENEFITS (15-20s) — Educate on benefits
+SEGMENT 4: RESULT + BENEFITS (15-20s) â Educate on benefits
 Text overlay: "drains facial bloat\\nreduces water retention\\ntightens puffy skin"
 
-SEGMENT 5: THE GLOW — Result + CTA (20-25s) — Payoff beauty shot
+SEGMENT 5: THE GLOW â Result + CTA (20-25s) â Payoff beauty shot
 Text overlay: "anti-puffy face snack\\n(onion + black seed oil + salt)" + CTA
 
 CRITICAL RULES FOR EVERY PROMPT:
 - EVERY prompt MUST describe Patient Maya: "a young woman with her hair in a bun wearing a black tank top"
 - EVERY prompt MUST include the Maju bottle: "a dark bottle labeled MAJU BLACK SEED OIL"
-- The bottle MUST be visible in EVERY segment — on the counter, in her hand, or in the foreground
+- The bottle MUST be visible in EVERY segment â on the counter, in her hand, or in the foreground
 - Bottle label must be readable in at least Reveal + Glow segments
 - Kitchen: ALWAYS dark/moody (dark cabinets, warm wood), NEVER bright/white
 - Lighting: ALWAYS warm golden-hour (3200-4000K), soft, flattering
-- Eating reaction must be AUTHENTIC — slight grimace then acceptance, NOT polished
+- Eating reaction must be AUTHENTIC â slight grimace then acceptance, NOT polished
 - Movement: smooth, natural, never robotic
 - Each prompt should be 2-3 sentences of rich visual description for Kling text-to-video
 - Include "Vertical 9:16 format" in each prompt
@@ -237,9 +237,9 @@ Example:
 
     const feedbackContext = relevantFeedback.length
       ? `\n\nPast feedback for this format (${relevantFeedback.length} entries):
-APPROVED videos — what worked:\n${approvals.map((f) => `- "${f.notes}"`).join('\n') || '(none yet)'}
-REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).join('\n') || '(none yet)'}`
-      : '\n\nNo past feedback yet — use best practices for short-form social video.';
+APPROVED videos â what worked:\n${approvals.map((f) => `- "${f.notes}"`).join('\n') || '(none yet)'}
+REJECTED videos â what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).join('\n') || '(none yet)'}`
+      : '\n\nNo past feedback yet â use best practices for short-form social video.';
 
     try {
       const res = await fetch(backendUrl('/api/proxy/claude/messages'), {
@@ -266,7 +266,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
           if (!parsed.instagramCaption) {
             const product = parsed.segments?.[0]?.textOverlay || 'Black Seed Oil';
             const hook = parsed.hookVariant || 'wellness snack';
-            parsed.instagramCaption = hook + ' ✨\nTry this anti-puffy face combo with ' + product + '. Your skin will thank you! 🖤\nSave for later & follow @majusuperfoods for more wellness snacks';
+            parsed.instagramCaption = hook + ' â¨\nTry this anti-puffy face combo with ' + product + '. Your skin will thank you! ð¤\nSave for later & follow @majusuperfoods for more wellness snacks';
           }
           if (!parsed.hashtags || !parsed.hashtags.length) {
             parsed.hashtags = ['blackseedoil','depuff','facesnack','skincaretips','naturalremedy','antiinflammatory','puffyface','wellnesstips','majublackseedoil','skincareroutine','majusuperfoods','holistichealth'];
@@ -282,7 +282,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     }
   }
 
-  // ─── Generate Video ───
+  // âââ Generate Video âââ
   $('#submit-video').addEventListener('click', async () => {
     const type = $('#video-type').value;
     const versions = parseInt($('#versions').value);
@@ -299,10 +299,10 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     if (apiKeys.claude) {
       const btn = $('#submit-video');
       btn.disabled = true;
-      btn.textContent = '🧠 Claude is optimizing your prompt…';
+      btn.textContent = 'ð§  Claude is optimizing your promptâ¦';
       aiPrompt = await getClaudeOptimizedPrompt(type, avatar, product, notes);
       btn.disabled = false;
-      btn.textContent = '🚀 Generate & Send to Queue';
+      btn.textContent = 'ð Generate & Send to Queue';
     }
 
     for (let i = 0; i < versions; i++) {
@@ -326,7 +326,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
         revisionCount: 0,
         revisionNotes: [],
         createdAt: new Date().toISOString(),
-        pipelineStage: 'generate', // generate → stitch → queue → post
+        pipelineStage: 'generate', // generate â stitch â queue â post
       };
       queue.unshift(item);
     }
@@ -350,7 +350,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     $('#notes').value = '';
   });
 
-  // ─── Pipeline Visualization ───
+  // âââ Pipeline Visualization âââ
   function showPipeline() {
     const card = $('#pipeline-card');
     card.classList.remove('hidden');
@@ -371,9 +371,9 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     if (!apiKeys.higgsfield) {
       let stage = 0;
       const sim = [
-        '⚠️ Higgsfield API key not set — video generation simulated. Add key in Settings.',
+        'â ï¸ Higgsfield API key not set â video generation simulated. Add key in Settings.',
         'FFmpeg stitch simulated (no backend connected).',
-        '✓ Pipeline complete — videos in queue (simulated).',
+        'â Pipeline complete â videos in queue (simulated).',
       ];
       function advanceSim() {
         setStage(stage, sim[stage]);
@@ -381,7 +381,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
         if (stage < sim.length) {
           setTimeout(advanceSim, 1800);
         } else {
-          // Simulation complete — move items into the approval queue
+          // Simulation complete â move items into the approval queue
           const simItems = queue.filter(q => q.pipelineStage === 'generate');
           simItems.forEach(item => { item.pipelineStage = 'queue'; });
           saveQueue();
@@ -394,12 +394,12 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       return;
     }
 
-    // Real pipeline: Generate → Stitch → Queue
+    // Real pipeline: Generate â Stitch â Queue
     runRealPipeline(steps, msg, setStage);
   }
 
   // SOP v2.0 default Kling prompts for each segment
-  // Avatar: Patient Maya (Bree Alba) — young woman, black tank top, hair in bun, minimal makeup, natural look
+  // Avatar: Patient Maya (Bree Alba) â young woman, black tank top, hair in bun, minimal makeup, natural look
   // Product: Maju's Black Seed Oil 8oz dark bottle with "MAJU BLACK SEED OIL" label
   const DEFAULT_SEGMENT_PROMPTS = [
     { name: 'hook', duration: 5, prompt: 'A young woman with her hair in a bun wearing a black tank top stands in a dark moody kitchen with warm golden lighting. She holds a whole red onion near her face, looking at it curiously then turning to camera with a confident knowing smile. A dark glass bottle labeled "MAJU BLACK SEED OIL" sits prominently on the wooden counter beside her. She slowly raises the onion. Cinematic warm golden-hour lighting from a window, dark cabinets in background. Vertical 9:16 format, smooth natural motion.', textOverlay: 'de-puff your face snack', model: 'kling-v2-master' },
@@ -446,22 +446,22 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
 
     // Product refinement pass: use Flux Kontext image-to-image with the product render as reference
     if (productImageUrl) {
-      debugPanel(`[${segLabel}] Refining product packaging via Kontext image-to-image…`);
-      console.log(`[Pipeline] ${segLabel} product refinement with reference: ${productImageUrl.slice(0, 60)}…`);
+      debugPanel(`[${segLabel}] Refining product packaging via Kontext image-to-imageâ¦`);
+      console.log(`[Pipeline] ${segLabel} product refinement with reference: ${productImageUrl.slice(0, 60)}â¦`);
       const editResult = await API.higgsfield.editImageWithProduct(
         baseImage.url,
         productImageUrl,
-        `Keep this exact scene, person, pose, lighting, and background unchanged. Replace any dark bottle or generic bottle in the image with the exact Maju Black Seed Oil bottle shown in the second reference image — match the label, shape, color, and packaging precisely. The bottle label should read "BLACK SEED OIL" with the Maju branding clearly visible.`
+        `Keep this exact scene, person, pose, lighting, and background unchanged. Replace any dark bottle or generic bottle in the image with the exact Maju Black Seed Oil bottle shown in the second reference image â match the label, shape, color, and packaging precisely. The bottle label should read "BLACK SEED OIL" with the Maju branding clearly visible.`
       );
       if (!editResult.ok || !editResult.id) {
         console.warn(`[Pipeline] ${segLabel} product edit failed, using base image:`, editResult.error);
-        debugPanel(`[${segLabel}] Product edit failed (${editResult.error || 'unknown'}) — using base image`);
+        debugPanel(`[${segLabel}] Product edit failed (${editResult.error || 'unknown'}) â using base image`);
         return baseImage;
       }
       const refinedImage = await pollImageStatus(editResult.id, segLabel, 'product-edit');
       if (!refinedImage.url) {
         console.warn(`[Pipeline] ${segLabel} product edit poll failed, using base image`);
-        debugPanel(`[${segLabel}] Product edit timed out — using base image`);
+        debugPanel(`[${segLabel}] Product edit timed out â using base image`);
         return baseImage;
       }
       debugPanel(`[${segLabel}] Product packaging refined successfully`);
@@ -507,18 +507,18 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     return { url: null, error: 'Video timed out after 600s' };
   }
 
-  // Helper: full segment pipeline — Higgsfield image → Kling animate (or Kling text2video fallback)
+  // Helper: full segment pipeline â Higgsfield image â Kling animate (or Kling text2video fallback)
   // Returns { url, error } object
   async function generateSegmentVideo(seg, segLabel, characterId, productImageUrl) {
-    // If Higgsfield key is set, use hybrid pipeline: Soul/Flux image → Kling image2video
+    // If Higgsfield key is set, use hybrid pipeline: Soul/Flux image â Kling image2video
     if (apiKeys.higgsfield) {
-      debugPanel(`[${segLabel}] Generating image via ${characterId ? 'Soul (character: ' + characterId + ')' : 'Flux Kontext Max'}${productImageUrl ? ' + product reference' : ''}…`);
+      debugPanel(`[${segLabel}] Generating image via ${characterId ? 'Soul (character: ' + characterId + ')' : 'Flux Kontext Max'}${productImageUrl ? ' + product reference' : ''}â¦`);
       const imageResult = await generateSegmentImage(seg, segLabel, characterId, productImageUrl);
       if (imageResult.url) {
-        debugPanel(`[${segLabel}] Image ready — animating via Kling image2video…`);
+        debugPanel(`[${segLabel}] Image ready â animating via Kling image2videoâ¦`);
         return await animateImageToVideo(seg, imageResult.url, segLabel);
       }
-      debugPanel(`[${segLabel}] Image failed (${imageResult.error}) — falling back to Kling text2video`);
+      debugPanel(`[${segLabel}] Image failed (${imageResult.error}) â falling back to Kling text2video`);
     }
 
     // Fallback: Kling text-to-video (no reference image)
@@ -577,7 +577,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
 
   async function runRealPipeline(steps, msg, setStage) {
     // Stage 0: Generate each segment via Kling text-to-video
-    setStage(0, 'Generating video segments via Kling AI…');
+    setStage(0, 'Generating video segments via Kling AIâ¦');
 
     const newItems = queue.filter(q => q.pipelineStage === 'generate');
     const allSegmentVideos = []; // { url, label } for stitching
@@ -588,17 +588,17 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       const segments = testMode ? allSegments.slice(0, 1) : allSegments;
       if (testMode) debugPanel('[Test Mode] Generating 1 segment only (hook)');
 
-      // Generate ALL video segments in parallel via Kling (text→video, no image step needed)
+      // Generate ALL video segments in parallel via Kling (textâvideo, no image step needed)
       const KLING_CONCURRENCY = 3;
-      msg.textContent = `v${item.version}: Generating ${segments.length} video segments via Kling…`;
-      updateSegmentStatus('hook', 'Generating videos…', false);
+      msg.textContent = `v${item.version}: Generating ${segments.length} video segments via Klingâ¦`;
+      updateSegmentStatus('hook', 'Generating videosâ¦', false);
 
       const characterId = item.avatar || CONFIG.higgsfield.avatar || null;
       const productImageUrl = apiKeys.productImageUrl || null;
       if (characterId) console.log(`[Pipeline] Using Soul character ID: ${characterId}`);
-      if (productImageUrl) console.log(`[Pipeline] Using product reference image: ${productImageUrl.slice(0, 60)}…`);
+      if (productImageUrl) console.log(`[Pipeline] Using product reference image: ${productImageUrl.slice(0, 60)}â¦`);
       const videoTasks = segments.map((seg, si) => () => {
-        updateSegmentStatus(seg.name, 'Generating…', false);
+        updateSegmentStatus(seg.name, 'Generatingâ¦', false);
         return generateSegmentVideo(seg, `${seg.name} (${si + 1}/${segments.length})`, characterId, productImageUrl);
       });
       const videoResults = await runWithConcurrency(videoTasks, KLING_CONCURRENCY);
@@ -608,7 +608,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       for (let si = 0; si < segments.length; si++) {
         if (videoResults[si] && videoResults[si].url) {
           segmentResults.push({ url: videoResults[si].url, label: segments[si].name, textOverlay: segments[si].textOverlay });
-          updateSegmentStatus(segments[si].name, 'Done ✓', true);
+          updateSegmentStatus(segments[si].name, 'Done â', true);
         } else {
           const reason = videoResults[si]?.error || 'Video failed';
           updateSegmentStatus(segments[si].name, reason, false);
@@ -626,7 +626,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       } else {
         item.pipelineStage = 'failed';
         item.status = 'failed';
-        msg.textContent = `⚠️ v${item.version}: No segments rendered successfully.`;
+        msg.textContent = `â ï¸ v${item.version}: No segments rendered successfully.`;
         if (typeof fetchDebugLog === 'function') fetchDebugLog();
       }
       saveQueue();
@@ -637,7 +637,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     // Stage 1: Auto-stitch via FFmpeg with captions
     let stitchPassed = false;
     if (completedVideos.length > 0 && (apiKeys.backendUrl || DEFAULT_BACKEND)) {
-      setStage(1, `FFmpeg auto-stitching ${completedVideos.length} clips with captions…`);
+      setStage(1, `FFmpeg auto-stitching ${completedVideos.length} clips with captionsâ¦`);
 
       const stitchOptions = {};
       const audioSel = document.getElementById('audio-select');
@@ -666,7 +666,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
           while (!stitchDone) {
             await new Promise(r => setTimeout(r, 1500));
             const st = await API.backend.jobStatus(stitchResult.jobId);
-            msg.textContent = `Stitching… ${st.progress || 0}%`;
+            msg.textContent = `Stitchingâ¦ ${st.progress || 0}%`;
 
             if (st.status === 'done') {
               stitchDone = true;
@@ -676,17 +676,17 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
               stitchPassed = true;
             } else if (st.status === 'error') {
               stitchDone = true;
-              msg.textContent = `⚠️ Stitch error: ${st.error}`;
+              msg.textContent = `â ï¸ Stitch error: ${st.error}`;
             }
           }
         }
       } catch (err) {
-        msg.textContent = `⚠️ Stitch error: ${err.message}`;
+        msg.textContent = `â ï¸ Stitch error: ${err.message}`;
       }
     } else if (completedVideos.length === 0) {
-      setStage(1, 'Stitch skipped — no completed videos.');
+      setStage(1, 'Stitch skipped â no completed videos.');
     } else {
-      setStage(1, 'Stitch skipped — no backend URL set.');
+      setStage(1, 'Stitch skipped â no backend URL set.');
     }
 
     // Audit check: only send to approval if stitch produced a real video
@@ -696,23 +696,23 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       renderQueue();
       renderTracker();
       updateBadge();
-      setStage(2, '✓ Pipeline complete — video ready for approval.');
+      setStage(2, 'â Pipeline complete â video ready for approval.');
     } else if (completedVideos.length > 0) {
-      // Segments rendered but stitch failed — keep in generate stage for retry, don't pollute approval queue
-      msg.textContent = '⚠️ Stitch failed — video not sent to approval. Check backend and retry.';
+      // Segments rendered but stitch failed â keep in generate stage for retry, don't pollute approval queue
+      msg.textContent = 'â ï¸ Stitch failed â video not sent to approval. Check backend and retry.';
       renderTracker();
-      setStage(2, '⚠️ Stitch failed — not queued for approval.');
+      setStage(2, 'â ï¸ Stitch failed â not queued for approval.');
     } else {
-      // Nothing rendered at all — keep in generate stage so they don't pollute approval queue
+      // Nothing rendered at all â keep in generate stage so they don't pollute approval queue
       newItems.forEach(item => { item.pipelineStage = 'failed'; item.status = 'failed'; });
       saveQueue();
       renderTracker();
       updateBadge();
-      setStage(2, '⚠️ No videos generated — check Kling API key and retry.');
+      setStage(2, 'â ï¸ No videos generated â check Kling API key and retry.');
     }
   }
 
-  // ─── Queue Rendering ───
+  // âââ Queue Rendering âââ
   function renderQueue(filter = 'all') {
     const list = $('#queue-list');
     // Only show items that have reached the approval queue (not still generating/stitching)
@@ -734,13 +734,13 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
           const vSrc = item.stitchedVideoUrl || item.videoUrl || (item.segmentVideos && item.segmentVideos[0]?.url);
           return vSrc
             ? `<div class="queue-video"><video src="${vSrc}" controls preload="auto" playsinline muted></video></div>`
-            : '<div class="queue-video queue-video-placeholder"><span>Video generating…</span></div>';
+            : '<div class="queue-video queue-video-placeholder"><span>Video generatingâ¦</span></div>';
         })()}
         <div class="queue-info">
-          <h4>${item.typeName} — v${item.version}/${item.totalVersions}</h4>
-          <p>${item.productName} · ${item.avatarName}</p>
+          <h4>${item.typeName} â v${item.version}/${item.totalVersions}</h4>
+          <p>${item.productName} Â· ${item.avatarName}</p>
           ${item.aiPrompt?.hookVariant ? `<span class="queue-hook-label">${item.aiPrompt.hookVariant}</span>` : ''}
-          ${item.postMode === 'asap' ? '<p>📌 Post ASAP</p>' : `<p>📅 ${formatDate(item.schedDate)}</p>`}
+          ${item.postMode === 'asap' ? '<p>ð Post ASAP</p>' : `<p>ð ${formatDate(item.schedDate)}</p>`}
           ${item.notes ? `<p>"${item.notes}"</p>` : ''}
           ${item.aiPrompt ? `<div class="ai-prompt"><strong>AI Brief:</strong> ${item.aiPrompt.reasoning || ''}<br><em>${(item.aiPrompt.direction || '').substring(0, 120)}</em></div>` : ''}
           <div class="queue-social-content">
@@ -751,17 +751,17 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
           </div>
           ${item.aiPrompt?.segments ? `<div class="queue-segments-preview"><strong>Segment Overlays:</strong> ${item.aiPrompt.segments.filter(s => s.textOverlay).map(s => `<span>${s.name}: "${s.textOverlay.replace(/\n/g, ' ')}"</span>`).join(' \u00b7 ')}</div>` : ''}
           <div class="queue-meta">
-            Status: <strong>${item.status.toUpperCase()}</strong> ·
+            Status: <strong>${item.status.toUpperCase()}</strong> Â·
             Created: ${formatDate(item.createdAt)}
-            ${(item.revisionCount || 0) > 0 ? `<div class="revision-count">🔄 Revision ${item.revisionCount}</div>` : ''}
+            ${(item.revisionCount || 0) > 0 ? `<div class="revision-count">ð Revision ${item.revisionCount}</div>` : ''}
           </div>
           ${(item.revisionNotes || []).length ? (item.revisionNotes || []).map((n, i) => `<div class="rejection-notes">Rev ${i + 1}: ${n}</div>`).join('') : ''}
           ${(item.approvalNotes || []).length ? (item.approvalNotes || []).map((n) => `<div class="approval-notes">Approved: ${n}</div>`).join('') : ''}
         </div>
         <div class="queue-actions">
           ${item.status === 'pending' || item.status === 'revision'
-            ? `<button class="btn-approve" data-action="approve" data-id="${item.id}">✓ Approve</button>
-               <button class="btn-reject" data-action="reject" data-id="${item.id}">✗ Reject</button>`
+            ? `<button class="btn-approve" data-action="approve" data-id="${item.id}">â Approve</button>
+               <button class="btn-reject" data-action="reject" data-id="${item.id}">â Reject</button>`
             : ''
           }
         </div>
@@ -801,7 +801,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     }
   });
 
-  // ─── Approval Modal ───
+  // âââ Approval Modal âââ
   $('#btn-cancel-approve').addEventListener('click', () => {
     $('#approve-modal').classList.add('hidden');
     currentApproveId = null;
@@ -854,7 +854,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     }
   });
 
-  // ─── Rejection Modal ───
+  // âââ Rejection Modal âââ
   $('#btn-cancel-reject').addEventListener('click', () => {
     $('#reject-modal').classList.add('hidden');
     currentRejectId = null;
@@ -911,7 +911,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     }
   });
 
-  // ─── Activity Feed ───
+  // âââ Activity Feed âââ
   function renderActivity() {
     const feed = $('#recent-activity');
     const recent = queue.slice(0, 8);
@@ -924,9 +924,9 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       .map(
         (item) => `
       <div class="activity-item">
-        <strong>${item.typeName}</strong> v${item.version} — ${item.productName}
+        <strong>${item.typeName}</strong> v${item.version} â ${item.productName}
         <span style="color:var(--${item.status === 'approved' ? 'success' : item.status === 'rejected' ? 'danger' : item.status === 'revision' ? 'revision' : 'warning'})">[${item.status}]</span>
-        ${item.revisionCount > 0 ? `<span style="color:var(--revision)">🔄 ${item.revisionCount}</span>` : ''}
+        ${item.revisionCount > 0 ? `<span style="color:var(--revision)">ð ${item.revisionCount}</span>` : ''}
         <div class="activity-time">${formatDate(item.createdAt)}</div>
       </div>
     `
@@ -934,7 +934,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       .join('');
   }
 
-  // ─── Badge ───
+  // âââ Badge âââ
   function updateBadge() {
     const pending = queue.filter(
       (q) => (q.status === 'pending' || q.status === 'revision') && (q.pipelineStage === 'queue' || q.pipelineStage === 'post')
@@ -952,12 +952,12 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     }
   }
 
-  // ─── Request Tracker ───
+  // âââ Request Tracker âââ
   const PIPELINE_STAGES = [
-    { key: 'generate', label: 'Generating', icon: '🎬' },
-    { key: 'stitch', label: 'Stitching', icon: '🧵' },
-    { key: 'queue', label: 'Awaiting Approval', icon: '⏳' },
-    { key: 'post', label: 'Posted', icon: '✅' },
+    { key: 'generate', label: 'Generating', icon: 'ð¬' },
+    { key: 'stitch', label: 'Stitching', icon: 'ð§µ' },
+    { key: 'queue', label: 'Awaiting Approval', icon: 'â³' },
+    { key: 'post', label: 'Posted', icon: 'â' },
   ];
 
   function getStageIndex(item) {
@@ -995,7 +995,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
         if (isFailed && idx === currentStage) cls += ' failed';
         if (isRevision && idx === 0) cls += ' revision';
         return `<div class="${cls}">
-          <div class="tracker-stage-dot">${idx < currentStage ? '✓' : stage.icon}</div>
+          <div class="tracker-stage-dot">${idx < currentStage ? 'â' : stage.icon}</div>
           <div class="tracker-stage-label">${stage.label}</div>
         </div>`;
       }).join('<div class="tracker-stage-connector"></div>');
@@ -1005,8 +1005,8 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       return `<div class="tracker-item ${isFailed ? 'tracker-failed' : ''} ${isRevision ? 'tracker-revision' : ''}">
         <div class="tracker-header">
           <div class="tracker-title">
-            <strong>${item.typeName || 'Video'} — v${item.version}/${item.totalVersions}</strong>
-            <span class="tracker-meta">${item.productName} · ${item.avatarName}</span>
+            <strong>${item.typeName || 'Video'} â v${item.version}/${item.totalVersions}</strong>
+            <span class="tracker-meta">${item.productName} Â· ${item.avatarName}</span>
           </div>
           <div class="tracker-progress-badge">${isFailed ? 'Failed' : isRevision ? 'In Revision' : progressPct + '%'}</div>
         </div>
@@ -1020,7 +1020,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     }).join('');
   }
 
-  // ─── Approved Videos ───
+  // âââ Approved Videos âââ
   function renderApprovedVideos() {
     const list = $('#approved-list');
     if (!list) return;
@@ -1039,8 +1039,8 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       return `<div class="approved-card">
         ${videoSrc ? `<video src="${videoSrc}" controls preload="metadata" playsinline></video>` : '<div class="queue-video-placeholder" style="height:180px"><span>No video</span></div>'}
         <div class="approved-card-info">
-          <h4>${item.typeName || 'Video'} — v${item.version}</h4>
-          <p>${item.productName} · ${item.avatarName}</p>
+          <h4>${item.typeName || 'Video'} â v${item.version}</h4>
+          <p>${item.productName} Â· ${item.avatarName}</p>
           <p>${formatDate(item.createdAt)}</p>
           ${item.postMode === 'asap' ? '<p>Post ASAP</p>' : `<p>Scheduled: ${formatDate(item.schedDate)}</p>`}
           ${item.metricoolId ? '<p style="color:var(--success)">Posted to Metricool</p>' : ''}
@@ -1050,7 +1050,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     }).join('');
   }
 
-  // ─── Spend Tracker ───
+  // âââ Spend Tracker âââ
   // Kling pricing estimates (per API call)
   const COST_ESTIMATES = {
     'kling-v2-master': 0.14,    // Kling v2 Master (5s video)
@@ -1080,7 +1080,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       spendRows.push({
         id: item.id,
         date: item.createdAt,
-        name: `${item.typeName || 'Video'} — v${item.version}`,
+        name: `${item.typeName || 'Video'} â v${item.version}`,
         product: item.productName,
         images: imageCount,
         videos: videoCount,
@@ -1120,7 +1120,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       <tbody>${spendRows.map(r => `<tr>
         <td class="spend-date">${formatDate(r.date)}</td>
         <td>${r.name}</td>
-        <td>${r.product || '—'}</td>
+        <td>${r.product || 'â'}</td>
         <td>${r.images}</td>
         <td>${r.videos}</td>
         <td>${r.model}</td>
@@ -1130,7 +1130,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     </table>`;
   }
 
-  // ─── Scheduled Posts (Metricool) ───
+  // âââ Scheduled Posts (Metricool) âââ
   function renderScheduledPosts() {
     const statusEl = $('#metricool-status');
     const listEl = $('#scheduled-list');
@@ -1145,13 +1145,13 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
         '<p class="empty-state">Metricool connected! Scheduled posts will appear here once the API integration is complete.</p>';
     } else {
       statusEl.innerHTML =
-        '<span class="status-dot disconnected"></span><span>Metricool: Not connected</span><a href="#" class="link-settings" data-goto="settings">Add API key →</a>';
+        '<span class="status-dot disconnected"></span><span>Metricool: Not connected</span><a href="#" class="link-settings" data-goto="settings">Add API key â</a>';
       listEl.innerHTML =
         '<p class="empty-state">Connect your Metricool API key in Settings to see scheduled posts.</p>';
     }
   }
 
-  // ─── SOP Wiki ───
+  // âââ SOP Wiki âââ
   $$('.sop-link').forEach((link) =>
     link.addEventListener('click', (e) => {
       e.preventDefault();
@@ -1200,7 +1200,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
   const firstSop = $('.sop-link.active');
   if (firstSop) loadSop(firstSop.dataset.sop);
 
-  // ─── API Settings ───
+  // âââ API Settings âââ
   // Load saved keys into form fields
   function loadApiKeys() {
     if (apiKeys.backendUrl) $('#api-backend-url').value = apiKeys.backendUrl;
@@ -1233,8 +1233,8 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
           loadApiKeys();
           console.log('[Config] Synced keys from backend');
         } else if (hasLocalKeys) {
-          // Backend has no keys (e.g. after redeploy) — push local keys up
-          console.log('[Config] Backend empty after redeploy — pushing local keys');
+          // Backend has no keys (e.g. after redeploy) â push local keys up
+          console.log('[Config] Backend empty after redeploy â pushing local keys');
           pushKeysToBackend();
         }
       }
@@ -1250,7 +1250,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
         body: JSON.stringify(apiKeys),
       });
       console.log('[Config] Keys saved to backend');
-    } catch { /* silent fail — localStorage still works */ }
+    } catch { /* silent fail â localStorage still works */ }
   }
 
   // Toggle visibility
@@ -1288,7 +1288,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
   loadAudioTracks();
     checkBackendStatus();
 
-  // ── Debounced save for queue social content edits ──
+  // ââ Debounced save for queue social content edits ââ
   let _queueSaveTimer = null;
   const queueList = document.getElementById('queue-list');
   if (queueList) {
@@ -1308,7 +1308,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
   }
   });
 
-  // ─── Helpers ───
+  // âââ Helpers âââ
   function saveQueue() {
     localStorage.setItem(CONFIG.storageKeys.queue, JSON.stringify(queue));
   }
@@ -1319,7 +1319,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
   }
 
   function formatDate(str) {
-    if (!str) return '—';
+    if (!str) return 'â';
     try {
       return new Date(str).toLocaleString('en-US', {
         month: 'short',
@@ -1332,7 +1332,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     }
   }
 
-  // ─── API Integrations (Live) ───
+  // âââ API Integrations (Live) âââ
 
   let DEFAULT_BACKEND = '';
 
@@ -1352,11 +1352,11 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
   // All API calls route through the backend proxy to avoid CORS issues.
 
   const API = {
-    // ── Higgsfield — Static image generation with Patient Maya avatar (via proxy) ──
+    // ââ Higgsfield â Static image generation with Patient Maya avatar (via proxy) ââ
     higgsfield: {
       async generateImage(params) {
         console.log('[Higgsfield] Soul image generation:', params);
-        if (!apiKeys.higgsfield) return { ok: false, error: 'No Higgsfield API key set — add in Settings' };
+        if (!apiKeys.higgsfield) return { ok: false, error: 'No Higgsfield API key set â add in Settings' };
         // Use Soul endpoint when character_id is available, otherwise fall back to Flux Kontext
         const useSoul = !!params.custom_reference_id;
         const endpoint = params.endpoint || (useSoul ? '/v1/text2image/soul' : 'flux-pro/kontext/max/text-to-image');
@@ -1370,6 +1370,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
         if (params.custom_reference_id) {
           body.input.custom_reference_id = params.custom_reference_id;
           body.input.custom_reference_strength = params.custom_reference_strength || 1;
+          body.input.soul_style_id = params.soul_style_id || '1cb4b936-77bf-4f9a-9039-f3d349a4cdbe';
         }
         try {
           const res = await fetch(backendUrl('/api/proxy/higgsfield/generate'), {
@@ -1445,13 +1446,13 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       },
     },
 
-    // ── Kling AI — Video generation (via Higgsfield platform proxy) ──
-    // Higgsfield provides Kling access through their API — same credentials
+    // ââ Kling AI â Video generation (via Higgsfield platform proxy) ââ
+    // Higgsfield provides Kling access through their API â same credentials
     // Endpoint pattern: kling-video/{version}/{tier}/{mode}
     kling: {
       async generateVideo(params) {
         console.log('[Kling via Higgsfield] Generate video:', params);
-        if (!apiKeys.higgsfield) return { ok: false, error: 'No Higgsfield API key set — add in Settings (Kling runs via Higgsfield)' };
+        if (!apiKeys.higgsfield) return { ok: false, error: 'No Higgsfield API key set â add in Settings (Kling runs via Higgsfield)' };
         const endpoint = params.endpoint || 'kling-video/v2.1/master/text-to-video';
         const body = {
           endpoint,
@@ -1501,7 +1502,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
 
       async generateFromImage(params) {
         console.log('[Kling via Higgsfield] Image-to-video:', params);
-        if (!apiKeys.higgsfield) return { ok: false, error: 'No Higgsfield API key set — add in Settings' };
+        if (!apiKeys.higgsfield) return { ok: false, error: 'No Higgsfield API key set â add in Settings' };
         const endpoint = params.endpoint || 'kling-video/v2.1/master/image-to-video';
         const body = {
           endpoint,
@@ -1535,12 +1536,12 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
 
       async reviseVideo(videoId, notes) {
         return this.generateVideo({
-          prompt: `Revision — feedback: ${notes}`,
+          prompt: `Revision â feedback: ${notes}`,
         });
       },
     },
 
-    // ── Metricool — Social scheduling & analytics (via proxy) ──
+    // ââ Metricool â Social scheduling & analytics (via proxy) ââ
     metricool: {
       async getScheduledPosts() {
         console.log('[Metricool] Fetching scheduled posts');
@@ -1581,7 +1582,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       },
     },
 
-    // ── Arcads — UGC-style ad video generation (via proxy) ──
+    // ââ Arcads â UGC-style ad video generation (via proxy) ââ
     arcads: {
       async generateUGC(params) {
         console.log('[Arcads] Generate UGC video:', params);
@@ -1614,7 +1615,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       },
     },
 
-    // ── Creatify — AI product video generation (via proxy) ──
+    // ââ Creatify â AI product video generation (via proxy) ââ
     creatify: {
       _creatifyHeaders() {
         const [apiId, apiKey] = (apiKeys.creatify || '').includes(':')
@@ -1673,7 +1674,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       },
     },
 
-    // ── Backend — FFmpeg stitching server ──
+    // ââ Backend â FFmpeg stitching server ââ
     backend: {
       async health() {
         try {
@@ -1721,7 +1722,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
   window.MAJU_API = API;
   window.MAJU_CONFIG = CONFIG;
 
-  // ─── Debug Panel (visible on page, no F12 needed) ───
+  // âââ Debug Panel (visible on page, no F12 needed) âââ
   const _debugLines = [];
   function debugPanel(msg) {
     _debugLines.push(`[${new Date().toLocaleTimeString()}] ${msg}`);
@@ -1751,10 +1752,10 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
   }
   window.fetchDebugLog = fetchDebugLog;
 
-  // ─── Backend Status Check ───
+  // âââ Backend Status Check âââ
   async function checkBackendStatus(retries = 3) {
     const el = $('#backend-status');
-    el.innerHTML = '<span class="status-dot connecting"></span><span>Backend: Connecting…</span>';
+    el.innerHTML = '<span class="status-dot connecting"></span><span>Backend: Connectingâ¦</span>';
 
     for (let i = 0; i < retries; i++) {
       try {
@@ -1770,15 +1771,15 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       } catch {
         // Backend may be cold-starting, retry
         if (i < retries - 1) {
-          el.innerHTML = `<span class="status-dot connecting"></span><span>Backend: Waking up… (attempt ${i + 2}/${retries})</span>`;
+          el.innerHTML = `<span class="status-dot connecting"></span><span>Backend: Waking upâ¦ (attempt ${i + 2}/${retries})</span>`;
           await new Promise(r => setTimeout(r, 5000));
         }
       }
     }
-    el.innerHTML = '<span class="status-dot disconnected"></span><span>Backend: Not connected — set your backend URL in <a href="#" data-goto="settings">Settings</a></span>';
+    el.innerHTML = '<span class="status-dot disconnected"></span><span>Backend: Not connected â set your backend URL in <a href="#" data-goto="settings">Settings</a></span>';
   }
 
-  // ─── Auto-Stitch Segment Status Updates ───
+  // âââ Auto-Stitch Segment Status Updates âââ
   // Called by the pipeline to update segment status in the stitch panel
   function updateSegmentStatus(segment, statusText, isReady) {
     const el = $(`#seg-${segment}`);
@@ -1789,14 +1790,14 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
   }
   window.updateSegmentStatus = updateSegmentStatus;
 
-  // ─── Live Metricool Scheduled Posts ───
+  // âââ Live Metricool Scheduled Posts âââ
   async function fetchScheduledPosts() {
     const statusEl = $('#metricool-status');
     const listEl = $('#scheduled-list');
 
     if (!apiKeys.metricool) return;
 
-    statusEl.innerHTML = '<span class="status-dot connected"></span><span>Metricool: Fetching…</span>';
+    statusEl.innerHTML = '<span class="status-dot connected"></span><span>Metricool: Fetchingâ¦</span>';
 
     const result = await API.metricool.getScheduledPosts();
     if (result.ok && result.posts && result.posts.length) {
@@ -1814,21 +1815,21 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       statusEl.innerHTML = '<span class="status-dot connected"></span><span>Metricool: Connected</span>';
       listEl.innerHTML = '<p class="empty-state">No scheduled posts in the next 30 days.</p>';
     } else {
-      statusEl.innerHTML = `<span class="status-dot disconnected"></span><span>Metricool: Error — ${result.error}</span>`;
+      statusEl.innerHTML = `<span class="status-dot disconnected"></span><span>Metricool: Error â ${result.error}</span>`;
     }
   }
 
-  // ─── Analytics View ───
+  // âââ Analytics View âââ
 
   async function loadAnalytics() {
     if (!apiKeys.metricool) {
       $('#analytics-status').innerHTML =
-        '<span class="status-dot disconnected"></span><span>Metricool: Not connected</span><a href="#" class="link-settings" data-goto="settings">Add API key →</a>';
+        '<span class="status-dot disconnected"></span><span>Metricool: Not connected</span><a href="#" class="link-settings" data-goto="settings">Add API key â</a>';
       return;
     }
 
     $('#analytics-status').innerHTML =
-      '<span class="status-dot connected"></span><span>Metricool: Loading analytics…</span>';
+      '<span class="status-dot connected"></span><span>Metricool: Loading analyticsâ¦</span>';
 
     // Fetch accounts/networks, analytics, and top posts in parallel
     const [networksRes, topPostsRes] = await Promise.all([
@@ -1930,7 +1931,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
         <div class="post-info">
           <div class="post-text">${i + 1}. ${post.content || post.text || post.caption || 'Post'}</div>
           <div class="post-meta">
-            ${post.network || post.platform || ''} · ${post.publicationDate || post.date || ''}
+            ${post.network || post.platform || ''} Â· ${post.publicationDate || post.date || ''}
           </div>
         </div>
         <div class="post-stats">
@@ -1964,21 +1965,21 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
   }
 
   function formatNum(n) {
-    if (n == null) return '—';
+    if (n == null) return 'â';
     if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
     if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
     return n.toString();
   }
 
-  // Analytics is loaded lazily — triggered from nav click handler below
+  // Analytics is loaded lazily â triggered from nav click handler below
 
-  // ─── Wire Approve → Metricool Post ───
+  // âââ Wire Approve â Metricool Post âââ
   function scheduleApprovedItem(item) {
     if (!apiKeys.metricool) {
-      console.log('[Metricool] No API key — skip scheduling');
+      console.log('[Metricool] No API key â skip scheduling');
       return;
     }
-    const caption = item.instagramCaption || `${item.productName} — ${item.typeName}`;
+    const caption = item.instagramCaption || `${item.productName} â ${item.typeName}`;
     const tags = (item.hashtags || []).map(t => `#${t.replace(/^#/, '')}`).join(' ');
     const fullContent = tags ? `${caption}\n\n${tags}` : caption;
     const videoSrc = item.stitchedVideoUrl || item.videoUrl;
@@ -2005,9 +2006,9 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     });
   }
 
-  // ─── Init ───
+  // âââ Init âââ
 
-  // ─── Audio / Music Management ───
+  // âââ Audio / Music Management âââ
   async function loadAudioTracks() {
     const select = document.getElementById('audio-select');
     if (!select) return;
@@ -2042,14 +2043,14 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       const file = e.target.files[0];
       if (!file) return;
       const hint = document.getElementById('audio-hint');
-      if (hint) hint.textContent = `Uploading ${file.name}…`;
+      if (hint) hint.textContent = `Uploading ${file.name}â¦`;
       const form = new FormData();
       form.append('audio', file);
       try {
         const res = await fetch(backendUrl('/api/audio/upload'), { method: 'POST', body: form });
         const data = await res.json();
         if (data.ok) {
-          if (hint) hint.textContent = `✓ Uploaded ${data.filename} — saved for future reels.`;
+          if (hint) hint.textContent = `â Uploaded ${data.filename} â saved for future reels.`;
           await loadAudioTracks();
           document.getElementById('audio-select').value = data.filename;
           document.getElementById('audio-preview-btn').style.display = '';
@@ -2064,7 +2065,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     });
   }
 
-  // Select change — show/hide buttons
+  // Select change â show/hide buttons
   const audioSelect = document.getElementById('audio-select');
   if (audioSelect) {
     audioSelect.addEventListener('change', () => {
