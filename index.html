@@ -17,23 +17,23 @@
     </div>
     <nav class="sidebar-nav">
       <button class="nav-btn active" data-view="dashboard">
-        <span class="nav-icon">⚡</span> Dashboard
+        <span class="nav-icon">â¡</span> Dashboard
       </button>
       <button class="nav-btn" data-view="approval">
-        <span class="nav-icon">✅</span> Approval Queue
+        <span class="nav-icon">â</span> Approval Queue
         <span class="badge" id="queue-badge">0</span>
       </button>
       <button class="nav-btn" data-view="scheduled">
-        <span class="nav-icon">📅</span> Scheduled Posts
+        <span class="nav-icon">ð</span> Scheduled Posts
       </button>
       <button class="nav-btn" data-view="analytics">
-        <span class="nav-icon">📊</span> Analytics
+        <span class="nav-icon">ð</span> Analytics
       </button>
       <button class="nav-btn" data-view="sop-wiki">
-        <span class="nav-icon">📖</span> SOP Wiki
+        <span class="nav-icon">ð</span> SOP Wiki
       </button>
       <button class="nav-btn" data-view="settings">
-        <span class="nav-icon">⚙️</span> API Settings
+        <span class="nav-icon">âï¸</span> API Settings
       </button>
     </nav>
     <div class="sidebar-footer">
@@ -44,7 +44,7 @@
   <!-- Main Content -->
   <main class="main" id="main">
     <header class="topbar">
-      <button class="menu-toggle" id="menu-toggle">☰</button>
+      <button class="menu-toggle" id="menu-toggle">â°</button>
       <h2 class="page-title" id="page-title">Dashboard</h2>
     </header>
 
@@ -71,7 +71,7 @@
           <div class="form-group">
             <label for="avatar">Avatar</label>
             <select id="avatar">
-              <option value="pateit" data-ig="@breealba" selected>Patient Maya (Bree Alba)</option>
+              <option value="b262e935-4460-4026-980b-926aa0babdec" data-ig="@breealba" selected>Patient Maya (Bree Alba)</option>
             </select>
           </div>
           <div class="form-group">
@@ -98,7 +98,7 @@
           </div>
           <div class="form-group full-width">
             <label for="notes">Notes / Brief</label>
-            <textarea id="notes" rows="3" placeholder="Any extra direction for the AI…"></textarea>
+            <textarea id="notes" rows="3" placeholder="Any extra direction for the AIâ¦"></textarea>
           </div>
           <div class="form-group full-width">
             <label>Background Music / Audio</label>
@@ -108,19 +108,19 @@
                   <option value="">No music (silent)</option>
                 </select>
                 <label class="btn btn-sm" style="cursor:pointer; margin:0;">
-                  📁 Upload
+                  ð Upload
                   <input type="file" id="audio-upload" accept=".mp3,.wav,.aac,.m4a,.ogg,.flac" style="display:none;">
                 </label>
-                <button class="btn btn-sm" id="audio-preview-btn" style="display:none;">▶ Preview</button>
-                <button class="btn btn-sm" id="audio-delete-btn" style="display:none;" title="Delete selected track">🗑</button>
+                <button class="btn btn-sm" id="audio-preview-btn" style="display:none;">â¶ Preview</button>
+                <button class="btn btn-sm" id="audio-delete-btn" style="display:none;" title="Delete selected track">ð</button>
               </div>
               <audio id="audio-player" controls style="display:none; width:100%; height:32px;"></audio>
-              <span class="api-hint" id="audio-hint">Upload an .mp3/.wav file — it saves on the server and can be reused for all future reels.</span>
+              <span class="api-hint" id="audio-hint">Upload an .mp3/.wav file â it saves on the server and can be reused for all future reels.</span>
             </div>
         </div>
         <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
           <button class="btn btn-primary" id="submit-video">
-            🚀 Generate &amp; Send to Queue
+            ð Generate &amp; Send to Queue
           </button>
           <label style="display:flex; align-items:center; gap:6px; font-size:0.85rem; cursor:pointer;">
             <input type="checkbox" id="test-mode"> Test mode (1 segment only)
@@ -159,19 +159,19 @@
           <span class="status-dot disconnected"></span>
           <span>Backend: Not connected</span>
         </div>
-        <p class="settings-note">Pipeline: Flux Kontext Max generates Patient Maya images → Kling 2.6 animates them into video → FFmpeg stitches into a 9:16 reel with captions. All powered by your Higgsfield API credentials.</p>
+        <p class="settings-note">Pipeline: Flux Kontext Max generates Patient Maya images â Kling 2.6 animates them into video â FFmpeg stitches into a 9:16 reel with captions. All powered by your Higgsfield API credentials.</p>
 
         <div class="stitch-segments" id="stitch-segments">
-          <div class="stitch-segment"><span>1. Hook (0-3s)</span> <span class="file-status" id="seg-hook">Waiting…</span></div>
-          <div class="stitch-segment"><span>2. Reveal (3-6s)</span> <span class="file-status" id="seg-reveal">Waiting…</span></div>
-          <div class="stitch-segment"><span>3. Demo (6-11s)</span> <span class="file-status" id="seg-demo">Waiting…</span></div>
-          <div class="stitch-segment"><span>4. Result + Benefits (11-13s)</span> <span class="file-status" id="seg-result">Waiting…</span></div>
-          <div class="stitch-segment"><span>5. The Glow (13-15s)</span> <span class="file-status" id="seg-endcard">Waiting…</span></div>
+          <div class="stitch-segment"><span>1. Hook (0-3s)</span> <span class="file-status" id="seg-hook">Waitingâ¦</span></div>
+          <div class="stitch-segment"><span>2. Reveal (3-6s)</span> <span class="file-status" id="seg-reveal">Waitingâ¦</span></div>
+          <div class="stitch-segment"><span>3. Demo (6-11s)</span> <span class="file-status" id="seg-demo">Waitingâ¦</span></div>
+          <div class="stitch-segment"><span>4. Result + Benefits (11-13s)</span> <span class="file-status" id="seg-result">Waitingâ¦</span></div>
+          <div class="stitch-segment"><span>5. The Glow (13-15s)</span> <span class="file-status" id="seg-endcard">Waitingâ¦</span></div>
         </div>
 
         <div class="stitch-progress hidden" id="stitch-progress">
           <div class="progress-bar"><div class="progress-fill" id="stitch-fill"></div></div>
-          <p class="stitch-status" id="stitch-status">Waiting for pipeline…</p>
+          <p class="stitch-status" id="stitch-status">Waiting for pipelineâ¦</p>
         </div>
         <div class="stitch-result hidden" id="stitch-result">
           <p>Stitched video ready:</p>
@@ -222,7 +222,7 @@
         <div class="api-status" id="metricool-status">
           <span class="status-dot disconnected"></span>
           <span>Metricool: Not connected</span>
-          <a href="#" class="link-settings" data-goto="settings">Add API key →</a>
+          <a href="#" class="link-settings" data-goto="settings">Add API key â</a>
         </div>
         <div id="scheduled-list" class="scheduled-list">
           <p class="empty-state">Connect your Metricool API key in Settings to see scheduled posts.</p>
@@ -237,7 +237,7 @@
         <div class="api-status" id="analytics-status">
           <span class="status-dot disconnected"></span>
           <span>Metricool: Not connected</span>
-          <a href="#" class="link-settings" data-goto="settings">Add API key →</a>
+          <a href="#" class="link-settings" data-goto="settings">Add API key â</a>
         </div>
 
         <!-- Account Breakdown -->
@@ -287,66 +287,66 @@
             <div class="api-input-row">
               <input type="text" id="api-backend-url" placeholder="https://vekraapzv3.us-east-1.awsapprunner.com">
             </div>
-            <span class="api-hint">FFmpeg stitching server — deployed on AWS App Runner (or run locally)</span>
+            <span class="api-hint">FFmpeg stitching server â deployed on AWS App Runner (or run locally)</span>
           </div>
 
           <div class="api-field">
             <label>Claude API Key (Anthropic)</label>
             <div class="api-input-row">
-              <input type="password" id="api-claude" placeholder="sk-ant-…">
+              <input type="password" id="api-claude" placeholder="sk-ant-â¦">
               <button class="btn btn-sm btn-toggle-vis" data-target="api-claude">Show</button>
             </div>
-            <span class="api-hint">Powers the AI learning loop — reads your feedback to generate smarter video prompts</span>
+            <span class="api-hint">Powers the AI learning loop â reads your feedback to generate smarter video prompts</span>
           </div>
 
           <div class="api-field">
             <label>Higgsfield API Key</label>
             <div class="api-input-row">
-              <input type="password" id="api-higgsfield" placeholder="Enter API Key…">
+              <input type="password" id="api-higgsfield" placeholder="Enter API Keyâ¦">
               <button class="btn btn-sm btn-toggle-vis" data-target="api-higgsfield">Show</button>
             </div>
           </div>
           <div class="api-field">
             <label>Higgsfield API Secret</label>
             <div class="api-input-row">
-              <input type="password" id="api-higgsfield-secret" placeholder="Enter API Secret…">
+              <input type="password" id="api-higgsfield-secret" placeholder="Enter API Secretâ¦">
               <button class="btn btn-sm btn-toggle-vis" data-target="api-higgsfield-secret">Show</button>
             </div>
-            <span class="api-hint">Flux Kontext Max (images) + Kling 2.6 (video) — all through one API — <code>cloud.higgsfield.ai</code></span>
+            <span class="api-hint">Flux Kontext Max (images) + Kling 2.6 (video) â all through one API â <code>cloud.higgsfield.ai</code></span>
           </div>
           <div class="api-field">
             <label>Product Reference Image URL</label>
             <div class="api-input-row">
-              <input type="text" id="setting-product-image-url" placeholder="https://… (direct URL to product bottle render)">
+              <input type="text" id="setting-product-image-url" placeholder="https://â¦ (direct URL to product bottle render)">
             </div>
-            <span class="api-hint">Maju Black Seed Oil 8oz bottle render — used by Flux Kontext to place your exact product packaging in every generated image</span>
+            <span class="api-hint">Maju Black Seed Oil 8oz bottle render â used by Flux Kontext to place your exact product packaging in every generated image</span>
           </div>
 
           <div class="api-field">
             <label>Metricool API Key</label>
             <div class="api-input-row">
-              <input type="password" id="api-metricool" placeholder="Enter Metricool key…">
+              <input type="password" id="api-metricool" placeholder="Enter Metricool keyâ¦">
               <button class="btn btn-sm btn-toggle-vis" data-target="api-metricool">Show</button>
             </div>
-            <span class="api-hint">Social scheduling &amp; analytics — powers the Scheduled Posts view</span>
+            <span class="api-hint">Social scheduling &amp; analytics â powers the Scheduled Posts view</span>
           </div>
           <div class="api-field">
             <label>Metricool Blog ID <small>(auto-discovered)</small></label>
             <div class="api-input-row">
-              <input type="text" id="setting-metricool-blog-id" placeholder="Auto-discovered from API…">
+              <input type="text" id="setting-metricool-blog-id" placeholder="Auto-discovered from APIâ¦">
             </div>
           </div>
           <div class="api-field">
             <label>Metricool User ID <small>(auto-discovered)</small></label>
             <div class="api-input-row">
-              <input type="text" id="setting-metricool-user-id" placeholder="Auto-discovered from API…">
+              <input type="text" id="setting-metricool-user-id" placeholder="Auto-discovered from APIâ¦">
             </div>
           </div>
 
           <div class="api-field">
             <label>Arcads API Key</label>
             <div class="api-input-row">
-              <input type="password" id="api-arcads" placeholder="Enter Arcads key…">
+              <input type="password" id="api-arcads" placeholder="Enter Arcads keyâ¦">
               <button class="btn btn-sm btn-toggle-vis" data-target="api-arcads">Show</button>
             </div>
             <span class="api-hint">UGC-style ad video generation (future workflows)</span>
@@ -355,15 +355,15 @@
           <div class="api-field">
             <label>Creatify API Key</label>
             <div class="api-input-row">
-              <input type="password" id="api-creatify" placeholder="Enter Creatify key…">
+              <input type="password" id="api-creatify" placeholder="Enter Creatify keyâ¦">
               <button class="btn btn-sm btn-toggle-vis" data-target="api-creatify">Show</button>
             </div>
-            <span class="api-hint">AI product video — enter as <code>X-API-ID:X-API-KEY</code> (colon-separated)</span>
+            <span class="api-hint">AI product video â enter as <code>X-API-ID:X-API-KEY</code> (colon-separated)</span>
           </div>
         </div>
 
-        <button class="btn btn-primary" id="btn-save-keys">💾 Save Keys</button>
-        <p class="save-msg hidden" id="save-msg">✓ Keys saved to local storage</p>
+        <button class="btn btn-primary" id="btn-save-keys">ð¾ Save Keys</button>
+        <p class="save-msg hidden" id="save-msg">â Keys saved to local storage</p>
       </div>
     </section>
   </main>
@@ -373,7 +373,7 @@
     <div class="modal">
       <h3>Approve Video</h3>
       <p>What worked well? Notes help the AI improve future videos for this format.</p>
-      <textarea id="approve-notes" rows="4" placeholder="e.g. Great pacing on the hook, CTA felt natural, loved the lighting…"></textarea>
+      <textarea id="approve-notes" rows="4" placeholder="e.g. Great pacing on the hook, CTA felt natural, loved the lightingâ¦"></textarea>
       <div class="modal-actions">
         <button class="btn btn-secondary" id="btn-cancel-approve">Cancel</button>
         <button class="btn btn-primary" id="btn-confirm-approve">Approve &amp; Continue</button>
@@ -386,7 +386,7 @@
     <div class="modal">
       <h3>Reject &amp; Revise</h3>
       <p>What needs to change? Notes help the AI revise this video.</p>
-      <textarea id="reject-notes" rows="4" placeholder="e.g. Make the hook punchier, slow down the demo section…"></textarea>
+      <textarea id="reject-notes" rows="4" placeholder="e.g. Make the hook punchier, slow down the demo sectionâ¦"></textarea>
       <div class="modal-actions">
         <button class="btn btn-secondary" id="btn-cancel-reject">Cancel</button>
         <button class="btn btn-danger" id="btn-confirm-reject">Reject &amp; Send for Revision</button>
