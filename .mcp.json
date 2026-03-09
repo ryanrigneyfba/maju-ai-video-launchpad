@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "creatify": {
+      "command": "npx",
+      "args": ["-y", "@tsavo/creatify-mcp"],
+      "env": {
+        "CREATIFY_API_ID": "",
+        "CREATIFY_API_KEY": ""
+      }
+    }
+  }
+}
