@@ -497,12 +497,18 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       msg.textContent = text;
     }
 
-    // If no Higgsfield key, simulate the whole pipeline
-    console.log('[Pipeline] apiKeys.higgsfield =', apiKeys.higgsfield ? '(set)' : '(empty)', '| All keys:', Object.keys(apiKeys).filter(k => apiKeys[k]));
-    if (!apiKeys.higgsfield) {
+    // Check if we can run the real pipeline:
+    // - Preloaded scene images + Kling key = real pipeline (no Higgsfield needed)
+    // - Higgsfield key = real pipeline (generates fresh images)
+    // - Neither = simulate
+    const pendingItems = queue.filter(q => q.pipelineStage === 'generate');
+    const hasPreloadedScenes = pendingItems.every(item => item.scene && item.scene.imageUrl);
+    const canRunReal = apiKeys.higgsfield || (hasPreloadedScenes && apiKeys.kling);
+    console.log('[Pipeline] apiKeys.higgsfield =', apiKeys.higgsfield ? '(set)' : '(empty)', '| apiKeys.kling =', apiKeys.kling ? '(set)' : '(empty)', '| preloaded scenes:', hasPreloadedScenes, '| All keys:', Object.keys(apiKeys).filter(k => apiKeys[k]));
+    if (!canRunReal) {
       let stage = 0;
       const sim = [
-        '⚠️ Higgsfield API key not set — video generation simulated. Add key in Settings.',
+        '⚠️ No API keys configured — video generation simulated. Add Kling key in Settings (Higgsfield optional with preloaded scenes).',
         'FFmpeg stitch simulated (no backend connected).',
         '✓ Pipeline complete — videos in queue (simulated).',
       ];
@@ -638,10 +644,16 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     return { url: null, error: 'Video timed out after 600s' };
   }
 
-  // Helper: full segment pipeline — Higgsfield image → Kling animate (or Kling text2video fallback)
+  // Helper: full segment pipeline — preloaded scene image → Kling i2v (or Soul → Kling i2v, or Kling t2v fallback)
   // Returns { url, error } object
   async function generateSegmentVideo(seg, segLabel, characterId, productImageUrl) {
-    // If Higgsfield key is set, use hybrid pipeline: Soul/Flux image → Kling image2video
+    // Priority 1: Use preloaded scene image (no Soul/JWT needed) → Kling image2video
+    if (seg.image_url) {
+      debugPanel(`[${segLabel}] Using preloaded scene image → Kling image2video…`);
+      return await animateImageToVideo(seg, seg.image_url, segLabel);
+    }
+
+    // Priority 2: If Higgsfield key is set, use hybrid pipeline: Soul/Flux image → Kling image2video
     if (apiKeys.higgsfield) {
       debugPanel(`[${segLabel}] Generating image via ${characterId ? 'Soul (character: ' + characterId + ')' : 'Flux Kontext Max'}${productImageUrl ? ' + product reference' : ''}…`);
       const imageResult = await generateSegmentImage(seg, segLabel, characterId, productImageUrl);
@@ -719,11 +731,13 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       const segments = testMode ? allSegments.slice(0, 1) : allSegments;
       if (testMode) debugPanel('[Test Mode] Generating 1 segment only (hook)');
 
-      // Scene images are generated at runtime via Soul API (Patient Maya + product reference).
-      // The Soul API returns platform.higgsfield.ai URLs that Kling i2v can access.
-      // (CDN share-page URLs are not accessible to Kling's backend.)
-      if (item.scene) {
-        debugPanel('[Pipeline] Scene: ' + item.scene.name + ' — generating fresh image via Soul API');
+      // Inject preloaded scene image into each segment so the pipeline uses it directly
+      // for Kling i2v animation — no Soul API / JWT required.
+      if (item.scene && item.scene.imageUrl) {
+        debugPanel('[Pipeline] Scene: ' + item.scene.name + ' — using preloaded image for Kling i2v');
+        segments.forEach(seg => { if (!seg.image_url) seg.image_url = item.scene.imageUrl; });
+      } else if (item.scene) {
+        debugPanel('[Pipeline] Scene: ' + item.scene.name + ' — no preloaded image, will generate via Soul API');
       }
 
       // Generate ALL video segments in parallel via Kling (image→video via Soul + Kling i2v)
