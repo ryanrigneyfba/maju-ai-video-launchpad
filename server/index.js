@@ -312,21 +312,34 @@ function runStitch(jobId, clips, outputPath, options = {}) {
     );
   }
 
-  // Build FFmpeg args
+  // Build FFmpeg args — inputs first, then filters, then output settings
   const args = [
     '-y',
     '-f', 'concat',
     '-safe', '0',
     '-i', concatListPath,
-    '-vf', vfParts.join(','),
   ];
 
-  // Audio background track if provided
+  // Audio background track — must be added as input BEFORE filters
+  let hasAudioInput = false;
   if (options.audioBg) {
     const audioPath = fs.existsSync(path.join(AUDIO_DIR, options.audioBg)) ? path.join(AUDIO_DIR, options.audioBg) : path.join(UPLOAD_DIR, options.audioBg);
     if (fs.existsSync(audioPath)) {
-      args.push('-i', audioPath, '-shortest');
+      args.push('-i', audioPath);
+      hasAudioInput = true;
     }
+  }
+
+  // Video filter applied only to video stream (not audio)
+  args.push('-filter:v', vfParts.join(','));
+
+  // Stream mapping when audio is present
+  if (hasAudioInput) {
+    args.push(
+      '-map', '0:v',     // video from concat input
+      '-map', '1:a',     // audio from background track
+      '-shortest'        // stop when shortest stream ends
+    );
   }
 
   // Output settings
