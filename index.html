@@ -134,29 +134,49 @@
       <!-- Create Custom Avatar (Creatify DYOA) -->
       <div class="card" id="dyoa-card">
         <h3 class="card-title">Create Custom Avatar (Creatify DYOA)</h3>
-        <p class="settings-note">Train a custom Creatify avatar from a reference image. Once trained, it auto-selects for Avatar Lipsync videos.</p>
+        <p class="settings-note">Design a custom Creatify avatar by description. Creatify generates photos for you to pick, then trains the avatar. Once approved, it auto-selects for Avatar Lipsync videos. Costs 10 credits.</p>
         <div class="form-grid">
           <div class="form-group">
             <label for="dyoa-name">Avatar Name</label>
             <input type="text" id="dyoa-name" value="Patient Maya" placeholder="e.g. Patient Maya">
           </div>
           <div class="form-group">
+            <label for="dyoa-age">Age Group</label>
+            <select id="dyoa-age">
+              <option value="young_adult" selected>Young Adult</option>
+              <option value="adult">Adult</option>
+              <option value="middle_aged">Middle Aged</option>
+              <option value="senior">Senior</option>
+            </select>
+          </div>
+          <div class="form-group">
             <label for="dyoa-gender">Gender</label>
             <select id="dyoa-gender">
-              <option value="female" selected>Female</option>
-              <option value="male">Male</option>
+              <option value="f" selected>Female</option>
+              <option value="m">Male</option>
+              <option value="other">Other</option>
             </select>
           </div>
           <div class="form-group full-width">
-            <label for="dyoa-image-url">Training Image URL</label>
-            <input type="url" id="dyoa-image-url" placeholder="https://… (public URL of Patient Maya reference photo)">
-            <span class="api-hint">Provide a clear, front-facing photo — hair in bun, black tank top, minimal makeup, natural look.</span>
+            <label for="dyoa-appearance">Appearance Details</label>
+            <textarea id="dyoa-appearance" rows="2" placeholder="Describe facial features, hair, skin tone…">Young woman with dark hair in a bun, minimal makeup, natural look, warm skin tone, soft features</textarea>
+          </div>
+          <div class="form-group">
+            <label for="dyoa-outfit">Outfit</label>
+            <input type="text" id="dyoa-outfit" value="Black tank top, casual wellness look" placeholder="Describe clothing…">
+          </div>
+          <div class="form-group">
+            <label for="dyoa-background">Background</label>
+            <input type="text" id="dyoa-background" value="Clean bright bathroom, natural light" placeholder="Describe setting…">
           </div>
         </div>
         <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-top:8px;">
           <button class="btn btn-primary" id="btn-dyoa-create">Create Avatar</button>
           <span class="api-hint" id="dyoa-status-msg"></span>
         </div>
+        <!-- Photo picker (shown after photos are generated) -->
+        <div class="hidden" id="dyoa-photos" style="margin-top:12px;"></div>
+        <!-- Saved avatar info -->
         <div class="hidden" id="dyoa-saved-info" style="margin-top:12px; padding:10px; background:var(--bg-main); border-radius:8px; border:1px solid var(--border);">
           <strong>Saved Custom Avatar:</strong>
           <span id="dyoa-saved-name"></span>

@@ -1281,16 +1281,23 @@ REJECTED:\n${rejections.map((f) => `- "${f.notes}"`).join('\n') || '(none)'}`
   }
 
   // ─── DYOA — Design Your Own Avatar (Creatify Custom Avatar) ───
+  // Flow: POST /api/dyoa/ → poll for photos → pick photo → submit_for_review → poll for approval → get creator ID
   const DYOA_KEY = 'maju_creatify_custom_avatar';
 
   function loadSavedAvatar() {
     const saved = JSON.parse(localStorage.getItem(DYOA_KEY) || 'null');
     const infoEl = $('#dyoa-saved-info');
+    const photosEl = $('#dyoa-photos');
     if (saved && infoEl) {
       infoEl.classList.remove('hidden');
       $('#dyoa-saved-name').textContent = saved.name || 'Custom Avatar';
-      $('#dyoa-saved-id').textContent = saved.id;
-      $('#dyoa-saved-status').textContent = saved.trained ? '(trained)' : '(training…)';
+      $('#dyoa-saved-id').textContent = saved.creatorId || saved.dyoaId || '';
+      const phase = saved.creatorId ? 'ready' : saved.chosenPhotoId ? 'reviewing' : saved.dyoaId ? 'generating photos' : 'not started';
+      $('#dyoa-saved-status').textContent = `(${phase})`;
+    }
+    // Hide photo picker if already submitted
+    if (photosEl && saved && saved.chosenPhotoId) {
+      photosEl.classList.add('hidden');
     }
     return saved;
   }
@@ -1300,35 +1307,119 @@ REJECTED:\n${rejections.map((f) => `- "${f.notes}"`).join('\n') || '(none)'}`
     loadSavedAvatar();
   }
 
-  // On load: show saved avatar if exists and poll if still training
+  // On load: resume polling if DYOA is in progress
   const savedAvatar = loadSavedAvatar();
-  if (savedAvatar && !savedAvatar.trained) {
-    pollDyoaTraining(savedAvatar.id);
+  if (savedAvatar && savedAvatar.dyoaId && !savedAvatar.creatorId) {
+    if (savedAvatar.chosenPhotoId) {
+      pollDyoaReview(savedAvatar.dyoaId);
+    } else {
+      pollDyoaPhotos(savedAvatar.dyoaId);
+    }
   }
 
-  async function pollDyoaTraining(personaId) {
+  // Step 1: Poll until photos are generated
+  async function pollDyoaPhotos(dyoaId) {
     const statusMsg = $('#dyoa-status-msg');
-    const MAX_POLLS = 120;
+    const MAX_POLLS = 60; // 60 * 10s = 10min
     for (let i = 0; i < MAX_POLLS; i++) {
-      if (statusMsg) statusMsg.textContent = `Training… (${Math.round(i * 10 / 60)}m elapsed)`;
+      if (statusMsg) statusMsg.textContent = `Generating avatar photos… (${Math.round(i * 10 / 60)}m elapsed)`;
       await new Promise(r => setTimeout(r, 10000));
-      const result = await API.creatify.getPersonaStatus(personaId);
+      const result = await API.creatify.getDyoaStatus(dyoaId);
       const st = (result.status || '').toLowerCase();
-      console.log(`[DYOA] Poll #${i}: status=${st}`);
+      console.log(`[DYOA] Photo poll #${i}: status=${st}, photos=${(result.photos || []).length}`);
 
-      if (st === 'done' || st === 'completed' || st === 'active') {
-        const saved = JSON.parse(localStorage.getItem(DYOA_KEY) || '{}');
-        saved.trained = true;
-        saveDyoaAvatar(saved);
-        if (statusMsg) statusMsg.textContent = 'Avatar trained and ready!';
+      if (result.photos && result.photos.length > 0) {
+        if (statusMsg) statusMsg.textContent = `${result.photos.length} photo(s) generated — pick one below:`;
+        showDyoaPhotos(dyoaId, result.photos);
         return;
       }
-      if (st === 'failed' || st === 'error') {
-        if (statusMsg) statusMsg.textContent = `Training failed: ${result.error || result.message || st}`;
+      if (st === 'failed' || st === 'error' || st === 'rejected') {
+        if (statusMsg) statusMsg.textContent = `Failed: ${result.error || result.message || st}`;
         return;
       }
     }
-    if (statusMsg) statusMsg.textContent = 'Training timed out — check Creatify dashboard.';
+    if (statusMsg) statusMsg.textContent = 'Photo generation timed out — check Creatify dashboard.';
+  }
+
+  // Show generated photos for user to pick
+  function showDyoaPhotos(dyoaId, photos) {
+    const container = $('#dyoa-photos');
+    if (!container) return;
+    container.classList.remove('hidden');
+    container.innerHTML = photos.map(p =>
+      `<div class="dyoa-photo-option" style="display:inline-block;margin:6px;cursor:pointer;border:3px solid transparent;border-radius:8px;overflow:hidden;" data-photo-id="${p.id}">
+        <img src="${p.image}" alt="Avatar option" style="width:120px;height:120px;object-fit:cover;display:block;">
+      </div>`
+    ).join('');
+
+    container.querySelectorAll('.dyoa-photo-option').forEach(el => {
+      el.addEventListener('click', async () => {
+        // Highlight selection
+        container.querySelectorAll('.dyoa-photo-option').forEach(o => o.style.borderColor = 'transparent');
+        el.style.borderColor = 'var(--accent, #6366f1)';
+
+        const photoId = el.dataset.photoId;
+        const statusMsg = $('#dyoa-status-msg');
+        if (statusMsg) statusMsg.textContent = 'Submitting chosen photo for review…';
+
+        const result = await API.creatify.submitDyoaForReview(dyoaId, photoId);
+        console.log('[DYOA] Submit for review result:', JSON.stringify(result).slice(0, 500));
+
+        const saved = JSON.parse(localStorage.getItem(DYOA_KEY) || '{}');
+        saved.chosenPhotoId = photoId;
+        saveDyoaAvatar(saved);
+
+        if (statusMsg) statusMsg.textContent = 'Submitted for review — polling for approval…';
+        container.classList.add('hidden');
+        pollDyoaReview(dyoaId);
+      });
+    });
+  }
+
+  // Step 2: Poll until review is approved and we get the creator ID
+  async function pollDyoaReview(dyoaId) {
+    const statusMsg = $('#dyoa-status-msg');
+    const MAX_POLLS = 120; // 120 * 30s = 60min
+    for (let i = 0; i < MAX_POLLS; i++) {
+      if (statusMsg) statusMsg.textContent = `Awaiting avatar approval… (${Math.round(i * 30 / 60)}m elapsed)`;
+      await new Promise(r => setTimeout(r, 30000));
+      const result = await API.creatify.getDyoaStatus(dyoaId);
+      const st = (result.status || '').toLowerCase();
+      console.log(`[DYOA] Review poll #${i}: status=${st}, reviews=${JSON.stringify(result.reviews || []).slice(0, 200)}`);
+
+      // Check reviews for an approved one with a creator ID
+      const reviews = result.reviews || [];
+      const approved = reviews.find(r => (r.status || '').toLowerCase() === 'approved' && r.creator);
+      if (approved) {
+        const saved = JSON.parse(localStorage.getItem(DYOA_KEY) || '{}');
+        saved.creatorId = approved.creator;
+        saveDyoaAvatar(saved);
+        if (statusMsg) statusMsg.textContent = `Avatar approved! Creator ID: ${approved.creator}`;
+        return;
+      }
+
+      if (st === 'approved' || st === 'done') {
+        // Status is approved but creator might be in a different field
+        const creatorId = result.creator_id || result.creator || (reviews[0] && reviews[0].creator);
+        if (creatorId) {
+          const saved = JSON.parse(localStorage.getItem(DYOA_KEY) || '{}');
+          saved.creatorId = creatorId;
+          saveDyoaAvatar(saved);
+          if (statusMsg) statusMsg.textContent = `Avatar approved! Creator ID: ${creatorId}`;
+          return;
+        }
+      }
+      if (st === 'rejected') {
+        const comment = (reviews[0] && reviews[0].comment) || '';
+        if (statusMsg) statusMsg.textContent = `Avatar rejected${comment ? ': ' + comment : ''}. Try again with different settings.`;
+        return;
+      }
+      if (st === 'failed' || st === 'error') {
+        if (statusMsg) statusMsg.textContent = `Review failed: ${result.error || result.message || st}`;
+        return;
+      }
+    }
+    if (statusMsg) statusMsg.textContent = 'Review timed out — check Creatify dashboard.';
   }
 
   // Wire up the Create Avatar button
@@ -1337,12 +1428,15 @@ REJECTED:\n${rejections.map((f) => `- "${f.notes}"`).join('\n') || '(none)'}`
     if (btn) {
       btn.addEventListener('click', async () => {
         const name = ($('#dyoa-name') || {}).value || 'Patient Maya';
-        const gender = ($('#dyoa-gender') || {}).value || 'female';
-        const imageUrl = ($('#dyoa-image-url') || {}).value;
+        const gender = ($('#dyoa-gender') || {}).value || 'f';
+        const ageGroup = ($('#dyoa-age') || {}).value || 'young_adult';
+        const appearance = ($('#dyoa-appearance') || {}).value || '';
+        const outfit = ($('#dyoa-outfit') || {}).value || '';
+        const background = ($('#dyoa-background') || {}).value || '';
         const statusMsg = $('#dyoa-status-msg');
 
-        if (!imageUrl) {
-          if (statusMsg) statusMsg.textContent = 'Please provide a training image URL.';
+        if (!appearance) {
+          if (statusMsg) statusMsg.textContent = 'Please describe the avatar appearance.';
           return;
         }
         if (!apiKeys.creatify) {
@@ -1353,28 +1447,30 @@ REJECTED:\n${rejections.map((f) => `- "${f.notes}"`).join('\n') || '(none)'}`
         btn.disabled = true;
         if (statusMsg) statusMsg.textContent = 'Creating avatar…';
 
-        const result = await API.creatify.createCustomAvatar({
+        const result = await API.creatify.createDyoa({
           name: name,
+          age_group: ageGroup,
           gender: gender,
-          image_input: imageUrl,
-          training_images: [imageUrl],
+          more_details: appearance,
+          outfit_description: outfit || 'Black tank top, casual wellness look',
+          background_description: background || 'Clean bright bathroom, natural light',
         });
 
         console.log('[DYOA] Create result:', JSON.stringify(result).slice(0, 500));
-        const personaId = result.id || result.persona_id;
+        const dyoaId = result.id;
 
-        if (!personaId) {
-          const errMsg = result.error || result.message || result.detail || 'No persona ID returned';
+        if (!dyoaId) {
+          const errMsg = result.error || result.message || result.detail || 'No DYOA ID returned';
           if (statusMsg) statusMsg.textContent = `Failed: ${errMsg}`;
           btn.disabled = false;
           return;
         }
 
-        saveDyoaAvatar({ id: personaId, name: name, gender: gender, trained: false, imageUrl: imageUrl });
-        if (statusMsg) statusMsg.textContent = `Avatar created (${personaId}) — training started…`;
+        saveDyoaAvatar({ dyoaId, name, gender, ageGroup, creatorId: null, chosenPhotoId: null });
+        if (statusMsg) statusMsg.textContent = `DYOA created (${dyoaId}) — generating photos…`;
 
-        // Start polling for training completion
-        pollDyoaTraining(personaId).then(() => { btn.disabled = false; });
+        // Start polling for generated photos
+        pollDyoaPhotos(dyoaId).then(() => { btn.disabled = false; });
       });
     }
   });
@@ -1382,7 +1478,7 @@ REJECTED:\n${rejections.map((f) => `- "${f.notes}"`).join('\n') || '(none)'}`
   // Auto-inject saved custom avatar into Creatify lipsync pipeline
   function getCustomAvatarId() {
     const saved = JSON.parse(localStorage.getItem(DYOA_KEY) || 'null');
-    return (saved && saved.trained) ? saved.id : null;
+    return (saved && saved.creatorId) ? saved.creatorId : null;
   }
 
   // ─── Queue Rendering ───
@@ -2626,11 +2722,11 @@ REJECTED:\n${rejections.map((f) => `- "${f.notes}"`).join('\n') || '(none)'}`
       },
 
       // DYOA — Design Your Own Avatar
-      async createCustomAvatar(params) {
-        console.log('[Creatify] Create custom avatar:', params);
+      async createDyoa(params) {
+        console.log('[Creatify] Create DYOA:', params);
         if (!apiKeys.creatify) return { ok: false, error: 'No API key set' };
         try {
-          const res = await fetch(backendUrl('/api/proxy/creatify/personas'), {
+          const res = await fetch(backendUrl('/api/proxy/creatify/dyoa'), {
             method: 'POST',
             headers: this._creatifyHeaders(),
             body: JSON.stringify(params),
@@ -2642,11 +2738,26 @@ REJECTED:\n${rejections.map((f) => `- "${f.notes}"`).join('\n') || '(none)'}`
         }
       },
 
-      async getPersonaStatus(personaId) {
+      async getDyoaStatus(dyoaId) {
         if (!apiKeys.creatify) return { ok: false, error: 'No API key set' };
         try {
-          const res = await fetch(backendUrl(`/api/proxy/creatify/personas/${encodeURIComponent(personaId)}`), {
+          const res = await fetch(backendUrl(`/api/proxy/creatify/dyoa/${encodeURIComponent(dyoaId)}`), {
             headers: this._creatifyHeaders(false),
+          });
+          const data = await res.json();
+          return { ok: res.ok, ...data };
+        } catch (err) {
+          return { ok: false, error: err.message };
+        }
+      },
+
+      async submitDyoaForReview(dyoaId, chosenPhotoId) {
+        if (!apiKeys.creatify) return { ok: false, error: 'No API key set' };
+        try {
+          const res = await fetch(backendUrl(`/api/proxy/creatify/dyoa/${encodeURIComponent(dyoaId)}/submit`), {
+            method: 'POST',
+            headers: this._creatifyHeaders(),
+            body: JSON.stringify({ chosen_photo_id: chosenPhotoId }),
           });
           const data = await res.json();
           return { ok: res.ok, ...data };

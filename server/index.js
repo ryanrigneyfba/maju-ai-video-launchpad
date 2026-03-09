@@ -1277,14 +1277,14 @@ app.get('/api/proxy/creatify/link-to-videos/:taskId', async (req, res) => {
   }
 });
 
-// Creatify: Create custom avatar (DYOA — Design Your Own Avatar)
-app.post('/api/proxy/creatify/personas', async (req, res) => {
+// Creatify: DYOA — Design Your Own Avatar (create)
+app.post('/api/proxy/creatify/dyoa', async (req, res) => {
   const apiId = req.headers['x-creatify-id'];
   const apiKey = req.headers['x-creatify-key'];
   if (!apiId || !apiKey) return res.status(400).json({ error: 'Missing Creatify credentials' });
   try {
     const result = await proxyRequest(
-      'https://api.creatify.ai/api/personas/',
+      'https://api.creatify.ai/api/dyoa/',
       'POST',
       { 'X-API-ID': apiId, 'X-API-KEY': apiKey, 'Content-Type': 'application/json' },
       req.body
@@ -1295,16 +1295,34 @@ app.post('/api/proxy/creatify/personas', async (req, res) => {
   }
 });
 
-// Creatify: Get persona detail / training status
-app.get('/api/proxy/creatify/personas/:personaId', async (req, res) => {
+// Creatify: DYOA — Get status / poll for photos & review
+app.get('/api/proxy/creatify/dyoa/:dyoaId', async (req, res) => {
   const apiId = req.headers['x-creatify-id'];
   const apiKey = req.headers['x-creatify-key'];
   if (!apiId || !apiKey) return res.status(400).json({ error: 'Missing Creatify credentials' });
   try {
     const result = await proxyRequest(
-      `https://api.creatify.ai/api/personas/${encodeURIComponent(req.params.personaId)}/`,
+      `https://api.creatify.ai/api/dyoa/${encodeURIComponent(req.params.dyoaId)}/`,
       'GET',
       { 'X-API-ID': apiId, 'X-API-KEY': apiKey }
+    );
+    res.status(result.status).json(result.data);
+  } catch (err) {
+    res.status(502).json({ error: err.message });
+  }
+});
+
+// Creatify: DYOA — Submit chosen photo for review
+app.post('/api/proxy/creatify/dyoa/:dyoaId/submit', async (req, res) => {
+  const apiId = req.headers['x-creatify-id'];
+  const apiKey = req.headers['x-creatify-key'];
+  if (!apiId || !apiKey) return res.status(400).json({ error: 'Missing Creatify credentials' });
+  try {
+    const result = await proxyRequest(
+      `https://api.creatify.ai/api/dyoa/${encodeURIComponent(req.params.dyoaId)}/submit_for_review/`,
+      'POST',
+      { 'X-API-ID': apiId, 'X-API-KEY': apiKey, 'Content-Type': 'application/json' },
+      req.body
     );
     res.status(result.status).json(result.data);
   } catch (err) {
