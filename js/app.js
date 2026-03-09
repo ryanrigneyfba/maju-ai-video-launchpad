@@ -1,11 +1,11 @@
-/* Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ 
-   MAJU AI Video Launchpad Ã¢ÂÂ v1.1 
+/* ═══════════════════════════════════════════ 
+   MAJU AI Video Launchpad — v1.1 
    Main application logic
-   Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ */ 
+   ═══════════════════════════════════════════ */ 
 (function () {
   'use strict';
 
-  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Config Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+  // ─── Config ───
   const CONFIG = {
     higgsfield: {
       asset: 'majurender8oz',
@@ -27,6 +27,7 @@
     'scene-1': {
       name: 'Skincare Application',
       shareUrl: 'https://higgsfield.ai/s/jCi5uwCyKK4',
+      imageUrl: 'https://d8j0ntlcm91z4.cloudfront.net/user_37AyZ7rfikCUmAP45VFZYj00Qy3/hf_20260308_205239_6ee53a03-515a-41c6-95d8-adc8ec151b89.webp',
       description: 'Young woman applying black seed oil to her face at a rustic wooden bathroom vanity',
       prompt: 'Young woman with hair pulled back, standing at a rustic wooden bathroom vanity, gently applying black seed oil to her face with fingertips, glowing dewy skin, wearing soft sage green linen top, warm amber morning light filtering through sheer curtains, dried eucalyptus bundle hanging on wall, apothecary jars and natural skincare products on counter, muted earth tone bathroom with terracotta accents, calming spa-like atmosphere, shot on iPhone 15 Pro, natural iPhone camera quality, slight wide-angle lens distortion, authentic casual selfie in mirror, mobile photography aesthetic, natural skin texture visible, no airbrushing, 9:16 vertical',
       productPrompt: 'black seed oil bottle sitting on rustic wooden vanity counter among amber glass apothecary jars, clearly visible MAJU label, herbal wellness bathroom setting',
@@ -34,6 +35,7 @@
     'scene-2': {
       name: 'Wellness Tea/Drink',
       shareUrl: 'https://higgsfield.ai/s/nAo2zIqYKXA',
+      imageUrl: 'https://d8j0ntlcm91z4.cloudfront.net/user_37AyZ7rfikCUmAP45VFZYj00Qy3/hf_20260308_205751_feed6317-5633-47ce-9c63-469f387ec505.webp',
       description: 'Young woman adding drops of black seed oil into a steaming cup of herbal tea',
       prompt: 'Young woman in warm earthy kitchen, adding drops of black seed oil into a steaming ceramic cup of herbal tea, wearing cozy oatmeal-colored knit sweater, loose messy bun, warm golden morning light through window, wooden cutting board with fresh lemons, raw honey in glass jar, dried herbs and chamomile scattered on counter, terracotta pots with fresh herbs on windowsill, calming herbal apothecary kitchen aesthetic, steam rising from mug, shot on iPhone 15 Pro, natural iPhone camera quality, slight wide-angle lens distortion, authentic casual photo from across counter, mobile photography aesthetic, natural skin texture visible, no airbrushing, 9:16 vertical',
       productPrompt: 'black seed oil bottle prominently placed on wooden counter next to herbal tea cup and honey jar, clearly visible MAJU label, warm herbal wellness kitchen setting',
@@ -41,6 +43,7 @@
     'scene-3': {
       name: 'Hair Care',
       shareUrl: 'https://higgsfield.ai/s/8T6-8CspXbQ',
+      imageUrl: 'https://d8j0ntlcm91z4.cloudfront.net/user_37AyZ7rfikCUmAP45VFZYj00Qy3/hf_20260308_210253_e5b5ca62-9f9b-4d8c-88d8-38fe876a90fa.webp',
       description: 'Young woman applying black seed oil to long dark hair at a vintage wooden vanity',
       prompt: 'Young woman sitting at vintage wooden vanity, applying black seed oil to long dark hair ends with fingertips, wearing cream silk robe, warm amber candlelight glow, dried lavender bundles and natural wooden hairbrush on vanity, sage green wall in background, mirror reflection with soft warm lighting, fresh eucalyptus in vase, calming herbal bedroom aesthetic, muted earth tones throughout, shot on iPhone 15 Pro, natural iPhone camera quality, slight wide-angle lens distortion, authentic casual vanity mirror angle, mobile photography aesthetic, natural skin texture visible, no airbrushing, 9:16 vertical',
       productPrompt: 'black seed oil bottle prominently placed on vintage wooden vanity next to dried lavender and natural hairbrush, clearly visible MAJU label, herbal beauty ritual setting',
@@ -48,6 +51,7 @@
     'scene-4': {
       name: 'Smoothie/Wellness Blend',
       shareUrl: 'https://higgsfield.ai/s/U-O3_CG0Vtc',
+      imageUrl: 'https://d8j0ntlcm91z4.cloudfront.net/user_37AyZ7rfikCUmAP45VFZYj00Qy3/hf_20260308_210431_a0172956-1ccc-43f4-866c-39044d52938d.webp',
       description: 'Young woman adding black seed oil drops into a green smoothie blender',
       prompt: 'Young woman in earthy natural kitchen, adding black seed oil drops into glass blender with green smoothie, wearing loose sage green linen tank, hair in low bun, morning light streaming through window with herb garden visible, wooden cutting board with fresh spinach, avocado, ginger root, natural ceramic bowls, hanging dried herbs above counter, warm wood and stone kitchen aesthetic, calming wellness morning ritual, shot on iPhone 15 Pro, natural iPhone camera quality, slight wide-angle lens distortion, authentic casual photo, mobile photography aesthetic, natural skin texture visible, no airbrushing, iPhone POV, photorealistic, 9:16 vertical',
       productPrompt: 'black seed oil bottle prominently placed on wooden kitchen counter next to green smoothie ingredients, clearly visible MAJU label, earthy wellness kitchen setting',
@@ -55,6 +59,7 @@
     'scene-5': {
       name: 'Close-up Product Showcase',
       shareUrl: 'https://higgsfield.ai/s/tv9zFXAqTO8',
+      imageUrl: 'https://d8j0ntlcm91z4.cloudfront.net/user_37AyZ7rfikCUmAP45VFZYj00Qy3/hf_20260308_210755_6e8c0d05-c95e-4fac-8543-5a385fd94105.webp',
       description: 'Close-up of young woman holding black seed oil bottle near her face',
       prompt: 'Close-up of young woman holding black seed oil bottle near her face with both hands, soft gentle smile, glowing healthy skin with natural dewiness, wearing off-white linen top, soft diffused golden window light, shallow depth of field, background of blurred sage green and warm amber tones, dried botanical elements softly visible behind, herbal calming mood, the bottle is the clear focal point, shot on iPhone 15 Pro, natural iPhone camera quality, slight wide-angle lens distortion, authentic casual iPhone selfie angle, mobile photography aesthetic, natural skin texture visible, no airbrushing, 9:16 vertical',
       productPrompt: 'black seed oil bottle held prominently in hands near face, clearly visible MAJU label facing camera, bottle is the focal point, herbal calming aesthetic',
@@ -62,6 +67,7 @@
     'scene-6': {
       name: 'Cooking/Meal Prep',
       shareUrl: 'https://higgsfield.ai/s/PHq-AM-ThRs',
+      imageUrl: 'https://d8j0ntlcm91z4.cloudfront.net/user_37AyZ7rfikCUmAP45VFZYj00Qy3/hf_20260308_210932_3e576d92-9604-461e-bb06-2df4e43dd0d0.webp',
       description: 'Young woman drizzling black seed oil over a fresh Mediterranean salad',
       prompt: 'Young woman in warm natural kitchen drizzling black seed oil over a fresh Mediterranean salad bowl, wearing earthy olive green apron over white tee, wooden countertop with fresh vegetables, herbs, and cutting board, terracotta pots with fresh basil and rosemary on counter, warm overhead pendant lighting, natural stone backsplash, mortar and pestle nearby, calming earthy kitchen with green and amber tones, shot on iPhone 15 Pro, natural iPhone camera quality, slight wide-angle lens distortion, authentic casual photo, mobile photography aesthetic, natural skin texture visible, no airbrushing, iPhone POV from across island, photorealistic, 9:16 vertical',
       productPrompt: 'black seed oil bottle prominently placed on wooden counter next to Mediterranean salad and fresh herbs, clearly visible MAJU label, earthy herbal cooking setting',
@@ -69,6 +75,7 @@
     'scene-7': {
       name: 'Morning Skincare Routine',
       shareUrl: 'https://higgsfield.ai/s/_NM-RIKRLxo',
+      imageUrl: 'https://d8j0ntlcm91z4.cloudfront.net/user_37AyZ7rfikCUmAP45VFZYj00Qy3/hf_20260308_211258_828734cf-62b4-4908-86fc-98c5aa0a5867.webp',
       description: 'Young woman at bathroom vanity applying black seed oil to her palm in morning light',
       prompt: 'Young woman at bright bathroom vanity in morning light, fresh face with damp hair in towel, wearing soft white cotton robe, applying black seed oil to palm of hand, marble countertop with amber glass skincare bottles neatly arranged, fresh eucalyptus sprig in small vase, warm wood-framed mirror, soft sage green towels, natural apothecary bathroom aesthetic, calming morning ritual atmosphere, shot on iPhone 15 Pro, natural iPhone camera quality, slight wide-angle lens distortion, authentic casual iPhone mirror selfie angle, mobile photography aesthetic, natural skin texture visible, no airbrushing, 9:16 vertical',
       productPrompt: 'black seed oil bottle prominently placed on marble vanity among amber glass skincare bottles, clearly visible MAJU label, natural apothecary bathroom setting',
@@ -76,6 +83,7 @@
     'scene-8': {
       name: 'Yoga/Meditation Wellness',
       shareUrl: 'https://higgsfield.ai/s/mytFSTNgXvk',
+      imageUrl: 'https://d8j0ntlcm91z4.cloudfront.net/user_37AyZ7rfikCUmAP45VFZYj00Qy3/hf_20260308_193947_e0e25872-2de1-408b-a46e-c142f5191c6f.webp',
       description: 'Young woman in peaceful yoga pose on mat in sunlit room with plants',
       prompt: 'Young woman in peaceful meditation pose on yoga mat in sunlit room, eyes closed, serene expression, wearing muted sage green athletic set, natural light streaming through sheer white curtains, monstera and pothos plants nearby, natural wood floors, small altar-like setup with candle and crystals beside mat, warm amber and green tones throughout, calming zen atmosphere, shot on iPhone 15 Pro, natural iPhone camera quality, slight wide-angle lens distortion, authentic casual photo, mobile photography aesthetic, natural skin texture visible, no airbrushing, iPhone POV from low angle, photorealistic, 9:16 vertical',
       productPrompt: 'black seed oil bottle sitting on yoga mat edge next to candle and crystals, clearly visible MAJU label, calming zen wellness setting',
@@ -83,6 +91,7 @@
     'scene-9': {
       name: 'Evening Self-Care Wind-Down',
       shareUrl: 'https://higgsfield.ai/s/yfOuFwHUAgQ',
+      imageUrl: 'https://d8j0ntlcm91z4.cloudfront.net/user_37AyZ7rfikCUmAP45VFZYj00Qy3/hf_20260308_204711_b7066a08-d399-4300-8bf5-f0ea73ed9875.webp',
       description: 'Young woman relaxing on couch journaling with candles and herbal tea',
       prompt: 'Young woman relaxing on couch wrapped in soft knit blanket, journaling in leather-bound notebook, wearing cozy sage green pajama set, warm amber glow from beeswax candles on coffee table, dried lavender in small vase, steaming cup of herbal tea on wooden coaster, houseplants in corner, muted earth tones throughout living room, peaceful evening wind-down ritual, calming herbal atmosphere, shot on iPhone 15 Pro, natural iPhone camera quality, slight wide-angle lens distortion, authentic casual photo, mobile photography aesthetic, natural skin texture visible, no airbrushing, iPhone POV from across couch, photorealistic, 9:16 vertical',
       productPrompt: 'black seed oil bottle sitting on coffee table next to beeswax candles and herbal tea, clearly visible MAJU label, calming evening self-care setting',
@@ -90,13 +99,14 @@
     'scene-10': {
       name: 'Post-Workout Recovery',
       shareUrl: 'https://higgsfield.ai/s/RU2GCS2UpS4',
+      imageUrl: 'https://d8j0ntlcm91z4.cloudfront.net/user_37AyZ7rfikCUmAP45VFZYj00Qy3/hf_20260308_211956_51db7c89-3c58-4f03-b473-5e508983a099.webp',
       description: 'Young woman post-workout on bench in natural light home gym',
       prompt: 'Young woman post-workout sitting on wooden bench in bright natural light home gym, towel around shoulders, light sweat glow, wearing muted olive green sports bra and leggings, drinking from glass water bottle, natural wood and concrete gym aesthetic, small potted plant on shelf, warm sunlight from window, resistance bands and yoga mat visible, calming recovery moment, earth tones throughout, shot on iPhone 15 Pro, natural iPhone camera quality, slight wide-angle lens distortion, authentic casual photo, mobile photography aesthetic, natural skin texture visible, no airbrushing, iPhone POV, photorealistic, 9:16 vertical',
       productPrompt: 'black seed oil bottle sitting on wooden gym bench next to glass water bottle and towel, clearly visible MAJU label, earthy natural recovery setting',
     },
   };
 
-  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ State Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+  // ─── State ───
   let queue = JSON.parse(localStorage.getItem(CONFIG.storageKeys.queue) || '[]');
 
   // Cleanup: remove busted pending items that have no stitched video andno segment ideos
@@ -136,7 +146,7 @@
     if (!item.instagramCaption) {
       const pName = item.productName || item.aiPrompt?.segments?.[0]?.textOverlay || 'Black Seed Oil';
       const hook = item.aiPrompt?.hookVariant || item.typeName || 'wellness snack';
-      item.instagramCaption = hook + ' Ã¢ÂÂ¨\nTry this with ' + pName + '. Your skin will thank you! Ã°ÂÂÂ¤\nSave & follow @majusuperfoods for more wellness snacks';
+      item.instagramCaption = hook + ' ✨\nTry this with ' + pName + '. Your skin will thank you! 🖤\nSave & follow @majusuperfoods for more wellness snacks';
       defaultsAdded = true;
     }
     if (!item.hashtags || !item.hashtags.length) {
@@ -154,7 +164,7 @@
   let currentApproveId = null;
   let analyticsLoaded = false;
 
-  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Feedback Log (persisted for AI learning) Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+  // ─── Feedback Log (persisted for AI learning) ───
   const FEEDBACK_KEY = 'maju_feedback_log';
   let feedbackLog = JSON.parse(localStorage.getItem(FEEDBACK_KEY) || '[]');
 
@@ -166,11 +176,11 @@
     localStorage.setItem(FEEDBACK_KEY, JSON.stringify(feedbackLog));
   }
 
-  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ DOM Refs Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+  // ─── DOM Refs ───
   const $ = (sel) => document.querySelector(sel);
   const $$ = (sel) => document.querySelectorAll(sel);
 
-  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Navigation Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+  // ─── Navigation ───
   const viewMap = {
     dashboard: 'view-dashboard',
     tracker: 'view-tracker',
@@ -232,7 +242,7 @@
     });
   }
 
-  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Posting Toggle Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+  // ─── Posting Toggle ───
   $$('input[name="postMode"]').forEach((radio) =>
     radio.addEventListener('change', () => {
       const schedField = $('#schedule-field');
@@ -272,7 +282,7 @@
   const sceneSelect = $('#scene-select');
   if (sceneSelect) sceneSelect.addEventListener('change', updateScenePreview);
 
-  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Claude AI Learning Loop Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+  // ─── Claude AI Learning Loop ───
   async function getClaudeOptimizedPrompt(videoType, avatar, product, userNotes) {
     if (!apiKeys.claude) return null;
 
@@ -287,37 +297,37 @@
     const systemPrompt = `You are a video production AI assistant for MAJU, a wellness brand. You generate optimized Kling AI text-to-video prompts.
 
 Format: ${videoType}
-Avatar: ${avatar} (Patient Maya / Bree Alba Ã¢ÂÂ young woman, hair in bun, black tank top, minimal makeup, natural look)
-Product: ${product} (Maju's Black Seed Oil 8oz Ã¢ÂÂ dark glass bottle with "MAJU BLACK SEED OIL" label)
+Avatar: ${avatar} (Patient Maya / Bree Alba — young woman, hair in bun, black tank top, minimal makeup, natural look)
+Product: ${product} (Maju's Black Seed Oil 8oz — dark glass bottle with "MAJU BLACK SEED OIL" label)
 Video model: Kling v2 Master (text-to-video, 5s per segment)
 
-This is the "Anti-Puffy Face Snack" Selfcare Snack Reel Ã¢ÂÂ red onion + Maju Black Seed Oil + salt. Total duration: 25 seconds (5 segments x 5s each), 9:16 vertical.
+This is the "Anti-Puffy Face Snack" Selfcare Snack Reel — red onion + Maju Black Seed Oil + salt. Total duration: 25 seconds (5 segments x 5s each), 9:16 vertical.
 
-The video has exactly 5 segments. Each segment is generated as a 5-second Kling text-to-video clip. Prompts must be rich, descriptive, and cinematic Ã¢ÂÂ Kling generates from text alone (no reference image).
+The video has exactly 5 segments. Each segment is generated as a 5-second Kling text-to-video clip. Prompts must be rich, descriptive, and cinematic — Kling generates from text alone (no reference image).
 
-SEGMENT 1: HOOK (0-5s) Ã¢ÂÂ Stop the scroll
+SEGMENT 1: HOOK (0-5s) — Stop the scroll
 Text overlay: "de-puff your face snack" OR "wake up puffy? eat this"
 
-SEGMENT 2: THE REVEAL Ã¢ÂÂ Ingredients + Pour (5-10s) Ã¢ÂÂ Product placement money shot
+SEGMENT 2: THE REVEAL — Ingredients + Pour (5-10s) — Product placement money shot
 Text overlay: "1 red onion\\n+ black seed oil\\n+ salt"
 
-SEGMENT 3: THE DEMO Ã¢ÂÂ Eating the Snack (10-15s) Ã¢ÂÂ Viral hook, authentic reaction
+SEGMENT 3: THE DEMO — Eating the Snack (10-15s) — Viral hook, authentic reaction
 Text overlay: NONE (let the visual do the work)
 
-SEGMENT 4: RESULT + BENEFITS (15-20s) Ã¢ÂÂ Educate on benefits
+SEGMENT 4: RESULT + BENEFITS (15-20s) — Educate on benefits
 Text overlay: "drains facial bloat\\nreduces water retention\\ntightens puffy skin"
 
-SEGMENT 5: THE GLOW Ã¢ÂÂ Result + CTA (20-25s) Ã¢ÂÂ Payoff beauty shot
+SEGMENT 5: THE GLOW — Result + CTA (20-25s) — Payoff beauty shot
 Text overlay: "anti-puffy face snack\\n(onion + black seed oil + salt)" + CTA
 
 CRITICAL RULES FOR EVERY PROMPT:
 - EVERY prompt MUST describe Patient Maya: "a young woman with her hair in a bun wearing a black tank top"
 - EVERY prompt MUST include the Maju bottle: "a dark bottle labeled MAJU BLACK SEED OIL"
-- The bottle MUST be visible in EVERY segment Ã¢ÂÂ on the counter, in her hand, or in the foreground
+- The bottle MUST be visible in EVERY segment — on the counter, in her hand, or in the foreground
 - Bottle label must be readable in at least Reveal + Glow segments
 - Kitchen: ALWAYS dark/moody (dark cabinets, warm wood), NEVER bright/white
 - Lighting: ALWAYS warm golden-hour (3200-4000K), soft, flattering
-- Eating reaction must be AUTHENTIC Ã¢ÂÂ slight grimace then acceptance, NOT polished
+- Eating reaction must be AUTHENTIC — slight grimace then acceptance, NOT polished
 - Movement: smooth, natural, never robotic
 - Each prompt should be 2-3 sentences of rich visual description for Kling text-to-video
 - Include "Vertical 9:16 format" in each prompt
@@ -338,9 +348,9 @@ Example:
 
     const feedbackContext = relevantFeedback.length
       ? `\n\nPast feedback for this format (${relevantFeedback.length} entries):
-APPROVED videos Ã¢ÂÂ what worked:\n${approvals.map((f) => `- "${f.notes}"`).join('\n') || '(none yet)'}
-REJECTED videos Ã¢ÂÂ what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).join('\n') || '(none yet)'}`
-      : '\n\nNo past feedback yet Ã¢ÂÂ use best practices for short-form social video.';
+APPROVED videos — what worked:\n${approvals.map((f) => `- "${f.notes}"`).join('\n') || '(none yet)'}
+REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).join('\n') || '(none yet)'}`
+      : '\n\nNo past feedback yet — use best practices for short-form social video.';
 
     try {
       const res = await fetch(backendUrl('/api/proxy/claude/messages'), {
@@ -367,7 +377,7 @@ REJECTED videos Ã¢ÂÂ what to avoid:\n${rejections.map((f) => `- "${f.not
           if (!parsed.instagramCaption) {
             const product = parsed.segments?.[0]?.textOverlay || 'Black Seed Oil';
             const hook = parsed.hookVariant || 'wellness snack';
-            parsed.instagramCaption = hook + ' Ã¢ÂÂ¨\nTry this anti-puffy face combo with ' + product + '. Your skin will thank you! Ã°ÂÂÂ¤\nSave for later & follow @majusuperfoods for more wellness snacks';
+            parsed.instagramCaption = hook + ' ✨\nTry this anti-puffy face combo with ' + product + '. Your skin will thank you! 🖤\nSave for later & follow @majusuperfoods for more wellness snacks';
           }
           if (!parsed.hashtags || !parsed.hashtags.length) {
             parsed.hashtags = ['blackseedoil','depuff','facesnack','skincaretips','naturalremedy','antiinflammatory','puffyface','wellnesstips','majublackseedoil','skincareroutine','majusuperfoods','holistichealth'];
@@ -383,7 +393,7 @@ REJECTED videos Ã¢ÂÂ what to avoid:\n${rejections.map((f) => `- "${f.not
     }
   }
 
-  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Generate Video Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+  // ─── Generate Video ───
   $('#submit-video').addEventListener('click', async () => {
     const type = $('#video-type').value;
     const versions = parseInt($('#versions').value);
@@ -404,10 +414,10 @@ REJECTED videos Ã¢ÂÂ what to avoid:\n${rejections.map((f) => `- "${f.not
     if (apiKeys.claude) {
       const btn = $('#submit-video');
       btn.disabled = true;
-      btn.textContent = 'Ã°ÂÂ§Â  Claude is optimizing your promptÃ¢ÂÂ¦';
+      btn.textContent = '🧠 Claude is optimizing your prompt…';
       aiPrompt = await getClaudeOptimizedPrompt(type, avatar, product, notes);
       btn.disabled = false;
-      btn.textContent = 'Ã°ÂÂÂ Generate & Send to Queue';
+      btn.textContent = '🚀 Generate & Send to Queue';
     }
 
     for (let i = 0; i < versions; i++) {
@@ -433,7 +443,7 @@ REJECTED videos Ã¢ÂÂ what to avoid:\n${rejections.map((f) => `- "${f.not
         revisionCount: 0,
         revisionNotes: [],
         createdAt: new Date().toISOString(),
-        pipelineStage: 'generate', // generate Ã¢ÂÂ stitch Ã¢ÂÂ queue Ã¢ÂÂ post
+        pipelineStage: 'generate', // generate → stitch → queue → post
       };
       queue.unshift(item);
     }
@@ -457,7 +467,7 @@ REJECTED videos Ã¢ÂÂ what to avoid:\n${rejections.map((f) => `- "${f.not
     $('#notes').value = '';
   });
 
-  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Pipeline Visualization Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+  // ─── Pipeline Visualization ───
   function showPipeline() {
     const card = $('#pipeline-card');
     card.classList.remove('hidden');
@@ -478,9 +488,9 @@ REJECTED videos Ã¢ÂÂ what to avoid:\n${rejections.map((f) => `- "${f.not
     if (!apiKeys.higgsfield) {
       let stage = 0;
       const sim = [
-        'Ã¢ÂÂ Ã¯Â¸Â Higgsfield API key not set Ã¢ÂÂ video generation simulated. Add key in Settings.',
+        '⚠️ Higgsfield API key not set — video generation simulated. Add key in Settings.',
         'FFmpeg stitch simulated (no backend connected).',
-        'Ã¢ÂÂ Pipeline complete Ã¢ÂÂ videos in queue (simulated).',
+        '✓ Pipeline complete — videos in queue (simulated).',
       ];
       function advanceSim() {
         setStage(stage, sim[stage]);
@@ -488,7 +498,7 @@ REJECTED videos Ã¢ÂÂ what to avoid:\n${rejections.map((f) => `- "${f.not
         if (stage < sim.length) {
           setTimeout(advanceSim, 1800);
         } else {
-          // Simulation complete Ã¢ÂÂ move items into the approval queue
+          // Simulation complete — move items into the approval queue
           const simItems = queue.filter(q => q.pipelineStage === 'generate');
           simItems.forEach(item => { item.pipelineStage = 'queue'; });
           saveQueue();
@@ -501,12 +511,12 @@ REJECTED videos Ã¢ÂÂ what to avoid:\n${rejections.map((f) => `- "${f.not
       return;
     }
 
-    // Real pipeline: Generate Ã¢ÂÂ Stitch Ã¢ÂÂ Queue
+    // Real pipeline: Generate → Stitch → Queue
     runRealPipeline(steps, msg, setStage);
   }
 
   // SOP v2.0 default Kling prompts for each segment
-  // Avatar: Patient Maya (Bree Alba) Ã¢ÂÂ young woman, black tank top, hair in bun, minimal makeup, natural look
+  // Avatar: Patient Maya (Bree Alba) — young woman, black tank top, hair in bun, minimal makeup, natural look
   // Product: Maju's Black Seed Oil 8oz dark bottle with "MAJU BLACK SEED OIL" label
   const DEFAULT_SEGMENT_PROMPTS = [
     { name: 'hook', duration: 5, prompt: 'A young woman with her hair in a bun wearing a black tank top stands in a dark moody kitchen with warm golden lighting. She holds a whole red onion near her face, looking at it curiously then turning to camera with a confident knowing smile. A dark glass bottle labeled "MAJU BLACK SEED OIL" sits prominently on the wooden counter beside her. She slowly raises the onion. Cinematic warm golden-hour lighting from a window, dark cabinets in background. Vertical 9:16 format, smooth natural motion.', textOverlay: 'de-puff your face snack', model: 'kling-v2-master' },
@@ -553,22 +563,22 @@ REJECTED videos Ã¢ÂÂ what to avoid:\n${rejections.map((f) => `- "${f.not
 
     // Product refinement pass: use Flux Kontext image-to-image with the product render as reference
     if (productImageUrl) {
-      debugPanel(`[${segLabel}] Refining product packaging via Kontext image-to-imageÃ¢ÂÂ¦`);
-      console.log(`[Pipeline] ${segLabel} product refinement with reference: ${productImageUrl.slice(0, 60)}Ã¢ÂÂ¦`);
+      debugPanel(`[${segLabel}] Refining product packaging via Kontext image-to-image…`);
+      console.log(`[Pipeline] ${segLabel} product refinement with reference: ${productImageUrl.slice(0, 60)}…`);
       const editResult = await API.higgsfield.editImageWithProduct(
         baseImage.url,
         productImageUrl,
-        `Keep this exact scene, person, pose, lighting, and background unchanged. Replace any dark bottle or generic bottle in the image with the exact Maju Black Seed Oil bottle shown in the second reference image Ã¢ÂÂ match the label, shape, color, and packaging precisely. The bottle label should read "BLACK SEED OIL" with the Maju branding clearly visible.`
+        `Keep this exact scene, person, pose, lighting, and background unchanged. Replace any dark bottle or generic bottle in the image with the exact Maju Black Seed Oil bottle shown in the second reference image — match the label, shape, color, and packaging precisely. The bottle label should read "BLACK SEED OIL" with the Maju branding clearly visible.`
       );
       if (!editResult.ok || !editResult.id) {
         console.warn(`[Pipeline] ${segLabel} product edit failed, using base image:`, editResult.error);
-        debugPanel(`[${segLabel}] Product edit failed (${editResult.error || 'unknown'}) Ã¢ÂÂ using base image`);
+        debugPanel(`[${segLabel}] Product edit failed (${editResult.error || 'unknown'}) — using base image`);
         return baseImage;
       }
       const refinedImage = await pollImageStatus(editResult.id, segLabel, 'product-edit');
       if (!refinedImage.url) {
         console.warn(`[Pipeline] ${segLabel} product edit poll failed, using base image`);
-        debugPanel(`[${segLabel}] Product edit timed out Ã¢ÂÂ using base image`);
+        debugPanel(`[${segLabel}] Product edit timed out — using base image`);
         return baseImage;
       }
       debugPanel(`[${segLabel}] Product packaging refined successfully`);
@@ -614,18 +624,18 @@ REJECTED videos Ã¢ÂÂ what to avoid:\n${rejections.map((f) => `- "${f.not
     return { url: null, error: 'Video timed out after 600s' };
   }
 
-  // Helper: full segment pipeline Ã¢ÂÂ Higgsfield image Ã¢ÂÂ Kling animate (or Kling text2video fallback)
+  // Helper: full segment pipeline — Higgsfield image → Kling animate (or Kling text2video fallback)
   // Returns { url, error } object
   async function generateSegmentVideo(seg, segLabel, characterId, productImageUrl) {
-    // If Higgsfield key is set, use hybrid pipeline: Soul/Flux image Ã¢ÂÂ Kling image2video
+    // If Higgsfield key is set, use hybrid pipeline: Soul/Flux image → Kling image2video
     if (apiKeys.higgsfield) {
-      debugPanel(`[${segLabel}] Generating image via ${characterId ? 'Soul (character: ' + characterId + ')' : 'Flux Kontext Max'}${productImageUrl ? ' + product reference' : ''}Ã¢ÂÂ¦`);
+      debugPanel(`[${segLabel}] Generating image via ${characterId ? 'Soul (character: ' + characterId + ')' : 'Flux Kontext Max'}${productImageUrl ? ' + product reference' : ''}…`);
       const imageResult = await generateSegmentImage(seg, segLabel, characterId, productImageUrl);
       if (imageResult.url) {
-        debugPanel(`[${segLabel}] Image ready Ã¢ÂÂ animating via Kling image2videoÃ¢ÂÂ¦`);
+        debugPanel(`[${segLabel}] Image ready — animating via Kling image2video…`);
         return await animateImageToVideo(seg, imageResult.url, segLabel);
       }
-      debugPanel(`[${segLabel}] Image failed (${imageResult.error}) Ã¢ÂÂ falling back to Kling text2video`);
+      debugPanel(`[${segLabel}] Image failed (${imageResult.error}) — falling back to Kling text2video`);
     }
 
     // Fallback: Kling text-to-video (no reference image)
@@ -684,7 +694,7 @@ REJECTED videos Ã¢ÂÂ what to avoid:\n${rejections.map((f) => `- "${f.not
 
   async function runRealPipeline(steps, msg, setStage) {
     // Stage 0: Generate each segment via Kling text-to-video
-    setStage(0, 'Generating video segments via Kling AIÃ¢ÂÂ¦');
+    setStage(0, 'Generating video segments via Kling AI…');
 
     const newItems = queue.filter(q => q.pipelineStage === 'generate');
     const allSegmentVideos = []; // { url, label } for stitching
@@ -695,19 +705,27 @@ REJECTED videos Ã¢ÂÂ what to avoid:\n${rejections.map((f) => `- "${f.not
       const segments = testMode ? allSegments.slice(0, 1) : allSegments;
       if (testMode) debugPanel('[Test Mode] Generating 1 segment only (hook)');
 
-      // Generate ALL video segments in parallel via Kling (textÃ¢ÂÂvideo, no image step needed)
+      // Inject scene image into segments for Kling image-to-video (skip Higgsfield generation)
+      const sceneImageUrl = item.scene && item.scene.imageUrl;
+      if (sceneImageUrl) {
+        segments.forEach(seg => { if (!seg.image_url) seg.image_url = sceneImageUrl; });
+        debugPanel('[Pipeline] Using pre-generated scene image: ' + item.scene.name);
+        console.log('[Pipeline] Scene image injected for all segments: ' + sceneImageUrl.slice(0, 80) + '...');
+      }
+
+      // Generate ALL video segments in parallel via Kling (text→video, no image step needed)
       const KLING_CONCURRENCY = 3;
-      msg.textContent = `v${item.version}: Generating ${segments.length} video segments via KlingÃ¢ÂÂ¦`;
-      updateSegmentStatus('hook', 'Generating videosÃ¢ÂÂ¦', false);
+      msg.textContent = `v${item.version}: Generating ${segments.length} video segments via Kling…`;
+      updateSegmentStatus('hook', 'Generating videos…', false);
 
       let characterId = item.avatar || CONFIG.higgsfield.avatar || null;
       // Resolve legacy avatar keys to Soul UUID
       if (characterId && CONFIG.avatarMeta[characterId] === undefined && characterId === 'pateit') characterId = 'b262e935-4460-4026-980b-926aa0babdec';
       const productImageUrl = apiKeys.productImageUrl || null;
       if (characterId) console.log(`[Pipeline] Using Soul character ID: ${characterId}`);
-      if (productImageUrl) console.log(`[Pipeline] Using product reference image: ${productImageUrl.slice(0, 60)}Ã¢ÂÂ¦`);
+      if (productImageUrl) console.log(`[Pipeline] Using product reference image: ${productImageUrl.slice(0, 60)}…`);
       const videoTasks = segments.map((seg, si) => () => {
-        updateSegmentStatus(seg.name, 'GeneratingÃ¢ÂÂ¦', false);
+        updateSegmentStatus(seg.name, 'Generating…', false);
         return generateSegmentVideo(seg, `${seg.name} (${si + 1}/${segments.length})`, characterId, productImageUrl);
       });
       const videoResults = await runWithConcurrency(videoTasks, KLING_CONCURRENCY);
@@ -717,7 +735,7 @@ REJECTED videos Ã¢ÂÂ what to avoid:\n${rejections.map((f) => `- "${f.not
       for (let si = 0; si < segments.length; si++) {
         if (videoResults[si] && videoResults[si].url) {
           segmentResults.push({ url: videoResults[si].url, label: segments[si].name, textOverlay: segments[si].textOverlay });
-          updateSegmentStatus(segments[si].name, 'Done Ã¢ÂÂ', true);
+          updateSegmentStatus(segments[si].name, 'Done ✓', true);
         } else {
           const reason = videoResults[si]?.error || 'Video failed';
           updateSegmentStatus(segments[si].name, reason, false);
@@ -735,7 +753,7 @@ REJECTED videos Ã¢ÂÂ what to avoid:\n${rejections.map((f) => `- "${f.not
       } else {
         item.pipelineStage = 'failed';
         item.status = 'failed';
-        msg.textContent = `Ã¢ÂÂ Ã¯Â¸Â v${item.version}: No segments rendered successfully.`;
+        msg.textContent = `⚠️ v${item.version}: No segments rendered successfully.`;
         if (typeof fetchDebugLog === 'function') fetchDebugLog();
       }
       saveQueue();
@@ -746,7 +764,7 @@ REJECTED videos Ã¢ÂÂ what to avoid:\n${rejections.map((f) => `- "${f.not
     // Stage 1: Auto-stitch via FFmpeg with captions
     let stitchPassed = false;
     if (completedVideos.length > 0 && (apiKeys.backendUrl || DEFAULT_BACKEND)) {
-      setStage(1, `FFmpeg auto-stitching ${completedVideos.length} clips with captionsÃ¢ÂÂ¦`);
+      setStage(1, `FFmpeg auto-stitching ${completedVideos.length} clips with captions…`);
 
       const stitchOptions = {};
       const audioSel = document.getElementById('audio-select');
@@ -775,7 +793,7 @@ REJECTED videos Ã¢ÂÂ what to avoid:\n${rejections.map((f) => `- "${f.not
           while (!stitchDone) {
             await new Promise(r => setTimeout(r, 1500));
             const st = await API.backend.jobStatus(stitchResult.jobId);
-            msg.textContent = `StitchingÃ¢ÂÂ¦ ${st.progress || 0}%`;
+            msg.textContent = `Stitching… ${st.progress || 0}%`;
 
             if (st.status === 'done') {
               stitchDone = true;
@@ -785,17 +803,17 @@ REJECTED videos Ã¢ÂÂ what to avoid:\n${rejections.map((f) => `- "${f.not
               stitchPassed = true;
             } else if (st.status === 'error') {
               stitchDone = true;
-              msg.textContent = `Ã¢ÂÂ Ã¯Â¸Â Stitch error: ${st.error}`;
+              msg.textContent = `⚠️ Stitch error: ${st.error}`;
             }
           }
         }
       } catch (err) {
-        msg.textContent = `Ã¢ÂÂ Ã¯Â¸Â Stitch error: ${err.message}`;
+        msg.textContent = `⚠️ Stitch error: ${err.message}`;
       }
     } else if (completedVideos.length === 0) {
-      setStage(1, 'Stitch skipped Ã¢ÂÂ no completed videos.');
+      setStage(1, 'Stitch skipped — no completed videos.');
     } else {
-      setStage(1, 'Stitch skipped Ã¢ÂÂ no backend URL set.');
+      setStage(1, 'Stitch skipped — no backend URL set.');
     }
 
     // Audit check: only send to approval if stitch produced a real video
@@ -805,23 +823,23 @@ REJECTED videos Ã¢ÂÂ what to avoid:\n${rejections.map((f) => `- "${f.not
       renderQueue();
       renderTracker();
       updateBadge();
-      setStage(2, 'Ã¢ÂÂ Pipeline complete Ã¢ÂÂ video ready for approval.');
+      setStage(2, '✓ Pipeline complete — video ready for approval.');
     } else if (completedVideos.length > 0) {
-      // Segments rendered but stitch failed Ã¢ÂÂ keep in generate stage for retry, don't pollute approval queue
-      msg.textContent = 'Ã¢ÂÂ Ã¯Â¸Â Stitch failed Ã¢ÂÂ video not sent to approval. Check backend and retry.';
+      // Segments rendered but stitch failed — keep in generate stage for retry, don't pollute approval queue
+      msg.textContent = '⚠️ Stitch failed — video not sent to approval. Check backend and retry.';
       renderTracker();
-      setStage(2, 'Ã¢ÂÂ Ã¯Â¸Â Stitch failed Ã¢ÂÂ not queued for approval.');
+      setStage(2, '⚠️ Stitch failed — not queued for approval.');
     } else {
-      // Nothing rendered at all Ã¢ÂÂ keep in generate stage so they don't pollute approval queue
+      // Nothing rendered at all — keep in generate stage so they don't pollute approval queue
       newItems.forEach(item => { item.pipelineStage = 'failed'; item.status = 'failed'; });
       saveQueue();
       renderTracker();
       updateBadge();
-      setStage(2, 'Ã¢ÂÂ Ã¯Â¸Â No videos generated Ã¢ÂÂ check Kling API key and retry.');
+      setStage(2, '⚠️ No videos generated — check Kling API key and retry.');
     }
   }
 
-  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Queue Rendering Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+  // ─── Queue Rendering ───
   function renderQueue(filter = 'all') {
     const list = $('#queue-list');
     // Only show items that have reached the approval queue (not still generating/stitching)
@@ -843,13 +861,13 @@ REJECTED videos Ã¢ÂÂ what to avoid:\n${rejections.map((f) => `- "${f.not
           const vSrc = item.stitchedVideoUrl || item.videoUrl || (item.segmentVideos && item.segmentVideos[0]?.url);
           return vSrc
             ? `<div class="queue-video"><video src="${vSrc}" controls preload="auto" playsinline muted></video></div>`
-            : '<div class="queue-video queue-video-placeholder"><span>Video generatingÃ¢ÂÂ¦</span></div>';
+            : '<div class="queue-video queue-video-placeholder"><span>Video generating…</span></div>';
         })()}
         <div class="queue-info">
-          <h4>${item.typeName} Ã¢ÂÂ v${item.version}/${item.totalVersions}</h4>
-          <p>${item.productName} ÃÂ· ${item.avatarName}</p>
+          <h4>${item.typeName} — v${item.version}/${item.totalVersions}</h4>
+          <p>${item.productName} · ${item.avatarName}</p>
           ${item.aiPrompt?.hookVariant ? `<span class="queue-hook-label">${item.aiPrompt.hookVariant}</span>` : ''}
-          ${item.postMode === 'asap' ? '<p>Ã°ÂÂÂ Post ASAP</p>' : `<p>Ã°ÂÂÂ ${formatDate(item.schedDate)}</p>`}
+          ${item.postMode === 'asap' ? '<p>📌 Post ASAP</p>' : `<p>📅 ${formatDate(item.schedDate)}</p>`}
           ${item.notes ? `<p>"${item.notes}"</p>` : ''}
           ${item.aiPrompt ? `<div class="ai-prompt"><strong>AI Brief:</strong> ${item.aiPrompt.reasoning || ''}<br><em>${(item.aiPrompt.direction || '').substring(0, 120)}</em></div>` : ''}
           <div class="queue-social-content">
@@ -860,17 +878,17 @@ REJECTED videos Ã¢ÂÂ what to avoid:\n${rejections.map((f) => `- "${f.not
           </div>
           ${item.aiPrompt?.segments ? `<div class="queue-segments-preview"><strong>Segment Overlays:</strong> ${item.aiPrompt.segments.filter(s => s.textOverlay).map(s => `<span>${s.name}: "${s.textOverlay.replace(/\n/g, ' ')}"</span>`).join(' \u00b7 ')}</div>` : ''}
           <div class="queue-meta">
-            Status: <strong>${item.status.toUpperCase()}</strong> ÃÂ·
+            Status: <strong>${item.status.toUpperCase()}</strong> ·
             Created: ${formatDate(item.createdAt)}
-            ${(item.revisionCount || 0) > 0 ? `<div class="revision-count">Ã°ÂÂÂ Revision ${item.revisionCount}</div>` : ''}
+            ${(item.revisionCount || 0) > 0 ? `<div class="revision-count">🔄 Revision ${item.revisionCount}</div>` : ''}
           </div>
           ${(item.revisionNotes || []).length ? (item.revisionNotes || []).map((n, i) => `<div class="rejection-notes">Rev ${i + 1}: ${n}</div>`).join('') : ''}
           ${(item.approvalNotes || []).length ? (item.approvalNotes || []).map((n) => `<div class="approval-notes">Approved: ${n}</div>`).join('') : ''}
         </div>
         <div class="queue-actions">
           ${item.status === 'pending' || item.status === 'revision'
-            ? `<button class="btn-approve" data-action="approve" data-id="${item.id}">Ã¢ÂÂ Approve</button>
-               <button class="btn-reject" data-action="reject" data-id="${item.id}">Ã¢ÂÂ Reject</button>`
+            ? `<button class="btn-approve" data-action="approve" data-id="${item.id}">✓ Approve</button>
+               <button class="btn-reject" data-action="reject" data-id="${item.id}">✗ Reject</button>`
             : ''
           }
         </div>
@@ -910,7 +928,7 @@ REJECTED videos Ã¢ÂÂ what to avoid:\n${rejections.map((f) => `- "${f.not
     }
   });
 
-  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Approval Modal Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+  // ─── Approval Modal ───
   $('#btn-cancel-approve').addEventListener('click', () => {
     $('#approve-modal').classList.add('hidden');
     currentApproveId = null;
@@ -963,7 +981,7 @@ REJECTED videos Ã¢ÂÂ what to avoid:\n${rejections.map((f) => `- "${f.not
     }
   });
 
-  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Rejection Modal Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+  // ─── Rejection Modal ───
   $('#btn-cancel-reject').addEventListener('click', () => {
     $('#reject-modal').classList.add('hidden');
     currentRejectId = null;
@@ -1020,7 +1038,7 @@ REJECTED videos Ã¢ÂÂ what to avoid:\n${rejections.map((f) => `- "${f.not
     }
   });
 
-  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Activity Feed Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+  // ─── Activity Feed ───
   function renderActivity() {
     const feed = $('#recent-activity');
     const recent = queue.slice(0, 8);
@@ -1033,9 +1051,9 @@ REJECTED videos Ã¢ÂÂ what to avoid:\n${rejections.map((f) => `- "${f.not
       .map(
         (item) => `
       <div class="activity-item">
-        <strong>${item.typeName}</strong> v${item.version} Ã¢ÂÂ ${item.productName}
+        <strong>${item.typeName}</strong> v${item.version} — ${item.productName}
         <span style="color:var(--${item.status === 'approved' ? 'success' : item.status === 'rejected' ? 'danger' : item.status === 'revision' ? 'revision' : 'warning'})">[${item.status}]</span>
-        ${item.revisionCount > 0 ? `<span style="color:var(--revision)">Ã°ÂÂÂ ${item.revisionCount}</span>` : ''}
+        ${item.revisionCount > 0 ? `<span style="color:var(--revision)">🔄 ${item.revisionCount}</span>` : ''}
         <div class="activity-time">${formatDate(item.createdAt)}</div>
       </div>
     `
@@ -1043,7 +1061,7 @@ REJECTED videos Ã¢ÂÂ what to avoid:\n${rejections.map((f) => `- "${f.not
       .join('');
   }
 
-  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Badge Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+  // ─── Badge ───
   function updateBadge() {
     const pending = queue.filter(
       (q) => (q.status === 'pending' || q.status === 'revision') && (q.pipelineStage === 'queue' || q.pipelineStage === 'post')
@@ -1061,12 +1079,12 @@ REJECTED videos Ã¢ÂÂ what to avoid:\n${rejections.map((f) => `- "${f.not
     }
   }
 
-  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Request Tracker Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+  // ─── Request Tracker ───
   const PIPELINE_STAGES = [
-    { key: 'generate', label: 'Generating', icon: 'Ã°ÂÂÂ¬' },
-    { key: 'stitch', label: 'Stitching', icon: 'Ã°ÂÂ§Âµ' },
-    { key: 'queue', label: 'Awaiting Approval', icon: 'Ã¢ÂÂ³' },
-    { key: 'post', label: 'Posted', icon: 'Ã¢ÂÂ' },
+    { key: 'generate', label: 'Generating', icon: '🎬' },
+    { key: 'stitch', label: 'Stitching', icon: '🧵' },
+    { key: 'queue', label: 'Awaiting Approval', icon: '⏳' },
+    { key: 'post', label: 'Posted', icon: '✅' },
   ];
 
   function getStageIndex(item) {
@@ -1104,7 +1122,7 @@ REJECTED videos Ã¢ÂÂ what to avoid:\n${rejections.map((f) => `- "${f.not
         if (isFailed && idx === currentStage) cls += ' failed';
         if (isRevision && idx === 0) cls += ' revision';
         return `<div class="${cls}">
-          <div class="tracker-stage-dot">${idx < currentStage ? 'Ã¢ÂÂ' : stage.icon}</div>
+          <div class="tracker-stage-dot">${idx < currentStage ? '✓' : stage.icon}</div>
           <div class="tracker-stage-label">${stage.label}</div>
         </div>`;
       }).join('<div class="tracker-stage-connector"></div>');
@@ -1114,8 +1132,8 @@ REJECTED videos Ã¢ÂÂ what to avoid:\n${rejections.map((f) => `- "${f.not
       return `<div class="tracker-item ${isFailed ? 'tracker-failed' : ''} ${isRevision ? 'tracker-revision' : ''}">
         <div class="tracker-header">
           <div class="tracker-title">
-            <strong>${item.typeName || 'Video'} Ã¢ÂÂ v${item.version}/${item.totalVersions}</strong>
-            <span class="tracker-meta">${item.productName} ÃÂ· ${item.avatarName}</span>
+            <strong>${item.typeName || 'Video'} — v${item.version}/${item.totalVersions}</strong>
+            <span class="tracker-meta">${item.productName} · ${item.avatarName}</span>
           </div>
           <div class="tracker-progress-badge">${isFailed ? 'Failed' : isRevision ? 'In Revision' : progressPct + '%'}</div>
         </div>
@@ -1129,7 +1147,7 @@ REJECTED videos Ã¢ÂÂ what to avoid:\n${rejections.map((f) => `- "${f.not
     }).join('');
   }
 
-  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Approved Videos Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+  // ─── Approved Videos ───
   function renderApprovedVideos() {
     const list = $('#approved-list');
     if (!list) return;
@@ -1148,8 +1166,8 @@ REJECTED videos Ã¢ÂÂ what to avoid:\n${rejections.map((f) => `- "${f.not
       return `<div class="approved-card">
         ${videoSrc ? `<video src="${videoSrc}" controls preload="metadata" playsinline></video>` : '<div class="queue-video-placeholder" style="height:180px"><span>No video</span></div>'}
         <div class="approved-card-info">
-          <h4>${item.typeName || 'Video'} Ã¢ÂÂ v${item.version}</h4>
-          <p>${item.productName} ÃÂ· ${item.avatarName}</p>
+          <h4>${item.typeName || 'Video'} — v${item.version}</h4>
+          <p>${item.productName} · ${item.avatarName}</p>
           <p>${formatDate(item.createdAt)}</p>
           ${item.postMode === 'asap' ? '<p>Post ASAP</p>' : `<p>Scheduled: ${formatDate(item.schedDate)}</p>`}
           ${item.metricoolId ? '<p style="color:var(--success)">Posted to Metricool</p>' : ''}
@@ -1159,7 +1177,7 @@ REJECTED videos Ã¢ÂÂ what to avoid:\n${rejections.map((f) => `- "${f.not
     }).join('');
   }
 
-  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Spend Tracker Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+  // ─── Spend Tracker ───
   // Kling pricing estimates (per API call)
   const COST_ESTIMATES = {
     'kling-v2-master': 0.14,    // Kling v2 Master (5s video)
@@ -1189,7 +1207,7 @@ REJECTED videos Ã¢ÂÂ what to avoid:\n${rejections.map((f) => `- "${f.not
       spendRows.push({
         id: item.id,
         date: item.createdAt,
-        name: `${item.typeName || 'Video'} Ã¢ÂÂ v${item.version}`,
+        name: `${item.typeName || 'Video'} — v${item.version}`,
         product: item.productName,
         images: imageCount,
         videos: videoCount,
@@ -1229,7 +1247,7 @@ REJECTED videos Ã¢ÂÂ what to avoid:\n${rejections.map((f) => `- "${f.not
       <tbody>${spendRows.map(r => `<tr>
         <td class="spend-date">${formatDate(r.date)}</td>
         <td>${r.name}</td>
-        <td>${r.product || 'Ã¢ÂÂ'}</td>
+        <td>${r.product || '—'}</td>
         <td>${r.images}</td>
         <td>${r.videos}</td>
         <td>${r.model}</td>
@@ -1239,7 +1257,7 @@ REJECTED videos Ã¢ÂÂ what to avoid:\n${rejections.map((f) => `- "${f.not
     </table>`;
   }
 
-  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Scheduled Posts (Metricool) Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+  // ─── Scheduled Posts (Metricool) ───
   function renderScheduledPosts() {
     const statusEl = $('#metricool-status');
     const listEl = $('#scheduled-list');
@@ -1254,13 +1272,13 @@ REJECTED videos Ã¢ÂÂ what to avoid:\n${rejections.map((f) => `- "${f.not
         '<p class="empty-state">Metricool connected! Scheduled posts will appear here once the API integration is complete.</p>';
     } else {
       statusEl.innerHTML =
-        '<span class="status-dot disconnected"></span><span>Metricool: Not connected</span><a href="#" class="link-settings" data-goto="settings">Add API key Ã¢ÂÂ</a>';
+        '<span class="status-dot disconnected"></span><span>Metricool: Not connected</span><a href="#" class="link-settings" data-goto="settings">Add API key →</a>';
       listEl.innerHTML =
         '<p class="empty-state">Connect your Metricool API key in Settings to see scheduled posts.</p>';
     }
   }
 
-  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ SOP Wiki Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+  // ─── SOP Wiki ───
   $$('.sop-link').forEach((link) =>
     link.addEventListener('click', (e) => {
       e.preventDefault();
@@ -1309,7 +1327,7 @@ REJECTED videos Ã¢ÂÂ what to avoid:\n${rejections.map((f) => `- "${f.not
   const firstSop = $('.sop-link.active');
   if (firstSop) loadSop(firstSop.dataset.sop);
 
-  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ API Settings Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+  // ─── API Settings ───
   // Load saved keys into form fields
   function loadApiKeys() {
     if (apiKeys.backendUrl) $('#api-backend-url').value = apiKeys.backendUrl;
@@ -1342,8 +1360,8 @@ REJECTED videos Ã¢ÂÂ what to avoid:\n${rejections.map((f) => `- "${f.not
           loadApiKeys();
           console.log('[Config] Synced keys from backend');
         } else if (hasLocalKeys) {
-          // Backend has no keys (e.g. after redeploy) Ã¢ÂÂ push local keys up
-          console.log('[Config] Backend empty after redeploy Ã¢ÂÂ pushing local keys');
+          // Backend has no keys (e.g. after redeploy) — push local keys up
+          console.log('[Config] Backend empty after redeploy — pushing local keys');
           pushKeysToBackend();
         }
       }
@@ -1359,7 +1377,7 @@ REJECTED videos Ã¢ÂÂ what to avoid:\n${rejections.map((f) => `- "${f.not
         body: JSON.stringify(apiKeys),
       });
       console.log('[Config] Keys saved to backend');
-    } catch { /* silent fail Ã¢ÂÂ localStorage still works */ }
+    } catch { /* silent fail — localStorage still works */ }
   }
 
   // Toggle visibility
@@ -1397,7 +1415,7 @@ REJECTED videos Ã¢ÂÂ what to avoid:\n${rejections.map((f) => `- "${f.not
   loadAudioTracks();
     checkBackendStatus();
 
-  // Ã¢ÂÂÃ¢ÂÂ Debounced save for queue social content edits Ã¢ÂÂÃ¢ÂÂ
+  // ── Debounced save for queue social content edits ──
   let _queueSaveTimer = null;
   const queueList = document.getElementById('queue-list');
   if (queueList) {
@@ -1417,7 +1435,7 @@ REJECTED videos Ã¢ÂÂ what to avoid:\n${rejections.map((f) => `- "${f.not
   }
   });
 
-  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Helpers Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+  // ─── Helpers ───
   function saveQueue() {
     localStorage.setItem(CONFIG.storageKeys.queue, JSON.stringify(queue));
   }
@@ -1428,7 +1446,7 @@ REJECTED videos Ã¢ÂÂ what to avoid:\n${rejections.map((f) => `- "${f.not
   }
 
   function formatDate(str) {
-    if (!str) return 'Ã¢ÂÂ';
+    if (!str) return '—';
     try {
       return new Date(str).toLocaleString('en-US', {
         month: 'short',
@@ -1441,7 +1459,7 @@ REJECTED videos Ã¢ÂÂ what to avoid:\n${rejections.map((f) => `- "${f.not
     }
   }
 
-  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ API Integrations (Live) Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+  // ─── API Integrations (Live) ───
 
   let DEFAULT_BACKEND = '';
 
@@ -1461,11 +1479,11 @@ REJECTED videos Ã¢ÂÂ what to avoid:\n${rejections.map((f) => `- "${f.not
   // All API calls route through the backend proxy to avoid CORS issues.
 
   const API = {
-    // Ã¢ÂÂÃ¢ÂÂ Higgsfield Ã¢ÂÂ Static image generation with Patient Maya avatar (via proxy) Ã¢ÂÂÃ¢ÂÂ
+    // ── Higgsfield — Static image generation with Patient Maya avatar (via proxy) ──
     higgsfield: {
       async generateImage(params) {
         console.log('[Higgsfield] Soul image generation:', params);
-        if (!apiKeys.higgsfield) return { ok: false, error: 'No Higgsfield API key set Ã¢ÂÂ add in Settings' };
+        if (!apiKeys.higgsfield) return { ok: false, error: 'No Higgsfield API key set — add in Settings' };
         // Use Soul endpoint when character_id is available, otherwise fall back to Flux Kontext
         const useSoul = !!params.custom_reference_id;
         const endpoint = params.endpoint || (useSoul ? '/v1/text2image/soul' : 'flux-pro/kontext/max/text-to-image');
@@ -1560,13 +1578,13 @@ REJECTED videos Ã¢ÂÂ what to avoid:\n${rejections.map((f) => `- "${f.not
       },
     },
 
-    // Ã¢ÂÂÃ¢ÂÂ Kling AI Ã¢ÂÂ Video generation (via Higgsfield platform proxy) Ã¢ÂÂÃ¢ÂÂ
-    // Higgsfield provides Kling access through their API Ã¢ÂÂ same credentials
+    // ── Kling AI — Video generation (via Higgsfield platform proxy) ──
+    // Higgsfield provides Kling access through their API — same credentials
     // Endpoint pattern: kling-video/{version}/{tier}/{mode}
     kling: {
       async generateVideo(params) {
         console.log('[Kling via Higgsfield] Generate video:', params);
-        if (!apiKeys.higgsfield) return { ok: false, error: 'No Higgsfield API key set Ã¢ÂÂ add in Settings (Kling runs via Higgsfield)' };
+        if (!apiKeys.higgsfield) return { ok: false, error: 'No Higgsfield API key set — add in Settings (Kling runs via Higgsfield)' };
         const endpoint = params.endpoint || 'kling-video/v2.1/master/text-to-video';
         const body = {
           endpoint,
@@ -1616,7 +1634,7 @@ REJECTED videos Ã¢ÂÂ what to avoid:\n${rejections.map((f) => `- "${f.not
 
       async generateFromImage(params) {
         console.log('[Kling via Higgsfield] Image-to-video:', params);
-        if (!apiKeys.higgsfield) return { ok: false, error: 'No Higgsfield API key set Ã¢ÂÂ add in Settings' };
+        if (!apiKeys.higgsfield) return { ok: false, error: 'No Higgsfield API key set — add in Settings' };
         const endpoint = params.endpoint || 'kling-video/v2.1/master/image-to-video';
         const body = {
           endpoint,
@@ -1650,12 +1668,12 @@ REJECTED videos Ã¢ÂÂ what to avoid:\n${rejections.map((f) => `- "${f.not
 
       async reviseVideo(videoId, notes) {
         return this.generateVideo({
-          prompt: `Revision Ã¢ÂÂ feedback: ${notes}`,
+          prompt: `Revision — feedback: ${notes}`,
         });
       },
     },
 
-    // Ã¢ÂÂÃ¢ÂÂ Metricool Ã¢ÂÂ Social scheduling & analytics (via proxy) Ã¢ÂÂÃ¢ÂÂ
+    // ── Metricool — Social scheduling & analytics (via proxy) ──
     metricool: {
       async getScheduledPosts() {
         console.log('[Metricool] Fetching scheduled posts');
@@ -1696,7 +1714,7 @@ REJECTED videos Ã¢ÂÂ what to avoid:\n${rejections.map((f) => `- "${f.not
       },
     },
 
-    // Ã¢ÂÂÃ¢ÂÂ Arcads Ã¢ÂÂ UGC-style ad video generation (via proxy) Ã¢ÂÂÃ¢ÂÂ
+    // ── Arcads — UGC-style ad video generation (via proxy) ──
     arcads: {
       async generateUGC(params) {
         console.log('[Arcads] Generate UGC video:', params);
@@ -1729,7 +1747,7 @@ REJECTED videos Ã¢ÂÂ what to avoid:\n${rejections.map((f) => `- "${f.not
       },
     },
 
-    // Ã¢ÂÂÃ¢ÂÂ Creatify Ã¢ÂÂ AI product video generation (via proxy) Ã¢ÂÂÃ¢ÂÂ
+    // ── Creatify — AI product video generation (via proxy) ──
     creatify: {
       _creatifyHeaders() {
         const [apiId, apiKey] = (apiKeys.creatify || '').includes(':')
@@ -1788,7 +1806,7 @@ REJECTED videos Ã¢ÂÂ what to avoid:\n${rejections.map((f) => `- "${f.not
       },
     },
 
-    // Ã¢ÂÂÃ¢ÂÂ Backend Ã¢ÂÂ FFmpeg stitching server Ã¢ÂÂÃ¢ÂÂ
+    // ── Backend — FFmpeg stitching server ──
     backend: {
       async health() {
         try {
@@ -1836,7 +1854,7 @@ REJECTED videos Ã¢ÂÂ what to avoid:\n${rejections.map((f) => `- "${f.not
   window.MAJU_API = API;
   window.MAJU_CONFIG = CONFIG;
 
-  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Debug Panel (visible on page, no F12 needed) Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+  // ─── Debug Panel (visible on page, no F12 needed) ───
   const _debugLines = [];
   function debugPanel(msg) {
     _debugLines.push(`[${new Date().toLocaleTimeString()}] ${msg}`);
@@ -1866,10 +1884,10 @@ REJECTED videos Ã¢ÂÂ what to avoid:\n${rejections.map((f) => `- "${f.not
   }
   window.fetchDebugLog = fetchDebugLog;
 
-  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Backend Status Check Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+  // ─── Backend Status Check ───
   async function checkBackendStatus(retries = 3) {
     const el = $('#backend-status');
-    el.innerHTML = '<span class="status-dot connecting"></span><span>Backend: ConnectingÃ¢ÂÂ¦</span>';
+    el.innerHTML = '<span class="status-dot connecting"></span><span>Backend: Connecting…</span>';
 
     for (let i = 0; i < retries; i++) {
       try {
@@ -1885,15 +1903,15 @@ REJECTED videos Ã¢ÂÂ what to avoid:\n${rejections.map((f) => `- "${f.not
       } catch {
         // Backend may be cold-starting, retry
         if (i < retries - 1) {
-          el.innerHTML = `<span class="status-dot connecting"></span><span>Backend: Waking upÃ¢ÂÂ¦ (attempt ${i + 2}/${retries})</span>`;
+          el.innerHTML = `<span class="status-dot connecting"></span><span>Backend: Waking up… (attempt ${i + 2}/${retries})</span>`;
           await new Promise(r => setTimeout(r, 5000));
         }
       }
     }
-    el.innerHTML = '<span class="status-dot disconnected"></span><span>Backend: Not connected Ã¢ÂÂ set your backend URL in <a href="#" data-goto="settings">Settings</a></span>';
+    el.innerHTML = '<span class="status-dot disconnected"></span><span>Backend: Not connected — set your backend URL in <a href="#" data-goto="settings">Settings</a></span>';
   }
 
-  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Auto-Stitch Segment Status Updates Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+  // ─── Auto-Stitch Segment Status Updates ───
   // Called by the pipeline to update segment status in the stitch panel
   function updateSegmentStatus(segment, statusText, isReady) {
     const el = $(`#seg-${segment}`);
@@ -1904,14 +1922,14 @@ REJECTED videos Ã¢ÂÂ what to avoid:\n${rejections.map((f) => `- "${f.not
   }
   window.updateSegmentStatus = updateSegmentStatus;
 
-  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Live Metricool Scheduled Posts Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+  // ─── Live Metricool Scheduled Posts ───
   async function fetchScheduledPosts() {
     const statusEl = $('#metricool-status');
     const listEl = $('#scheduled-list');
 
     if (!apiKeys.metricool) return;
 
-    statusEl.innerHTML = '<span class="status-dot connected"></span><span>Metricool: FetchingÃ¢ÂÂ¦</span>';
+    statusEl.innerHTML = '<span class="status-dot connected"></span><span>Metricool: Fetching…</span>';
 
     const result = await API.metricool.getScheduledPosts();
     if (result.ok && result.posts && result.posts.length) {
@@ -1929,21 +1947,21 @@ REJECTED videos Ã¢ÂÂ what to avoid:\n${rejections.map((f) => `- "${f.not
       statusEl.innerHTML = '<span class="status-dot connected"></span><span>Metricool: Connected</span>';
       listEl.innerHTML = '<p class="empty-state">No scheduled posts in the next 30 days.</p>';
     } else {
-      statusEl.innerHTML = `<span class="status-dot disconnected"></span><span>Metricool: Error Ã¢ÂÂ ${result.error}</span>`;
+      statusEl.innerHTML = `<span class="status-dot disconnected"></span><span>Metricool: Error — ${result.error}</span>`;
     }
   }
 
-  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Analytics View Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+  // ─── Analytics View ───
 
   async function loadAnalytics() {
     if (!apiKeys.metricool) {
       $('#analytics-status').innerHTML =
-        '<span class="status-dot disconnected"></span><span>Metricool: Not connected</span><a href="#" class="link-settings" data-goto="settings">Add API key Ã¢ÂÂ</a>';
+        '<span class="status-dot disconnected"></span><span>Metricool: Not connected</span><a href="#" class="link-settings" data-goto="settings">Add API key →</a>';
       return;
     }
 
     $('#analytics-status').innerHTML =
-      '<span class="status-dot connected"></span><span>Metricool: Loading analyticsÃ¢ÂÂ¦</span>';
+      '<span class="status-dot connected"></span><span>Metricool: Loading analytics…</span>';
 
     // Fetch accounts/networks, analytics, and top posts in parallel
     const [networksRes, topPostsRes] = await Promise.all([
@@ -2045,7 +2063,7 @@ REJECTED videos Ã¢ÂÂ what to avoid:\n${rejections.map((f) => `- "${f.not
         <div class="post-info">
           <div class="post-text">${i + 1}. ${post.content || post.text || post.caption || 'Post'}</div>
           <div class="post-meta">
-            ${post.network || post.platform || ''} ÃÂ· ${post.publicationDate || post.date || ''}
+            ${post.network || post.platform || ''} · ${post.publicationDate || post.date || ''}
           </div>
         </div>
         <div class="post-stats">
@@ -2079,21 +2097,21 @@ REJECTED videos Ã¢ÂÂ what to avoid:\n${rejections.map((f) => `- "${f.not
   }
 
   function formatNum(n) {
-    if (n == null) return 'Ã¢ÂÂ';
+    if (n == null) return '—';
     if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
     if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
     return n.toString();
   }
 
-  // Analytics is loaded lazily Ã¢ÂÂ triggered from nav click handler below
+  // Analytics is loaded lazily — triggered from nav click handler below
 
-  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Wire Approve Ã¢ÂÂ Metricool Post Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+  // ─── Wire Approve → Metricool Post ───
   function scheduleApprovedItem(item) {
     if (!apiKeys.metricool) {
-      console.log('[Metricool] No API key Ã¢ÂÂ skip scheduling');
+      console.log('[Metricool] No API key — skip scheduling');
       return;
     }
-    const caption = item.instagramCaption || `${item.productName} Ã¢ÂÂ ${item.typeName}`;
+    const caption = item.instagramCaption || `${item.productName} — ${item.typeName}`;
     const tags = (item.hashtags || []).map(t => `#${t.replace(/^#/, '')}`).join(' ');
     const fullContent = tags ? `${caption}\n\n${tags}` : caption;
     const videoSrc = item.stitchedVideoUrl || item.videoUrl;
@@ -2120,9 +2138,9 @@ REJECTED videos Ã¢ÂÂ what to avoid:\n${rejections.map((f) => `- "${f.not
     });
   }
 
-  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Init Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+  // ─── Init ───
 
-  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Audio / Music Management Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
+  // ─── Audio / Music Management ───
   async function loadAudioTracks() {
     const select = document.getElementById('audio-select');
     if (!select) return;
@@ -2157,14 +2175,14 @@ REJECTED videos Ã¢ÂÂ what to avoid:\n${rejections.map((f) => `- "${f.not
       const file = e.target.files[0];
       if (!file) return;
       const hint = document.getElementById('audio-hint');
-      if (hint) hint.textContent = `Uploading ${file.name}Ã¢ÂÂ¦`;
+      if (hint) hint.textContent = `Uploading ${file.name}…`;
       const form = new FormData();
       form.append('audio', file);
       try {
         const res = await fetch(backendUrl('/api/audio/upload'), { method: 'POST', body: form });
         const data = await res.json();
         if (data.ok) {
-          if (hint) hint.textContent = `Ã¢ÂÂ Uploaded ${data.filename} Ã¢ÂÂ saved for future reels.`;
+          if (hint) hint.textContent = `✓ Uploaded ${data.filename} — saved for future reels.`;
           await loadAudioTracks();
           document.getElementById('audio-select').value = data.filename;
           document.getElementById('audio-preview-btn').style.display = '';
@@ -2179,7 +2197,7 @@ REJECTED videos Ã¢ÂÂ what to avoid:\n${rejections.map((f) => `- "${f.not
     });
   }
 
-  // Select change Ã¢ÂÂ show/hide buttons
+  // Select change — show/hide buttons
   const audioSelect = document.getElementById('audio-select');
   if (audioSelect) {
     audioSelect.addEventListener('change', () => {
