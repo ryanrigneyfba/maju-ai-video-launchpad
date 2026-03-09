@@ -70,10 +70,10 @@ const jobs = new Map();
 const SOP_SEGMENTS = {
   'selfcare-snack-reel': [
     { name: 'hook', label: 'Hook (0-3s)', maxDuration: 3 },
-    { name: 'reveal', label: 'Reveal — Ingredients + Pour (3-6s)', maxDuration: 3 },
-    { name: 'demo', label: 'Demo — Eating the Snack (6-11s)', maxDuration: 5 },
-    { name: 'result', label: 'Result + Benefits (11-13s)', maxDuration: 2 },
-    { name: 'glow', label: 'Glow — Result + CTA (13-15s)', maxDuration: 2 },
+    { name: 'reveal', label: 'Reveal (3-6s)', maxDuration: 3 },
+    { name: 'demo', label: 'Demo (6-9s)', maxDuration: 3 },
+    { name: 'result', label: 'Result + Benefits (9-12s)', maxDuration: 3 },
+    { name: 'glow', label: 'Glow + CTA (12-15s)', maxDuration: 3 },
   ],
 };
 
@@ -273,8 +273,15 @@ function runStitch(jobId, clips, outputPath, options = {}) {
 
   // Create concat file list for FFmpeg
   const concatListPath = path.join(UPLOAD_DIR, `${jobId}-concat.txt`);
+  const clipDurations = options.clipDurations || [];
+  const maxClipDur = options.maxClipDuration || 3;
   const concatContent = clips
-    .map((c) => `file '${path.join(UPLOAD_DIR, c.filename)}'`)
+    .map((c, i) => {
+      let entry = `file '${path.join(UPLOAD_DIR, c.filename)}'`;
+      const dur = clipDurations[i] || maxClipDur;
+      if (dur) entry += `\nduration ${dur}`;
+      return entry;
+    })
     .join('\n');
   fs.writeFileSync(concatListPath, concatContent);
 
