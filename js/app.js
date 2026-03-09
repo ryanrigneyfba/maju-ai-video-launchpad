@@ -1,11 +1,11 @@
-/* ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ 
-   MAJU AI Video Launchpad ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ v1.1 
+/* Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ 
+   MAJU AI Video Launchpad Ã¢ÂÂ v1.1 
    Main application logic
-   ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ */ 
+   Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂÃ¢ÂÂ */ 
 (function () {
   'use strict';
 
-  // ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Config ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ
+  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Config Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
   const CONFIG = {
     higgsfield: {
       asset: 'majurender8oz',
@@ -96,7 +96,7 @@
     },
   };
 
-  // ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ State ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ
+  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ State Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
   let queue = JSON.parse(localStorage.getItem(CONFIG.storageKeys.queue) || '[]');
 
   // Cleanup: remove busted pending items that have no stitched video andno segment ideos
@@ -136,7 +136,7 @@
     if (!item.instagramCaption) {
       const pName = item.productName || item.aiPrompt?.segments?.[0]?.textOverlay || 'Black Seed Oil';
       const hook = item.aiPrompt?.hookVariant || item.typeName || 'wellness snack';
-      item.instagramCaption = hook + ' ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ¨\nTry this with ' + pName + '. Your skin will thank you! ÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂ¤\nSave & follow @majusuperfoods for more wellness snacks';
+      item.instagramCaption = hook + ' Ã¢ÂÂ¨\nTry this with ' + pName + '. Your skin will thank you! Ã°ÂÂÂ¤\nSave & follow @majusuperfoods for more wellness snacks';
       defaultsAdded = true;
     }
     if (!item.hashtags || !item.hashtags.length) {
@@ -154,7 +154,7 @@
   let currentApproveId = null;
   let analyticsLoaded = false;
 
-  // ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Feedback Log (persisted for AI learning) ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ
+  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Feedback Log (persisted for AI learning) Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
   const FEEDBACK_KEY = 'maju_feedback_log';
   let feedbackLog = JSON.parse(localStorage.getItem(FEEDBACK_KEY) || '[]');
 
@@ -166,11 +166,11 @@
     localStorage.setItem(FEEDBACK_KEY, JSON.stringify(feedbackLog));
   }
 
-  // ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ DOM Refs ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ
+  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ DOM Refs Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
   const $ = (sel) => document.querySelector(sel);
   const $$ = (sel) => document.querySelectorAll(sel);
 
-  // ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Navigation ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ
+  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Navigation Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
   const viewMap = {
     dashboard: 'view-dashboard',
     tracker: 'view-tracker',
@@ -232,7 +232,7 @@
     });
   }
 
-  // ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Posting Toggle ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ
+  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Posting Toggle Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
   $$('input[name="postMode"]').forEach((radio) =>
     radio.addEventListener('change', () => {
       const schedField = $('#schedule-field');
@@ -272,7 +272,7 @@
   const sceneSelect = $('#scene-select');
   if (sceneSelect) sceneSelect.addEventListener('change', updateScenePreview);
 
-  // ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Claude AI Learning Loop ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ
+  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Claude AI Learning Loop Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
   async function getClaudeOptimizedPrompt(videoType, avatar, product, userNotes) {
     if (!apiKeys.claude) return null;
 
@@ -287,37 +287,37 @@
     const systemPrompt = `You are a video production AI assistant for MAJU, a wellness brand. You generate optimized Kling AI text-to-video prompts.
 
 Format: ${videoType}
-Avatar: ${avatar} (Patient Maya / Bree Alba ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ young woman, hair in bun, black tank top, minimal makeup, natural look)
-Product: ${product} (Maju's Black Seed Oil 8oz ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ dark glass bottle with "MAJU BLACK SEED OIL" label)
+Avatar: ${avatar} (Patient Maya / Bree Alba Ã¢ÂÂ young woman, hair in bun, black tank top, minimal makeup, natural look)
+Product: ${product} (Maju's Black Seed Oil 8oz Ã¢ÂÂ dark glass bottle with "MAJU BLACK SEED OIL" label)
 Video model: Kling v2 Master (text-to-video, 5s per segment)
 
-This is the "Anti-Puffy Face Snack" Selfcare Snack Reel ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ red onion + Maju Black Seed Oil + salt. Total duration: 25 seconds (5 segments x 5s each), 9:16 vertical.
+This is the "Anti-Puffy Face Snack" Selfcare Snack Reel Ã¢ÂÂ red onion + Maju Black Seed Oil + salt. Total duration: 25 seconds (5 segments x 5s each), 9:16 vertical.
 
-The video has exactly 5 segments. Each segment is generated as a 5-second Kling text-to-video clip. Prompts must be rich, descriptive, and cinematic ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Kling generates from text alone (no reference image).
+The video has exactly 5 segments. Each segment is generated as a 5-second Kling text-to-video clip. Prompts must be rich, descriptive, and cinematic Ã¢ÂÂ Kling generates from text alone (no reference image).
 
-SEGMENT 1: HOOK (0-5s) ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Stop the scroll
+SEGMENT 1: HOOK (0-5s) Ã¢ÂÂ Stop the scroll
 Text overlay: "de-puff your face snack" OR "wake up puffy? eat this"
 
-SEGMENT 2: THE REVEAL ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Ingredients + Pour (5-10s) ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Product placement money shot
+SEGMENT 2: THE REVEAL Ã¢ÂÂ Ingredients + Pour (5-10s) Ã¢ÂÂ Product placement money shot
 Text overlay: "1 red onion\\n+ black seed oil\\n+ salt"
 
-SEGMENT 3: THE DEMO ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Eating the Snack (10-15s) ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Viral hook, authentic reaction
+SEGMENT 3: THE DEMO Ã¢ÂÂ Eating the Snack (10-15s) Ã¢ÂÂ Viral hook, authentic reaction
 Text overlay: NONE (let the visual do the work)
 
-SEGMENT 4: RESULT + BENEFITS (15-20s) ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Educate on benefits
+SEGMENT 4: RESULT + BENEFITS (15-20s) Ã¢ÂÂ Educate on benefits
 Text overlay: "drains facial bloat\\nreduces water retention\\ntightens puffy skin"
 
-SEGMENT 5: THE GLOW ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Result + CTA (20-25s) ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Payoff beauty shot
+SEGMENT 5: THE GLOW Ã¢ÂÂ Result + CTA (20-25s) Ã¢ÂÂ Payoff beauty shot
 Text overlay: "anti-puffy face snack\\n(onion + black seed oil + salt)" + CTA
 
 CRITICAL RULES FOR EVERY PROMPT:
 - EVERY prompt MUST describe Patient Maya: "a young woman with her hair in a bun wearing a black tank top"
 - EVERY prompt MUST include the Maju bottle: "a dark bottle labeled MAJU BLACK SEED OIL"
-- The bottle MUST be visible in EVERY segment ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ on the counter, in her hand, or in the foreground
+- The bottle MUST be visible in EVERY segment Ã¢ÂÂ on the counter, in her hand, or in the foreground
 - Bottle label must be readable in at least Reveal + Glow segments
 - Kitchen: ALWAYS dark/moody (dark cabinets, warm wood), NEVER bright/white
 - Lighting: ALWAYS warm golden-hour (3200-4000K), soft, flattering
-- Eating reaction must be AUTHENTIC ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ slight grimace then acceptance, NOT polished
+- Eating reaction must be AUTHENTIC Ã¢ÂÂ slight grimace then acceptance, NOT polished
 - Movement: smooth, natural, never robotic
 - Each prompt should be 2-3 sentences of rich visual description for Kling text-to-video
 - Include "Vertical 9:16 format" in each prompt
@@ -338,9 +338,9 @@ Example:
 
     const feedbackContext = relevantFeedback.length
       ? `\n\nPast feedback for this format (${relevantFeedback.length} entries):
-APPROVED videos ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ what worked:\n${approvals.map((f) => `- "${f.notes}"`).join('\n') || '(none yet)'}
-REJECTED videos ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).join('\n') || '(none yet)'}`
-      : '\n\nNo past feedback yet ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ use best practices for short-form social video.';
+APPROVED videos Ã¢ÂÂ what worked:\n${approvals.map((f) => `- "${f.notes}"`).join('\n') || '(none yet)'}
+REJECTED videos Ã¢ÂÂ what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).join('\n') || '(none yet)'}`
+      : '\n\nNo past feedback yet Ã¢ÂÂ use best practices for short-form social video.';
 
     try {
       const res = await fetch(backendUrl('/api/proxy/claude/messages'), {
@@ -367,7 +367,7 @@ REJECTED videos ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ what to avoid:\
           if (!parsed.instagramCaption) {
             const product = parsed.segments?.[0]?.textOverlay || 'Black Seed Oil';
             const hook = parsed.hookVariant || 'wellness snack';
-            parsed.instagramCaption = hook + ' ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ¨\nTry this anti-puffy face combo with ' + product + '. Your skin will thank you! ÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂ¤\nSave for later & follow @majusuperfoods for more wellness snacks';
+            parsed.instagramCaption = hook + ' Ã¢ÂÂ¨\nTry this anti-puffy face combo with ' + product + '. Your skin will thank you! Ã°ÂÂÂ¤\nSave for later & follow @majusuperfoods for more wellness snacks';
           }
           if (!parsed.hashtags || !parsed.hashtags.length) {
             parsed.hashtags = ['blackseedoil','depuff','facesnack','skincaretips','naturalremedy','antiinflammatory','puffyface','wellnesstips','majublackseedoil','skincareroutine','majusuperfoods','holistichealth'];
@@ -383,7 +383,7 @@ REJECTED videos ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ what to avoid:\
     }
   }
 
-  // ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Generate Video ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ
+  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Generate Video Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
   $('#submit-video').addEventListener('click', async () => {
     const type = $('#video-type').value;
     const versions = parseInt($('#versions').value);
@@ -404,10 +404,10 @@ REJECTED videos ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ what to avoid:\
     if (apiKeys.claude) {
       const btn = $('#submit-video');
       btn.disabled = true;
-      btn.textContent = 'ÃÂÃÂ°ÃÂÃÂÃÂÃÂ§ÃÂÃÂ  Claude is optimizing your promptÃÂÃÂ¢ÃÂÃÂÃÂÃÂ¦';
+      btn.textContent = 'Ã°ÂÂ§Â  Claude is optimizing your promptÃ¢ÂÂ¦';
       aiPrompt = await getClaudeOptimizedPrompt(type, avatar, product, notes);
       btn.disabled = false;
-      btn.textContent = 'ÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂ Generate & Send to Queue';
+      btn.textContent = 'Ã°ÂÂÂ Generate & Send to Queue';
     }
 
     for (let i = 0; i < versions; i++) {
@@ -433,7 +433,7 @@ REJECTED videos ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ what to avoid:\
         revisionCount: 0,
         revisionNotes: [],
         createdAt: new Date().toISOString(),
-        pipelineStage: 'generate', // generate ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ stitch ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ queue ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ post
+        pipelineStage: 'generate', // generate Ã¢ÂÂ stitch Ã¢ÂÂ queue Ã¢ÂÂ post
       };
       queue.unshift(item);
     }
@@ -457,7 +457,7 @@ REJECTED videos ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ what to avoid:\
     $('#notes').value = '';
   });
 
-  // ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Pipeline Visualization ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ
+  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Pipeline Visualization Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
   function showPipeline() {
     const card = $('#pipeline-card');
     card.classList.remove('hidden');
@@ -478,9 +478,9 @@ REJECTED videos ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ what to avoid:\
     if (!apiKeys.higgsfield) {
       let stage = 0;
       const sim = [
-        'ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ ÃÂÃÂ¯ÃÂÃÂ¸ÃÂÃÂ Higgsfield API key not set ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ video generation simulated. Add key in Settings.',
+        'Ã¢ÂÂ Ã¯Â¸Â Higgsfield API key not set Ã¢ÂÂ video generation simulated. Add key in Settings.',
         'FFmpeg stitch simulated (no backend connected).',
-        'ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Pipeline complete ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ videos in queue (simulated).',
+        'Ã¢ÂÂ Pipeline complete Ã¢ÂÂ videos in queue (simulated).',
       ];
       function advanceSim() {
         setStage(stage, sim[stage]);
@@ -488,7 +488,7 @@ REJECTED videos ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ what to avoid:\
         if (stage < sim.length) {
           setTimeout(advanceSim, 1800);
         } else {
-          // Simulation complete ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ move items into the approval queue
+          // Simulation complete Ã¢ÂÂ move items into the approval queue
           const simItems = queue.filter(q => q.pipelineStage === 'generate');
           simItems.forEach(item => { item.pipelineStage = 'queue'; });
           saveQueue();
@@ -501,12 +501,12 @@ REJECTED videos ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ what to avoid:\
       return;
     }
 
-    // Real pipeline: Generate ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Stitch ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Queue
+    // Real pipeline: Generate Ã¢ÂÂ Stitch Ã¢ÂÂ Queue
     runRealPipeline(steps, msg, setStage);
   }
 
   // SOP v2.0 default Kling prompts for each segment
-  // Avatar: Patient Maya (Bree Alba) ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ young woman, black tank top, hair in bun, minimal makeup, natural look
+  // Avatar: Patient Maya (Bree Alba) Ã¢ÂÂ young woman, black tank top, hair in bun, minimal makeup, natural look
   // Product: Maju's Black Seed Oil 8oz dark bottle with "MAJU BLACK SEED OIL" label
   const DEFAULT_SEGMENT_PROMPTS = [
     { name: 'hook', duration: 5, prompt: 'A young woman with her hair in a bun wearing a black tank top stands in a dark moody kitchen with warm golden lighting. She holds a whole red onion near her face, looking at it curiously then turning to camera with a confident knowing smile. A dark glass bottle labeled "MAJU BLACK SEED OIL" sits prominently on the wooden counter beside her. She slowly raises the onion. Cinematic warm golden-hour lighting from a window, dark cabinets in background. Vertical 9:16 format, smooth natural motion.', textOverlay: 'de-puff your face snack', model: 'kling-v2-master' },
@@ -553,22 +553,22 @@ REJECTED videos ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ what to avoid:\
 
     // Product refinement pass: use Flux Kontext image-to-image with the product render as reference
     if (productImageUrl) {
-      debugPanel(`[${segLabel}] Refining product packaging via Kontext image-to-imageÃÂÃÂ¢ÃÂÃÂÃÂÃÂ¦`);
-      console.log(`[Pipeline] ${segLabel} product refinement with reference: ${productImageUrl.slice(0, 60)}ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ¦`);
+      debugPanel(`[${segLabel}] Refining product packaging via Kontext image-to-imageÃ¢ÂÂ¦`);
+      console.log(`[Pipeline] ${segLabel} product refinement with reference: ${productImageUrl.slice(0, 60)}Ã¢ÂÂ¦`);
       const editResult = await API.higgsfield.editImageWithProduct(
         baseImage.url,
         productImageUrl,
-        `Keep this exact scene, person, pose, lighting, and background unchanged. Replace any dark bottle or generic bottle in the image with the exact Maju Black Seed Oil bottle shown in the second reference image ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ match the label, shape, color, and packaging precisely. The bottle label should read "BLACK SEED OIL" with the Maju branding clearly visible.`
+        `Keep this exact scene, person, pose, lighting, and background unchanged. Replace any dark bottle or generic bottle in the image with the exact Maju Black Seed Oil bottle shown in the second reference image Ã¢ÂÂ match the label, shape, color, and packaging precisely. The bottle label should read "BLACK SEED OIL" with the Maju branding clearly visible.`
       );
       if (!editResult.ok || !editResult.id) {
         console.warn(`[Pipeline] ${segLabel} product edit failed, using base image:`, editResult.error);
-        debugPanel(`[${segLabel}] Product edit failed (${editResult.error || 'unknown'}) ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ using base image`);
+        debugPanel(`[${segLabel}] Product edit failed (${editResult.error || 'unknown'}) Ã¢ÂÂ using base image`);
         return baseImage;
       }
       const refinedImage = await pollImageStatus(editResult.id, segLabel, 'product-edit');
       if (!refinedImage.url) {
         console.warn(`[Pipeline] ${segLabel} product edit poll failed, using base image`);
-        debugPanel(`[${segLabel}] Product edit timed out ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ using base image`);
+        debugPanel(`[${segLabel}] Product edit timed out Ã¢ÂÂ using base image`);
         return baseImage;
       }
       debugPanel(`[${segLabel}] Product packaging refined successfully`);
@@ -614,18 +614,18 @@ REJECTED videos ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ what to avoid:\
     return { url: null, error: 'Video timed out after 600s' };
   }
 
-  // Helper: full segment pipeline ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Higgsfield image ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Kling animate (or Kling text2video fallback)
+  // Helper: full segment pipeline Ã¢ÂÂ Higgsfield image Ã¢ÂÂ Kling animate (or Kling text2video fallback)
   // Returns { url, error } object
   async function generateSegmentVideo(seg, segLabel, characterId, productImageUrl) {
-    // If Higgsfield key is set, use hybrid pipeline: Soul/Flux image ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Kling image2video
+    // If Higgsfield key is set, use hybrid pipeline: Soul/Flux image Ã¢ÂÂ Kling image2video
     if (apiKeys.higgsfield) {
-      debugPanel(`[${segLabel}] Generating image via ${characterId ? 'Soul (character: ' + characterId + ')' : 'Flux Kontext Max'}${productImageUrl ? ' + product reference' : ''}ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ¦`);
+      debugPanel(`[${segLabel}] Generating image via ${characterId ? 'Soul (character: ' + characterId + ')' : 'Flux Kontext Max'}${productImageUrl ? ' + product reference' : ''}Ã¢ÂÂ¦`);
       const imageResult = await generateSegmentImage(seg, segLabel, characterId, productImageUrl);
       if (imageResult.url) {
-        debugPanel(`[${segLabel}] Image ready ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ animating via Kling image2videoÃÂÃÂ¢ÃÂÃÂÃÂÃÂ¦`);
+        debugPanel(`[${segLabel}] Image ready Ã¢ÂÂ animating via Kling image2videoÃ¢ÂÂ¦`);
         return await animateImageToVideo(seg, imageResult.url, segLabel);
       }
-      debugPanel(`[${segLabel}] Image failed (${imageResult.error}) ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ falling back to Kling text2video`);
+      debugPanel(`[${segLabel}] Image failed (${imageResult.error}) Ã¢ÂÂ falling back to Kling text2video`);
     }
 
     // Fallback: Kling text-to-video (no reference image)
@@ -684,7 +684,7 @@ REJECTED videos ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ what to avoid:\
 
   async function runRealPipeline(steps, msg, setStage) {
     // Stage 0: Generate each segment via Kling text-to-video
-    setStage(0, 'Generating video segments via Kling AIÃÂÃÂ¢ÃÂÃÂÃÂÃÂ¦');
+    setStage(0, 'Generating video segments via Kling AIÃ¢ÂÂ¦');
 
     const newItems = queue.filter(q => q.pipelineStage === 'generate');
     const allSegmentVideos = []; // { url, label } for stitching
@@ -695,19 +695,19 @@ REJECTED videos ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ what to avoid:\
       const segments = testMode ? allSegments.slice(0, 1) : allSegments;
       if (testMode) debugPanel('[Test Mode] Generating 1 segment only (hook)');
 
-      // Generate ALL video segments in parallel via Kling (textÃÂÃÂ¢ÃÂÃÂÃÂÃÂvideo, no image step needed)
+      // Generate ALL video segments in parallel via Kling (textÃ¢ÂÂvideo, no image step needed)
       const KLING_CONCURRENCY = 3;
-      msg.textContent = `v${item.version}: Generating ${segments.length} video segments via KlingÃÂÃÂ¢ÃÂÃÂÃÂÃÂ¦`;
-      updateSegmentStatus('hook', 'Generating videosÃÂÃÂ¢ÃÂÃÂÃÂÃÂ¦', false);
+      msg.textContent = `v${item.version}: Generating ${segments.length} video segments via KlingÃ¢ÂÂ¦`;
+      updateSegmentStatus('hook', 'Generating videosÃ¢ÂÂ¦', false);
 
       let characterId = item.avatar || CONFIG.higgsfield.avatar || null;
       // Resolve legacy avatar keys to Soul UUID
       if (characterId && CONFIG.avatarMeta[characterId] === undefined && characterId === 'pateit') characterId = 'b262e935-4460-4026-980b-926aa0babdec';
       const productImageUrl = apiKeys.productImageUrl || null;
       if (characterId) console.log(`[Pipeline] Using Soul character ID: ${characterId}`);
-      if (productImageUrl) console.log(`[Pipeline] Using product reference image: ${productImageUrl.slice(0, 60)}ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ¦`);
+      if (productImageUrl) console.log(`[Pipeline] Using product reference image: ${productImageUrl.slice(0, 60)}Ã¢ÂÂ¦`);
       const videoTasks = segments.map((seg, si) => () => {
-        updateSegmentStatus(seg.name, 'GeneratingÃÂÃÂ¢ÃÂÃÂÃÂÃÂ¦', false);
+        updateSegmentStatus(seg.name, 'GeneratingÃ¢ÂÂ¦', false);
         return generateSegmentVideo(seg, `${seg.name} (${si + 1}/${segments.length})`, characterId, productImageUrl);
       });
       const videoResults = await runWithConcurrency(videoTasks, KLING_CONCURRENCY);
@@ -717,7 +717,7 @@ REJECTED videos ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ what to avoid:\
       for (let si = 0; si < segments.length; si++) {
         if (videoResults[si] && videoResults[si].url) {
           segmentResults.push({ url: videoResults[si].url, label: segments[si].name, textOverlay: segments[si].textOverlay });
-          updateSegmentStatus(segments[si].name, 'Done ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ', true);
+          updateSegmentStatus(segments[si].name, 'Done Ã¢ÂÂ', true);
         } else {
           const reason = videoResults[si]?.error || 'Video failed';
           updateSegmentStatus(segments[si].name, reason, false);
@@ -735,7 +735,7 @@ REJECTED videos ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ what to avoid:\
       } else {
         item.pipelineStage = 'failed';
         item.status = 'failed';
-        msg.textContent = `ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ ÃÂÃÂ¯ÃÂÃÂ¸ÃÂÃÂ v${item.version}: No segments rendered successfully.`;
+        msg.textContent = `Ã¢ÂÂ Ã¯Â¸Â v${item.version}: No segments rendered successfully.`;
         if (typeof fetchDebugLog === 'function') fetchDebugLog();
       }
       saveQueue();
@@ -746,7 +746,7 @@ REJECTED videos ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ what to avoid:\
     // Stage 1: Auto-stitch via FFmpeg with captions
     let stitchPassed = false;
     if (completedVideos.length > 0 && (apiKeys.backendUrl || DEFAULT_BACKEND)) {
-      setStage(1, `FFmpeg auto-stitching ${completedVideos.length} clips with captionsÃÂÃÂ¢ÃÂÃÂÃÂÃÂ¦`);
+      setStage(1, `FFmpeg auto-stitching ${completedVideos.length} clips with captionsÃ¢ÂÂ¦`);
 
       const stitchOptions = {};
       const audioSel = document.getElementById('audio-select');
@@ -775,7 +775,7 @@ REJECTED videos ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ what to avoid:\
           while (!stitchDone) {
             await new Promise(r => setTimeout(r, 1500));
             const st = await API.backend.jobStatus(stitchResult.jobId);
-            msg.textContent = `StitchingÃÂÃÂ¢ÃÂÃÂÃÂÃÂ¦ ${st.progress || 0}%`;
+            msg.textContent = `StitchingÃ¢ÂÂ¦ ${st.progress || 0}%`;
 
             if (st.status === 'done') {
               stitchDone = true;
@@ -785,17 +785,17 @@ REJECTED videos ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ what to avoid:\
               stitchPassed = true;
             } else if (st.status === 'error') {
               stitchDone = true;
-              msg.textContent = `ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ ÃÂÃÂ¯ÃÂÃÂ¸ÃÂÃÂ Stitch error: ${st.error}`;
+              msg.textContent = `Ã¢ÂÂ Ã¯Â¸Â Stitch error: ${st.error}`;
             }
           }
         }
       } catch (err) {
-        msg.textContent = `ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ ÃÂÃÂ¯ÃÂÃÂ¸ÃÂÃÂ Stitch error: ${err.message}`;
+        msg.textContent = `Ã¢ÂÂ Ã¯Â¸Â Stitch error: ${err.message}`;
       }
     } else if (completedVideos.length === 0) {
-      setStage(1, 'Stitch skipped ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ no completed videos.');
+      setStage(1, 'Stitch skipped Ã¢ÂÂ no completed videos.');
     } else {
-      setStage(1, 'Stitch skipped ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ no backend URL set.');
+      setStage(1, 'Stitch skipped Ã¢ÂÂ no backend URL set.');
     }
 
     // Audit check: only send to approval if stitch produced a real video
@@ -805,23 +805,23 @@ REJECTED videos ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ what to avoid:\
       renderQueue();
       renderTracker();
       updateBadge();
-      setStage(2, 'ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Pipeline complete ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ video ready for approval.');
+      setStage(2, 'Ã¢ÂÂ Pipeline complete Ã¢ÂÂ video ready for approval.');
     } else if (completedVideos.length > 0) {
-      // Segments rendered but stitch failed ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ keep in generate stage for retry, don't pollute approval queue
-      msg.textContent = 'ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ ÃÂÃÂ¯ÃÂÃÂ¸ÃÂÃÂ Stitch failed ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ video not sent to approval. Check backend and retry.';
+      // Segments rendered but stitch failed Ã¢ÂÂ keep in generate stage for retry, don't pollute approval queue
+      msg.textContent = 'Ã¢ÂÂ Ã¯Â¸Â Stitch failed Ã¢ÂÂ video not sent to approval. Check backend and retry.';
       renderTracker();
-      setStage(2, 'ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ ÃÂÃÂ¯ÃÂÃÂ¸ÃÂÃÂ Stitch failed ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ not queued for approval.');
+      setStage(2, 'Ã¢ÂÂ Ã¯Â¸Â Stitch failed Ã¢ÂÂ not queued for approval.');
     } else {
-      // Nothing rendered at all ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ keep in generate stage so they don't pollute approval queue
+      // Nothing rendered at all Ã¢ÂÂ keep in generate stage so they don't pollute approval queue
       newItems.forEach(item => { item.pipelineStage = 'failed'; item.status = 'failed'; });
       saveQueue();
       renderTracker();
       updateBadge();
-      setStage(2, 'ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ ÃÂÃÂ¯ÃÂÃÂ¸ÃÂÃÂ No videos generated ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ check Kling API key and retry.');
+      setStage(2, 'Ã¢ÂÂ Ã¯Â¸Â No videos generated Ã¢ÂÂ check Kling API key and retry.');
     }
   }
 
-  // ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Queue Rendering ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ
+  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Queue Rendering Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
   function renderQueue(filter = 'all') {
     const list = $('#queue-list');
     // Only show items that have reached the approval queue (not still generating/stitching)
@@ -843,13 +843,13 @@ REJECTED videos ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ what to avoid:\
           const vSrc = item.stitchedVideoUrl || item.videoUrl || (item.segmentVideos && item.segmentVideos[0]?.url);
           return vSrc
             ? `<div class="queue-video"><video src="${vSrc}" controls preload="auto" playsinline muted></video></div>`
-            : '<div class="queue-video queue-video-placeholder"><span>Video generatingÃÂÃÂ¢ÃÂÃÂÃÂÃÂ¦</span></div>';
+            : '<div class="queue-video queue-video-placeholder"><span>Video generatingÃ¢ÂÂ¦</span></div>';
         })()}
         <div class="queue-info">
-          <h4>${item.typeName} ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ v${item.version}/${item.totalVersions}</h4>
-          <p>${item.productName} ÃÂÃÂÃÂÃÂ· ${item.avatarName}</p>
+          <h4>${item.typeName} Ã¢ÂÂ v${item.version}/${item.totalVersions}</h4>
+          <p>${item.productName} ÃÂ· ${item.avatarName}</p>
           ${item.aiPrompt?.hookVariant ? `<span class="queue-hook-label">${item.aiPrompt.hookVariant}</span>` : ''}
-          ${item.postMode === 'asap' ? '<p>ÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂ Post ASAP</p>' : `<p>ÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂ ${formatDate(item.schedDate)}</p>`}
+          ${item.postMode === 'asap' ? '<p>Ã°ÂÂÂ Post ASAP</p>' : `<p>Ã°ÂÂÂ ${formatDate(item.schedDate)}</p>`}
           ${item.notes ? `<p>"${item.notes}"</p>` : ''}
           ${item.aiPrompt ? `<div class="ai-prompt"><strong>AI Brief:</strong> ${item.aiPrompt.reasoning || ''}<br><em>${(item.aiPrompt.direction || '').substring(0, 120)}</em></div>` : ''}
           <div class="queue-social-content">
@@ -860,17 +860,17 @@ REJECTED videos ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ what to avoid:\
           </div>
           ${item.aiPrompt?.segments ? `<div class="queue-segments-preview"><strong>Segment Overlays:</strong> ${item.aiPrompt.segments.filter(s => s.textOverlay).map(s => `<span>${s.name}: "${s.textOverlay.replace(/\n/g, ' ')}"</span>`).join(' \u00b7 ')}</div>` : ''}
           <div class="queue-meta">
-            Status: <strong>${item.status.toUpperCase()}</strong> ÃÂÃÂÃÂÃÂ·
+            Status: <strong>${item.status.toUpperCase()}</strong> ÃÂ·
             Created: ${formatDate(item.createdAt)}
-            ${(item.revisionCount || 0) > 0 ? `<div class="revision-count">ÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂ Revision ${item.revisionCount}</div>` : ''}
+            ${(item.revisionCount || 0) > 0 ? `<div class="revision-count">Ã°ÂÂÂ Revision ${item.revisionCount}</div>` : ''}
           </div>
           ${(item.revisionNotes || []).length ? (item.revisionNotes || []).map((n, i) => `<div class="rejection-notes">Rev ${i + 1}: ${n}</div>`).join('') : ''}
           ${(item.approvalNotes || []).length ? (item.approvalNotes || []).map((n) => `<div class="approval-notes">Approved: ${n}</div>`).join('') : ''}
         </div>
         <div class="queue-actions">
           ${item.status === 'pending' || item.status === 'revision'
-            ? `<button class="btn-approve" data-action="approve" data-id="${item.id}">ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Approve</button>
-               <button class="btn-reject" data-action="reject" data-id="${item.id}">ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Reject</button>`
+            ? `<button class="btn-approve" data-action="approve" data-id="${item.id}">Ã¢ÂÂ Approve</button>
+               <button class="btn-reject" data-action="reject" data-id="${item.id}">Ã¢ÂÂ Reject</button>`
             : ''
           }
         </div>
@@ -910,7 +910,7 @@ REJECTED videos ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ what to avoid:\
     }
   });
 
-  // ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Approval Modal ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ
+  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Approval Modal Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
   $('#btn-cancel-approve').addEventListener('click', () => {
     $('#approve-modal').classList.add('hidden');
     currentApproveId = null;
@@ -963,7 +963,7 @@ REJECTED videos ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ what to avoid:\
     }
   });
 
-  // ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Rejection Modal ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ
+  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Rejection Modal Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
   $('#btn-cancel-reject').addEventListener('click', () => {
     $('#reject-modal').classList.add('hidden');
     currentRejectId = null;
@@ -1020,7 +1020,7 @@ REJECTED videos ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ what to avoid:\
     }
   });
 
-  // ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Activity Feed ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ
+  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Activity Feed Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
   function renderActivity() {
     const feed = $('#recent-activity');
     const recent = queue.slice(0, 8);
@@ -1033,9 +1033,9 @@ REJECTED videos ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ what to avoid:\
       .map(
         (item) => `
       <div class="activity-item">
-        <strong>${item.typeName}</strong> v${item.version} ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ ${item.productName}
+        <strong>${item.typeName}</strong> v${item.version} Ã¢ÂÂ ${item.productName}
         <span style="color:var(--${item.status === 'approved' ? 'success' : item.status === 'rejected' ? 'danger' : item.status === 'revision' ? 'revision' : 'warning'})">[${item.status}]</span>
-        ${item.revisionCount > 0 ? `<span style="color:var(--revision)">ÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂ ${item.revisionCount}</span>` : ''}
+        ${item.revisionCount > 0 ? `<span style="color:var(--revision)">Ã°ÂÂÂ ${item.revisionCount}</span>` : ''}
         <div class="activity-time">${formatDate(item.createdAt)}</div>
       </div>
     `
@@ -1043,7 +1043,7 @@ REJECTED videos ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ what to avoid:\
       .join('');
   }
 
-  // ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Badge ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ
+  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Badge Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
   function updateBadge() {
     const pending = queue.filter(
       (q) => (q.status === 'pending' || q.status === 'revision') && (q.pipelineStage === 'queue' || q.pipelineStage === 'post')
@@ -1061,12 +1061,12 @@ REJECTED videos ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ what to avoid:\
     }
   }
 
-  // ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Request Tracker ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ
+  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Request Tracker Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
   const PIPELINE_STAGES = [
-    { key: 'generate', label: 'Generating', icon: 'ÃÂÃÂ°ÃÂÃÂÃÂÃÂÃÂÃÂ¬' },
-    { key: 'stitch', label: 'Stitching', icon: 'ÃÂÃÂ°ÃÂÃÂÃÂÃÂ§ÃÂÃÂµ' },
-    { key: 'queue', label: 'Awaiting Approval', icon: 'ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ³' },
-    { key: 'post', label: 'Posted', icon: 'ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ' },
+    { key: 'generate', label: 'Generating', icon: 'Ã°ÂÂÂ¬' },
+    { key: 'stitch', label: 'Stitching', icon: 'Ã°ÂÂ§Âµ' },
+    { key: 'queue', label: 'Awaiting Approval', icon: 'Ã¢ÂÂ³' },
+    { key: 'post', label: 'Posted', icon: 'Ã¢ÂÂ' },
   ];
 
   function getStageIndex(item) {
@@ -1104,7 +1104,7 @@ REJECTED videos ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ what to avoid:\
         if (isFailed && idx === currentStage) cls += ' failed';
         if (isRevision && idx === 0) cls += ' revision';
         return `<div class="${cls}">
-          <div class="tracker-stage-dot">${idx < currentStage ? 'ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ' : stage.icon}</div>
+          <div class="tracker-stage-dot">${idx < currentStage ? 'Ã¢ÂÂ' : stage.icon}</div>
           <div class="tracker-stage-label">${stage.label}</div>
         </div>`;
       }).join('<div class="tracker-stage-connector"></div>');
@@ -1114,8 +1114,8 @@ REJECTED videos ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ what to avoid:\
       return `<div class="tracker-item ${isFailed ? 'tracker-failed' : ''} ${isRevision ? 'tracker-revision' : ''}">
         <div class="tracker-header">
           <div class="tracker-title">
-            <strong>${item.typeName || 'Video'} ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ v${item.version}/${item.totalVersions}</strong>
-            <span class="tracker-meta">${item.productName} ÃÂÃÂÃÂÃÂ· ${item.avatarName}</span>
+            <strong>${item.typeName || 'Video'} Ã¢ÂÂ v${item.version}/${item.totalVersions}</strong>
+            <span class="tracker-meta">${item.productName} ÃÂ· ${item.avatarName}</span>
           </div>
           <div class="tracker-progress-badge">${isFailed ? 'Failed' : isRevision ? 'In Revision' : progressPct + '%'}</div>
         </div>
@@ -1129,7 +1129,7 @@ REJECTED videos ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ what to avoid:\
     }).join('');
   }
 
-  // ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Approved Videos ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ
+  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Approved Videos Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
   function renderApprovedVideos() {
     const list = $('#approved-list');
     if (!list) return;
@@ -1148,8 +1148,8 @@ REJECTED videos ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ what to avoid:\
       return `<div class="approved-card">
         ${videoSrc ? `<video src="${videoSrc}" controls preload="metadata" playsinline></video>` : '<div class="queue-video-placeholder" style="height:180px"><span>No video</span></div>'}
         <div class="approved-card-info">
-          <h4>${item.typeName || 'Video'} ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ v${item.version}</h4>
-          <p>${item.productName} ÃÂÃÂÃÂÃÂ· ${item.avatarName}</p>
+          <h4>${item.typeName || 'Video'} Ã¢ÂÂ v${item.version}</h4>
+          <p>${item.productName} ÃÂ· ${item.avatarName}</p>
           <p>${formatDate(item.createdAt)}</p>
           ${item.postMode === 'asap' ? '<p>Post ASAP</p>' : `<p>Scheduled: ${formatDate(item.schedDate)}</p>`}
           ${item.metricoolId ? '<p style="color:var(--success)">Posted to Metricool</p>' : ''}
@@ -1159,7 +1159,7 @@ REJECTED videos ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ what to avoid:\
     }).join('');
   }
 
-  // ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Spend Tracker ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ
+  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Spend Tracker Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
   // Kling pricing estimates (per API call)
   const COST_ESTIMATES = {
     'kling-v2-master': 0.14,    // Kling v2 Master (5s video)
@@ -1189,7 +1189,7 @@ REJECTED videos ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ what to avoid:\
       spendRows.push({
         id: item.id,
         date: item.createdAt,
-        name: `${item.typeName || 'Video'} ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ v${item.version}`,
+        name: `${item.typeName || 'Video'} Ã¢ÂÂ v${item.version}`,
         product: item.productName,
         images: imageCount,
         videos: videoCount,
@@ -1229,7 +1229,7 @@ REJECTED videos ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ what to avoid:\
       <tbody>${spendRows.map(r => `<tr>
         <td class="spend-date">${formatDate(r.date)}</td>
         <td>${r.name}</td>
-        <td>${r.product || 'ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ'}</td>
+        <td>${r.product || 'Ã¢ÂÂ'}</td>
         <td>${r.images}</td>
         <td>${r.videos}</td>
         <td>${r.model}</td>
@@ -1239,7 +1239,7 @@ REJECTED videos ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ what to avoid:\
     </table>`;
   }
 
-  // ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Scheduled Posts (Metricool) ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ
+  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Scheduled Posts (Metricool) Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
   function renderScheduledPosts() {
     const statusEl = $('#metricool-status');
     const listEl = $('#scheduled-list');
@@ -1254,13 +1254,13 @@ REJECTED videos ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ what to avoid:\
         '<p class="empty-state">Metricool connected! Scheduled posts will appear here once the API integration is complete.</p>';
     } else {
       statusEl.innerHTML =
-        '<span class="status-dot disconnected"></span><span>Metricool: Not connected</span><a href="#" class="link-settings" data-goto="settings">Add API key ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ</a>';
+        '<span class="status-dot disconnected"></span><span>Metricool: Not connected</span><a href="#" class="link-settings" data-goto="settings">Add API key Ã¢ÂÂ</a>';
       listEl.innerHTML =
         '<p class="empty-state">Connect your Metricool API key in Settings to see scheduled posts.</p>';
     }
   }
 
-  // ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ SOP Wiki ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ
+  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ SOP Wiki Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
   $$('.sop-link').forEach((link) =>
     link.addEventListener('click', (e) => {
       e.preventDefault();
@@ -1309,7 +1309,7 @@ REJECTED videos ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ what to avoid:\
   const firstSop = $('.sop-link.active');
   if (firstSop) loadSop(firstSop.dataset.sop);
 
-  // ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ API Settings ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ
+  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ API Settings Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
   // Load saved keys into form fields
   function loadApiKeys() {
     if (apiKeys.backendUrl) $('#api-backend-url').value = apiKeys.backendUrl;
@@ -1342,8 +1342,8 @@ REJECTED videos ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ what to avoid:\
           loadApiKeys();
           console.log('[Config] Synced keys from backend');
         } else if (hasLocalKeys) {
-          // Backend has no keys (e.g. after redeploy) ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ push local keys up
-          console.log('[Config] Backend empty after redeploy ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ pushing local keys');
+          // Backend has no keys (e.g. after redeploy) Ã¢ÂÂ push local keys up
+          console.log('[Config] Backend empty after redeploy Ã¢ÂÂ pushing local keys');
           pushKeysToBackend();
         }
       }
@@ -1359,7 +1359,7 @@ REJECTED videos ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ what to avoid:\
         body: JSON.stringify(apiKeys),
       });
       console.log('[Config] Keys saved to backend');
-    } catch { /* silent fail ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ localStorage still works */ }
+    } catch { /* silent fail Ã¢ÂÂ localStorage still works */ }
   }
 
   // Toggle visibility
@@ -1397,7 +1397,7 @@ REJECTED videos ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ what to avoid:\
   loadAudioTracks();
     checkBackendStatus();
 
-  // ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Debounced save for queue social content edits ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ
+  // Ã¢ÂÂÃ¢ÂÂ Debounced save for queue social content edits Ã¢ÂÂÃ¢ÂÂ
   let _queueSaveTimer = null;
   const queueList = document.getElementById('queue-list');
   if (queueList) {
@@ -1417,7 +1417,7 @@ REJECTED videos ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ what to avoid:\
   }
   });
 
-  // ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Helpers ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ
+  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Helpers Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
   function saveQueue() {
     localStorage.setItem(CONFIG.storageKeys.queue, JSON.stringify(queue));
   }
@@ -1428,7 +1428,7 @@ REJECTED videos ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ what to avoid:\
   }
 
   function formatDate(str) {
-    if (!str) return 'ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ';
+    if (!str) return 'Ã¢ÂÂ';
     try {
       return new Date(str).toLocaleString('en-US', {
         month: 'short',
@@ -1441,7 +1441,7 @@ REJECTED videos ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ what to avoid:\
     }
   }
 
-  // ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ API Integrations (Live) ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ
+  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ API Integrations (Live) Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
 
   let DEFAULT_BACKEND = '';
 
@@ -1461,11 +1461,11 @@ REJECTED videos ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ what to avoid:\
   // All API calls route through the backend proxy to avoid CORS issues.
 
   const API = {
-    // ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Higgsfield ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Static image generation with Patient Maya avatar (via proxy) ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ
+    // Ã¢ÂÂÃ¢ÂÂ Higgsfield Ã¢ÂÂ Static image generation with Patient Maya avatar (via proxy) Ã¢ÂÂÃ¢ÂÂ
     higgsfield: {
       async generateImage(params) {
         console.log('[Higgsfield] Soul image generation:', params);
-        if (!apiKeys.higgsfield) return { ok: false, error: 'No Higgsfield API key set ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ add in Settings' };
+        if (!apiKeys.higgsfield) return { ok: false, error: 'No Higgsfield API key set Ã¢ÂÂ add in Settings' };
         // Use Soul endpoint when character_id is available, otherwise fall back to Flux Kontext
         const useSoul = !!params.custom_reference_id;
         const endpoint = params.endpoint || (useSoul ? '/v1/text2image/soul' : 'flux-pro/kontext/max/text-to-image');
@@ -1560,13 +1560,13 @@ REJECTED videos ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ what to avoid:\
       },
     },
 
-    // ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Kling AI ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Video generation (via Higgsfield platform proxy) ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ
-    // Higgsfield provides Kling access through their API ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ same credentials
+    // Ã¢ÂÂÃ¢ÂÂ Kling AI Ã¢ÂÂ Video generation (via Higgsfield platform proxy) Ã¢ÂÂÃ¢ÂÂ
+    // Higgsfield provides Kling access through their API Ã¢ÂÂ same credentials
     // Endpoint pattern: kling-video/{version}/{tier}/{mode}
     kling: {
       async generateVideo(params) {
         console.log('[Kling via Higgsfield] Generate video:', params);
-        if (!apiKeys.higgsfield) return { ok: false, error: 'No Higgsfield API key set ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ add in Settings (Kling runs via Higgsfield)' };
+        if (!apiKeys.higgsfield) return { ok: false, error: 'No Higgsfield API key set Ã¢ÂÂ add in Settings (Kling runs via Higgsfield)' };
         const endpoint = params.endpoint || 'kling-video/v2.1/master/text-to-video';
         const body = {
           endpoint,
@@ -1616,7 +1616,7 @@ REJECTED videos ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ what to avoid:\
 
       async generateFromImage(params) {
         console.log('[Kling via Higgsfield] Image-to-video:', params);
-        if (!apiKeys.higgsfield) return { ok: false, error: 'No Higgsfield API key set ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ add in Settings' };
+        if (!apiKeys.higgsfield) return { ok: false, error: 'No Higgsfield API key set Ã¢ÂÂ add in Settings' };
         const endpoint = params.endpoint || 'kling-video/v2.1/master/image-to-video';
         const body = {
           endpoint,
@@ -1650,12 +1650,12 @@ REJECTED videos ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ what to avoid:\
 
       async reviseVideo(videoId, notes) {
         return this.generateVideo({
-          prompt: `Revision ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ feedback: ${notes}`,
+          prompt: `Revision Ã¢ÂÂ feedback: ${notes}`,
         });
       },
     },
 
-    // ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Metricool ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Social scheduling & analytics (via proxy) ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ
+    // Ã¢ÂÂÃ¢ÂÂ Metricool Ã¢ÂÂ Social scheduling & analytics (via proxy) Ã¢ÂÂÃ¢ÂÂ
     metricool: {
       async getScheduledPosts() {
         console.log('[Metricool] Fetching scheduled posts');
@@ -1696,7 +1696,7 @@ REJECTED videos ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ what to avoid:\
       },
     },
 
-    // ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Arcads ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ UGC-style ad video generation (via proxy) ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ
+    // Ã¢ÂÂÃ¢ÂÂ Arcads Ã¢ÂÂ UGC-style ad video generation (via proxy) Ã¢ÂÂÃ¢ÂÂ
     arcads: {
       async generateUGC(params) {
         console.log('[Arcads] Generate UGC video:', params);
@@ -1729,7 +1729,7 @@ REJECTED videos ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ what to avoid:\
       },
     },
 
-    // ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Creatify ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ AI product video generation (via proxy) ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ
+    // Ã¢ÂÂÃ¢ÂÂ Creatify Ã¢ÂÂ AI product video generation (via proxy) Ã¢ÂÂÃ¢ÂÂ
     creatify: {
       _creatifyHeaders() {
         const [apiId, apiKey] = (apiKeys.creatify || '').includes(':')
@@ -1788,7 +1788,7 @@ REJECTED videos ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ what to avoid:\
       },
     },
 
-    // ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Backend ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ FFmpeg stitching server ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ
+    // Ã¢ÂÂÃ¢ÂÂ Backend Ã¢ÂÂ FFmpeg stitching server Ã¢ÂÂÃ¢ÂÂ
     backend: {
       async health() {
         try {
@@ -1836,7 +1836,7 @@ REJECTED videos ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ what to avoid:\
   window.MAJU_API = API;
   window.MAJU_CONFIG = CONFIG;
 
-  // ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Debug Panel (visible on page, no F12 needed) ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ
+  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Debug Panel (visible on page, no F12 needed) Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
   const _debugLines = [];
   function debugPanel(msg) {
     _debugLines.push(`[${new Date().toLocaleTimeString()}] ${msg}`);
@@ -1866,10 +1866,10 @@ REJECTED videos ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ what to avoid:\
   }
   window.fetchDebugLog = fetchDebugLog;
 
-  // ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Backend Status Check ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ
+  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Backend Status Check Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
   async function checkBackendStatus(retries = 3) {
     const el = $('#backend-status');
-    el.innerHTML = '<span class="status-dot connecting"></span><span>Backend: ConnectingÃÂÃÂ¢ÃÂÃÂÃÂÃÂ¦</span>';
+    el.innerHTML = '<span class="status-dot connecting"></span><span>Backend: ConnectingÃ¢ÂÂ¦</span>';
 
     for (let i = 0; i < retries; i++) {
       try {
@@ -1885,15 +1885,15 @@ REJECTED videos ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ what to avoid:\
       } catch {
         // Backend may be cold-starting, retry
         if (i < retries - 1) {
-          el.innerHTML = `<span class="status-dot connecting"></span><span>Backend: Waking upÃÂÃÂ¢ÃÂÃÂÃÂÃÂ¦ (attempt ${i + 2}/${retries})</span>`;
+          el.innerHTML = `<span class="status-dot connecting"></span><span>Backend: Waking upÃ¢ÂÂ¦ (attempt ${i + 2}/${retries})</span>`;
           await new Promise(r => setTimeout(r, 5000));
         }
       }
     }
-    el.innerHTML = '<span class="status-dot disconnected"></span><span>Backend: Not connected ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ set your backend URL in <a href="#" data-goto="settings">Settings</a></span>';
+    el.innerHTML = '<span class="status-dot disconnected"></span><span>Backend: Not connected Ã¢ÂÂ set your backend URL in <a href="#" data-goto="settings">Settings</a></span>';
   }
 
-  // ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Auto-Stitch Segment Status Updates ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ
+  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Auto-Stitch Segment Status Updates Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
   // Called by the pipeline to update segment status in the stitch panel
   function updateSegmentStatus(segment, statusText, isReady) {
     const el = $(`#seg-${segment}`);
@@ -1904,14 +1904,14 @@ REJECTED videos ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ what to avoid:\
   }
   window.updateSegmentStatus = updateSegmentStatus;
 
-  // ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Live Metricool Scheduled Posts ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ
+  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Live Metricool Scheduled Posts Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
   async function fetchScheduledPosts() {
     const statusEl = $('#metricool-status');
     const listEl = $('#scheduled-list');
 
     if (!apiKeys.metricool) return;
 
-    statusEl.innerHTML = '<span class="status-dot connected"></span><span>Metricool: FetchingÃÂÃÂ¢ÃÂÃÂÃÂÃÂ¦</span>';
+    statusEl.innerHTML = '<span class="status-dot connected"></span><span>Metricool: FetchingÃ¢ÂÂ¦</span>';
 
     const result = await API.metricool.getScheduledPosts();
     if (result.ok && result.posts && result.posts.length) {
@@ -1929,21 +1929,21 @@ REJECTED videos ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ what to avoid:\
       statusEl.innerHTML = '<span class="status-dot connected"></span><span>Metricool: Connected</span>';
       listEl.innerHTML = '<p class="empty-state">No scheduled posts in the next 30 days.</p>';
     } else {
-      statusEl.innerHTML = `<span class="status-dot disconnected"></span><span>Metricool: Error ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ ${result.error}</span>`;
+      statusEl.innerHTML = `<span class="status-dot disconnected"></span><span>Metricool: Error Ã¢ÂÂ ${result.error}</span>`;
     }
   }
 
-  // ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Analytics View ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ
+  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Analytics View Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
 
   async function loadAnalytics() {
     if (!apiKeys.metricool) {
       $('#analytics-status').innerHTML =
-        '<span class="status-dot disconnected"></span><span>Metricool: Not connected</span><a href="#" class="link-settings" data-goto="settings">Add API key ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ</a>';
+        '<span class="status-dot disconnected"></span><span>Metricool: Not connected</span><a href="#" class="link-settings" data-goto="settings">Add API key Ã¢ÂÂ</a>';
       return;
     }
 
     $('#analytics-status').innerHTML =
-      '<span class="status-dot connected"></span><span>Metricool: Loading analyticsÃÂÃÂ¢ÃÂÃÂÃÂÃÂ¦</span>';
+      '<span class="status-dot connected"></span><span>Metricool: Loading analyticsÃ¢ÂÂ¦</span>';
 
     // Fetch accounts/networks, analytics, and top posts in parallel
     const [networksRes, topPostsRes] = await Promise.all([
@@ -2045,7 +2045,7 @@ REJECTED videos ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ what to avoid:\
         <div class="post-info">
           <div class="post-text">${i + 1}. ${post.content || post.text || post.caption || 'Post'}</div>
           <div class="post-meta">
-            ${post.network || post.platform || ''} ÃÂÃÂÃÂÃÂ· ${post.publicationDate || post.date || ''}
+            ${post.network || post.platform || ''} ÃÂ· ${post.publicationDate || post.date || ''}
           </div>
         </div>
         <div class="post-stats">
@@ -2079,21 +2079,21 @@ REJECTED videos ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ what to avoid:\
   }
 
   function formatNum(n) {
-    if (n == null) return 'ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ';
+    if (n == null) return 'Ã¢ÂÂ';
     if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
     if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
     return n.toString();
   }
 
-  // Analytics is loaded lazily ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ triggered from nav click handler below
+  // Analytics is loaded lazily Ã¢ÂÂ triggered from nav click handler below
 
-  // ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Wire Approve ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Metricool Post ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ
+  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Wire Approve Ã¢ÂÂ Metricool Post Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
   function scheduleApprovedItem(item) {
     if (!apiKeys.metricool) {
-      console.log('[Metricool] No API key ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ skip scheduling');
+      console.log('[Metricool] No API key Ã¢ÂÂ skip scheduling');
       return;
     }
-    const caption = item.instagramCaption || `${item.productName} ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ ${item.typeName}`;
+    const caption = item.instagramCaption || `${item.productName} Ã¢ÂÂ ${item.typeName}`;
     const tags = (item.hashtags || []).map(t => `#${t.replace(/^#/, '')}`).join(' ');
     const fullContent = tags ? `${caption}\n\n${tags}` : caption;
     const videoSrc = item.stitchedVideoUrl || item.videoUrl;
@@ -2120,9 +2120,9 @@ REJECTED videos ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ what to avoid:\
     });
   }
 
-  // ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Init ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ
+  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Init Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
 
-  // ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Audio / Music Management ÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂ
+  // Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ Audio / Music Management Ã¢ÂÂÃ¢ÂÂÃ¢ÂÂ
   async function loadAudioTracks() {
     const select = document.getElementById('audio-select');
     if (!select) return;
@@ -2157,14 +2157,14 @@ REJECTED videos ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ what to avoid:\
       const file = e.target.files[0];
       if (!file) return;
       const hint = document.getElementById('audio-hint');
-      if (hint) hint.textContent = `Uploading ${file.name}ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ¦`;
+      if (hint) hint.textContent = `Uploading ${file.name}Ã¢ÂÂ¦`;
       const form = new FormData();
       form.append('audio', file);
       try {
         const res = await fetch(backendUrl('/api/audio/upload'), { method: 'POST', body: form });
         const data = await res.json();
         if (data.ok) {
-          if (hint) hint.textContent = `ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Uploaded ${data.filename} ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ saved for future reels.`;
+          if (hint) hint.textContent = `Ã¢ÂÂ Uploaded ${data.filename} Ã¢ÂÂ saved for future reels.`;
           await loadAudioTracks();
           document.getElementById('audio-select').value = data.filename;
           document.getElementById('audio-preview-btn').style.display = '';
@@ -2179,7 +2179,7 @@ REJECTED videos ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ what to avoid:\
     });
   }
 
-  // Select change ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ show/hide buttons
+  // Select change Ã¢ÂÂ show/hide buttons
   const audioSelect = document.getElementById('audio-select');
   if (audioSelect) {
     audioSelect.addEventListener('change', () => {
