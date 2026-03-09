@@ -395,6 +395,20 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
 
   // ─── Generate Video ───
   $('#submit-video').addEventListener('click', async () => {
+    // Pre-check: is Soul connection active?
+    if (window.__MAJU_JWT_CONNECTED && !window.__MAJU_JWT_CONNECTED()) {
+      const proceed = confirm(
+        '⚠️ Higgsfield Soul is disconnected.\n\n' +
+        'Without it, Patient Maya\'s likeness won\'t be used — the pipeline will fall back to generic images.\n\n' +
+        'Click "Cancel" to connect first, or "OK" to generate anyway.'
+      );
+      if (!proceed) {
+        const modal = document.querySelector('#hf-connect-modal');
+        if (modal) modal.classList.remove('hidden');
+        return;
+      }
+    }
+
     const type = $('#video-type').value;
     const versions = parseInt($('#versions').value);
     const avatar = $('#avatar').value;
@@ -2253,4 +2267,82 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
 
   // Fetch live scheduled posts if Metricool key is set
   if (apiKeys.metricool) fetchScheduledPosts();
+
+  // ─── JWT Status Widget ───
+  // Polls the backend every 10s to show connection status in the topbar
+  let jwtConnected = false;
+  const jwtDot = $('#jwt-dot');
+  const jwtLabel = $('#jwt-label');
+  const jwtConnectBtn = $('#jwt-connect-btn');
+  const jwtModal = $('#hf-connect-modal');
+  const modalStatus = $('#modal-jwt-status');
+
+  async function pollJWTStatus() {
+    try {
+      const base = (apiKeys.backendUrl || DEFAULT_BACKEND).replace(/\/+$/, '');
+      if (!base) { setJWTStatus('No backend', 'checking'); return; }
+      const res = await fetch(base + '/api/jwt-status');
+      const data = await res.json();
+      if (data.valid) {
+        setJWTStatus('Soul Connected', 'connected');
+        jwtConnected = true;
+        if (modalStatus) modalStatus.innerHTML = '<span style="color:var(--success);">✓ Connected — you can close this window.</span>';
+      } else {
+        setJWTStatus('Soul Disconnected', 'disconnected');
+        jwtConnected = false;
+        if (modalStatus) modalStatus.innerHTML = '<span style="color:var(--danger);">✗ Not connected yet — open higgsfield.ai with the userscript active.</span>';
+      }
+    } catch (e) {
+      setJWTStatus('Backend offline', 'checking');
+      jwtConnected = false;
+    }
+  }
+
+  function setJWTStatus(text, state) {
+    if (jwtDot) {
+      jwtDot.className = 'jwt-dot ' + state;
+    }
+    if (jwtLabel) jwtLabel.textContent = text;
+    if (jwtConnectBtn) {
+      jwtConnectBtn.style.display = state === 'disconnected' ? 'inline-block' : 'none';
+    }
+  }
+
+  // Connect modal handlers
+  if (jwtConnectBtn) {
+    jwtConnectBtn.addEventListener('click', () => {
+      if (jwtModal) jwtModal.classList.remove('hidden');
+    });
+  }
+  // Also open modal if the status label is clicked while disconnected
+  const jwtStatusEl = $('#jwt-status');
+  if (jwtStatusEl) {
+    jwtStatusEl.style.cursor = 'pointer';
+    jwtStatusEl.addEventListener('click', () => {
+      if (!jwtConnected && jwtModal) jwtModal.classList.remove('hidden');
+    });
+  }
+  if ($('#hf-modal-close')) {
+    $('#hf-modal-close').addEventListener('click', () => {
+      if (jwtModal) jwtModal.classList.add('hidden');
+    });
+  }
+  if ($('#hf-open-btn')) {
+    $('#hf-open-btn').addEventListener('click', () => {
+      window.open('https://higgsfield.ai/', '_blank');
+    });
+  }
+  // Close modal on overlay click
+  if (jwtModal) {
+    jwtModal.addEventListener('click', (e) => {
+      if (e.target === jwtModal) jwtModal.classList.add('hidden');
+    });
+  }
+
+  // Poll JWT status every 10 seconds
+  setTimeout(pollJWTStatus, 2000);
+  setInterval(pollJWTStatus, 10000);
+
+  // Expose jwtConnected for pipeline pre-check
+  window.__MAJU_JWT_CONNECTED = () => jwtConnected;
 })();

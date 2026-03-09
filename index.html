@@ -37,7 +37,7 @@
       </button>
     </nav>
     <div class="sidebar-footer">
-      <p class="version">v1.2.4</p>
+      <p class="version">v1.2.5</p>
     </div>
   </aside>
 
@@ -46,7 +46,61 @@
     <header class="topbar">
       <button class="menu-toggle" id="menu-toggle">☰</button>
       <h2 class="page-title" id="page-title">Dashboard</h2>
+      <div class="jwt-status" id="jwt-status" title="Higgsfield Soul connection status">
+        <span class="jwt-dot" id="jwt-dot"></span>
+        <span class="jwt-label" id="jwt-label">Checking…</span>
+        <button class="btn btn-xs jwt-connect-btn" id="jwt-connect-btn" style="display:none;">Connect</button>
+      </div>
     </header>
+
+    <!-- Higgsfield Connect Modal -->
+    <div class="modal-overlay hidden" id="hf-connect-modal">
+      <div class="modal-card">
+        <button class="modal-close" id="hf-modal-close">&times;</button>
+        <h3 style="margin-bottom:12px;">🔗 Connect to Higgsfield</h3>
+        <p style="font-size:0.9rem; color:var(--text-dim); margin-bottom:16px;">
+          Patient Maya's likeness requires the Higgsfield Soul engine. You need to be logged
+          into <strong>higgsfield.ai</strong> with the auto-relay userscript installed.
+        </p>
+        <div class="connect-steps">
+          <div class="connect-step">
+            <span class="step-badge">1</span>
+            <div>
+              <strong>Install the userscript</strong> (one-time)
+              <p style="font-size:0.8rem; color:var(--text-dim); margin:4px 0 0;">
+                Install <a href="https://www.tampermonkey.net/" target="_blank" style="color:var(--accent);">Tampermonkey</a>, then
+                <a href="https://ryanrigneyfba.github.io/maju-ai-video-launchpad/maju-jwt-relay.user.js" target="_blank" style="color:var(--accent);">click here to install the MAJU relay script</a>.
+              </p>
+            </div>
+          </div>
+          <div class="connect-step">
+            <span class="step-badge">2</span>
+            <div>
+              <strong>Open Higgsfield &amp; log in</strong>
+              <p style="font-size:0.8rem; color:var(--text-dim); margin:4px 0 0;">
+                The userscript auto-relays your session token every 40 seconds.
+              </p>
+              <button class="btn btn-primary btn-sm" id="hf-open-btn" style="margin-top:8px;">
+                Open higgsfield.ai →
+              </button>
+            </div>
+          </div>
+          <div class="connect-step">
+            <span class="step-badge">3</span>
+            <div>
+              <strong>Keep the tab open</strong>
+              <p style="font-size:0.8rem; color:var(--text-dim); margin:4px 0 0;">
+                As long as higgsfield.ai is open in any tab, the connection stays active. You'll see a green
+                "MAJU: Connected ✓" badge on that tab.
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="connect-status" id="modal-jwt-status" style="margin-top:16px; padding:10px; border-radius:8px; background:var(--bg-input); text-align:center; font-size:0.85rem;">
+          Waiting for connection…
+        </div>
+      </div>
+    </div>
 
     <!-- Dashboard View -->
     <section class="view active" id="view-dashboard">
