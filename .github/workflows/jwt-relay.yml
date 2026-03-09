@@ -1,0 +1,51 @@
+name: JWT Relay (Higgsfield Soul)
+
+on:
+  # Manual trigger — click "Run workflow" in GitHub Actions tab
+    workflow_dispatch:
+        inputs:
+              duration:
+                      description: 'How long to run (minutes)'
+                              required: false
+                                      default: '330'
+
+                                        # Auto-run: restarts every 6 hours to stay alive continuously
+                                          # Uncomment the schedule below to enable always-on relay
+                                            # schedule:
+                                              #   - cron: '0 */6 * * *'   # every 6 hours
+
+                                              jobs:
+                                                relay:
+                                                    runs-on: ubuntu-latest
+                                                        timeout-minutes: 360   # 6 hour max
+
+                                                            steps:
+                                                                  - name: Checkout repo
+                                                                          uses: actions/checkout@v4
+
+                                                                                - name: Setup Node.js
+                                                                                        uses: actions/setup-node@v4
+                                                                                                with:
+                                                                                                          node-version: '20'
+                                                                                                          
+                                                                                                                - name: Install dependencies
+                                                                                                                        run: |
+                                                                                                                                  npm init -y
+                                                                                                                                            npm install playwright
+                                                                                                                                                      npx playwright install chromium --with-deps
+                                                                                                                                                      
+                                                                                                                                                            - name: Run JWT relay
+                                                                                                                                                                    env:
+                                                                                                                                                                              HF_EMAIL: ${{ secrets.HF_EMAIL }}
+                                                                                                                                                                                        HF_PASSWORD: ${{ secrets.HF_PASSWORD }}
+                                                                                                                                                                                                  BACKEND_URL: ${{ secrets.BACKEND_URL }}
+                                                                                                                                                                                                            RELAY_DURATION: ${{ github.event.inputs.duration || '330' }}
+                                                                                                                                                                                                                    run: node scripts/jwt-relay.mjs
+                                                                                                                                                                                                                    
+                                                                                                                                                                                                                          - name: Upload debug screenshots (if any)
+                                                                                                                                                                                                                                  if: failure()
+                                                                                                                                                                                                                                          uses: actions/upload-artifact@v4
+                                                                                                                                                                                                                                                  with:
+                                                                                                                                                                                                                                                            name: debug-screenshots
+                                                                                                                                                                                                                                                                      path: debug-*.png
+                                                                                                                                                                                                                                                                                retention-days: 3
