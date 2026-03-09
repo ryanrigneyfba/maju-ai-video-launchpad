@@ -370,6 +370,111 @@ REJECTED — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).join('\n'
     }
   }
 
+  // ─── Claude Creatify Script Generator (for Creatify avatar lipsync + AI shorts) ───
+  async function getClaudeCreatifyScript(videoType, avatar, product, userNotes) {
+    if (!apiKeys.claude) return null;
+
+    const relevantFeedback = feedbackLog
+      .filter((f) => f.videoType === videoType)
+      .slice(-20);
+    const approvals = relevantFeedback.filter((f) => f.action === 'approve');
+    const rejections = relevantFeedback.filter((f) => f.action === 'reject');
+
+    const isAiShorts = videoType === 'creatify-ai-shorts';
+
+    const systemPrompt = isAiShorts
+      ? `You are a short-form video content strategist for MAJU, a wellness brand.
+Product: Maju's Black Seed Oil 8oz — premium wellness oil in a dark glass bottle
+Platform: Instagram Reels / TikTok (9:16 vertical)
+Format: AI-generated short (Creatify AI Shorts)
+
+Generate a creative prompt for an AI short video about this product. The prompt should describe the visual style, mood, and key messaging.
+
+Return ONLY a JSON object with:
+- "prompt": the creative prompt for AI short generation (2-4 sentences describing the video concept, style, and messaging)
+- "aspect_ratio": "9:16"
+- "duration": estimated seconds (15-60)
+- "style": visual style keyword (cinematic, minimal, vibrant, organic, editorial)
+- "direction": brief visual direction notes
+- "instagramCaption": ready-to-post Instagram caption (150-300 chars, NO hashtags)
+- "hashtags": array of 10-15 relevant hashtags (strings without #)
+- "reasoning": 1 sentence on optimization rationale`
+      : `You are a UGC ad script writer for MAJU, a wellness brand. You write scripts for AI avatar lipsync videos (Creatify platform).
+
+Product: Maju's Black Seed Oil 8oz — premium wellness oil in a dark glass bottle
+Platform: Instagram Reels / TikTok (9:16 vertical)
+Format: Avatar talking-head lipsync video (Creatify)
+Duration: 30-60 seconds
+
+Write a natural-sounding script that an AI avatar will speak directly to camera. The avatar lip-syncs to your script.
+
+STRUCTURE:
+1. HOOK (first 3 seconds) — Stop the scroll with a question or bold claim
+2. PROBLEM — Relate to viewer pain point (puffy face, inflammation, dull skin)
+3. DISCOVERY — Introduce Black Seed Oil naturally
+4. PROOF/BENEFITS — 2-3 specific benefits
+5. CTA — Clear call to action
+
+RULES:
+- 80-150 words (30-60 seconds spoken)
+- Natural contractions (I'm, you're, don't)
+- Conversational, authentic tone — NOT salesy
+- Reference the product naturally
+
+Return ONLY a JSON object with:
+- "script": the full spoken script (with \\n for paragraph breaks)
+- "hookLine": the opening hook line
+- "duration": estimated seconds
+- "tone": one-word tone (excited, calm, confident, conspiratorial)
+- "direction": brief delivery direction
+- "avatar_style": suggested style (selfie, presenter)
+- "instagramCaption": ready-to-post Instagram caption (150-300 chars, NO hashtags)
+- "hashtags": array of 10-15 relevant hashtags (strings without #)
+- "reasoning": 1 sentence on optimization rationale`;
+
+    const feedbackContext = relevantFeedback.length
+      ? `\n\nPast feedback (${relevantFeedback.length} entries):
+APPROVED:\n${approvals.map((f) => `- "${f.notes}"`).join('\n') || '(none)'}
+REJECTED:\n${rejections.map((f) => `- "${f.notes}"`).join('\n') || '(none)'}`
+      : '\n\nNo past feedback yet — use best practices.';
+
+    try {
+      const res = await fetch(backendUrl('/api/proxy/claude/messages'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-api-key-value': apiKeys.claude },
+        body: JSON.stringify({
+          model: 'claude-haiku-4-5-20251001',
+          max_tokens: 1024,
+          system: systemPrompt,
+          messages: [{
+            role: 'user',
+            content: `Generate a ${isAiShorts ? 'creative AI short prompt' : 'Creatify avatar lipsync script'} for Maju Black Seed Oil.${feedbackContext}\n\nUser notes: "${userNotes || 'No specific notes'}"`,
+          }],
+        }),
+      });
+      const data = await res.json();
+      if (data.content && data.content[0]) {
+        const text = data.content[0].text;
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          const parsed = JSON.parse(jsonMatch[0]);
+          if (!parsed.instagramCaption) {
+            parsed.instagramCaption = (parsed.hookLine || 'Black Seed Oil changed everything') + ' ✨\nTry Maju Black Seed Oil. Link in bio @majusuperfoods';
+          }
+          if (!parsed.hashtags || !parsed.hashtags.length) {
+            parsed.hashtags = ['blackseedoil','majusuperfoods','skincaretips','naturalremedy','wellness','antiinflammatory','glowup','selfcare','beautyhack','holistichealth','ugc','skincare'];
+          }
+          return parsed;
+        }
+        return { script: text, direction: '', reasoning: 'Raw response' };
+      }
+      return null;
+    } catch (err) {
+      console.error('[Claude Creatify] Error:', err);
+      return null;
+    }
+  }
+
   // ─── Generate Video ───
   $('#submit-video').addEventListener('click', async () => {
     const type = $('#video-type').value;
@@ -382,16 +487,26 @@ REJECTED — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).join('\n'
     const schedDate = $('#schedule-date')?.value || '';
     const notes = $('#notes').value.trim();
 
-    // If Claude key is set, get AI-optimized prompt first
+    // Determine which pipeline to use
     const isUGC = type === 'ugc-talking-head';
+    const isCreatify = type === 'creatify-avatar' || type === 'creatify-ai-shorts';
+    const pipelineName = isUGC ? 'arcads' : isCreatify ? 'creatify' : 'kling';
+
+    // If Claude key is set, get AI-optimized prompt first
     let aiPrompt = null;
     if (apiKeys.claude) {
       const btn = $('#submit-video');
       btn.disabled = true;
-      btn.textContent = isUGC ? '🧠 Claude is writing your UGC script…' : '🧠 Claude is optimizing your prompt…';
-      aiPrompt = isUGC
-        ? await getClaudeUGCScript(type, avatar, product, notes)
-        : await getClaudeOptimizedPrompt(type, avatar, product, notes);
+      if (isUGC) {
+        btn.textContent = '🧠 Claude is writing your UGC script…';
+        aiPrompt = await getClaudeUGCScript(type, avatar, product, notes);
+      } else if (isCreatify) {
+        btn.textContent = '🧠 Claude is writing your Creatify script…';
+        aiPrompt = await getClaudeCreatifyScript(type, avatar, product, notes);
+      } else {
+        btn.textContent = '🧠 Claude is optimizing your prompt…';
+        aiPrompt = await getClaudeOptimizedPrompt(type, avatar, product, notes);
+      }
       btn.disabled = false;
       btn.textContent = '🚀 Generate & Send to Queue';
     }
@@ -401,7 +516,7 @@ REJECTED — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).join('\n'
         id: Date.now().toString(36) + '-' + i,
         type,
         typeName: $('#video-type').selectedOptions[0].textContent,
-        pipeline: isUGC ? 'arcads' : 'kling', // which generation pipeline to use
+        pipeline: pipelineName, // which generation pipeline to use
         avatar,
         avatarName,
         product,
@@ -410,7 +525,7 @@ REJECTED — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).join('\n'
         schedDate: postMode === 'schedule' ? schedDate : null,
         notes,
         aiPrompt, // Claude-optimized prompt (null if no key)
-        ugcScript: isUGC ? (aiPrompt?.script || notes || '') : null, // spoken script for Arcads
+        ugcScript: (isUGC || type === 'creatify-avatar') ? (aiPrompt?.script || notes || '') : null, // spoken script for Arcads/Creatify
         instagramCaption: aiPrompt?.instagramCaption || '',
         hashtags: aiPrompt?.hashtags || [],
         version: i + 1,
@@ -459,10 +574,11 @@ REJECTED — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).join('\n'
       msg.textContent = text;
     }
 
-    // Check if any pending items are Arcads UGC pipeline
+    // Check which pipelines have pending items
     const pendingItems = queue.filter(q => q.pipelineStage === 'generate');
     const hasArcadsItems = pendingItems.some(q => q.pipeline === 'arcads');
-    const hasKlingItems = pendingItems.some(q => q.pipeline !== 'arcads');
+    const hasCreatifyItems = pendingItems.some(q => q.pipeline === 'creatify');
+    const hasKlingItems = pendingItems.some(q => q.pipeline === 'kling' || !q.pipeline);
 
     // Route Arcads UGC items to the Arcads pipeline
     if (hasArcadsItems && apiKeys.arcads) {
@@ -470,9 +586,15 @@ REJECTED — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).join('\n'
       return;
     }
 
-    // If no Higgsfield key (and not Arcads), simulate the whole pipeline
+    // Route Creatify items to the Creatify pipeline
+    if (hasCreatifyItems && apiKeys.creatify) {
+      runCreatifyPipeline(steps, msg, setStage);
+      return;
+    }
+
+    // If no Higgsfield key (and not Arcads/Creatify), simulate the whole pipeline
     console.log('[Pipeline] apiKeys.higgsfield =', apiKeys.higgsfield ? '(set)' : '(empty)', '| All keys:', Object.keys(apiKeys).filter(k => apiKeys[k]));
-    if (!apiKeys.higgsfield && !hasArcadsItems) {
+    if (!apiKeys.higgsfield && !hasArcadsItems && !hasCreatifyItems) {
       let stage = 0;
       const sim = [
         '⚠️ Higgsfield API key not set — video generation simulated. Add key in Settings.',
@@ -955,6 +1077,208 @@ REJECTED — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).join('\n'
       renderTracker();
       updateBadge();
     }
+  }
+
+  // ─── Creatify Pipeline ───
+  // Generates videos via Creatify avatar lipsync or AI shorts
+  async function runCreatifyPipeline(steps, msg, setStage) {
+    setStage(0, 'Generating video via Creatify…');
+
+    const newItems = queue.filter(q => q.pipelineStage === 'generate' && q.pipeline === 'creatify');
+    if (!newItems.length) {
+      setStage(2, '⚠️ No Creatify items to generate.');
+      return;
+    }
+
+    for (const item of newItems) {
+      const isAiShorts = item.type === 'creatify-ai-shorts';
+
+      try {
+        if (isAiShorts) {
+          // ── AI Shorts pipeline: create → poll preview → render → poll final ──
+          const prompt = item.aiPrompt?.prompt || item.notes || 'Maju Black Seed Oil wellness product showcase';
+          msg.textContent = `v${item.version}: Creating Creatify AI short…`;
+          debugPanel(`[Creatify] v${item.version}: AI Short — prompt: ${prompt.slice(0, 100)}…`);
+
+          const createResult = await API.creatify.createAiShort({
+            prompt: prompt,
+            aspect_ratio: item.aiPrompt?.aspect_ratio || '9:16',
+          });
+          console.log('[Creatify] AI Short create result:', JSON.stringify(createResult).slice(0, 300));
+
+          const taskId = createResult.id || createResult.task_id;
+          if (!taskId) {
+            const errMsg = createResult.error || createResult.message || 'No task ID returned';
+            debugPanel(`[Creatify] v${item.version}: Create failed — ${errMsg}`);
+            item.pipelineStage = 'failed';
+            item.status = 'failed';
+            msg.textContent = `⚠️ v${item.version}: Creatify create failed — ${errMsg}`;
+            saveQueue();
+            continue;
+          }
+
+          item.creatifyTaskId = taskId;
+          debugPanel(`[Creatify] v${item.version}: Task ID = ${taskId} — polling for preview…`);
+
+          // Poll until preview is ready
+          const previewResult = await pollCreatifyStatus(
+            () => API.creatify.getAiShortStatus(taskId),
+            item, msg, 'preview'
+          );
+          if (!previewResult) { saveQueue(); continue; }
+
+          // Trigger render
+          msg.textContent = `v${item.version}: Rendering Creatify AI short…`;
+          debugPanel(`[Creatify] v${item.version}: Preview done — triggering render…`);
+          const renderResult = await API.creatify.renderAiShort(taskId);
+          console.log('[Creatify] Render result:', JSON.stringify(renderResult).slice(0, 300));
+
+          // Poll until render is done
+          const finalResult = await pollCreatifyStatus(
+            () => API.creatify.getAiShortStatus(taskId),
+            item, msg, 'render'
+          );
+          if (!finalResult) { saveQueue(); continue; }
+
+          // Extract video URL
+          const videoUrl = finalResult.video_url || finalResult.output || finalResult.url ||
+                          (finalResult.output_video && finalResult.output_video.url);
+          if (videoUrl) {
+            item.videoUrl = videoUrl;
+            item.stitchedVideoUrl = videoUrl;
+            item.pipelineStage = 'queue';
+            msg.textContent = `v${item.version}: Creatify AI short ready!`;
+            debugPanel(`[Creatify] v${item.version}: Video complete — ${videoUrl.slice(0, 80)}…`);
+          } else {
+            debugPanel(`[Creatify] v${item.version}: Render done but no video URL: ${JSON.stringify(finalResult).slice(0, 300)}`);
+            item.pipelineStage = 'failed';
+            item.status = 'failed';
+            msg.textContent = `⚠️ v${item.version}: Creatify done but no video URL found.`;
+          }
+
+        } else {
+          // ── Avatar Lipsync pipeline: create lipsync → poll → done ──
+          const script = item.ugcScript || item.aiPrompt?.script || item.notes || '';
+          if (!script) {
+            item.pipelineStage = 'failed';
+            item.status = 'failed';
+            msg.textContent = `⚠️ v${item.version}: No script provided for Creatify avatar.`;
+            saveQueue();
+            continue;
+          }
+
+          msg.textContent = `v${item.version}: Creating Creatify avatar lipsync…`;
+          debugPanel(`[Creatify] v${item.version}: Avatar lipsync — script: ${script.slice(0, 100)}…`);
+
+          const lipsyncParams = {
+            input_text: script,
+            aspect_ratio: '9:16',
+          };
+
+          // Use avatar/voice from aiPrompt if available
+          if (item.aiPrompt?.avatar_id) lipsyncParams.avatar_id = item.aiPrompt.avatar_id;
+          if (item.aiPrompt?.avatar_style) lipsyncParams.avatar_style = item.aiPrompt.avatar_style;
+          if (item.aiPrompt?.voice_id) lipsyncParams.voice_id = item.aiPrompt.voice_id;
+          if (item.aiPrompt?.background_url) lipsyncParams.background_url = item.aiPrompt.background_url;
+
+          const createResult = await API.creatify.createLipsync(lipsyncParams);
+          console.log('[Creatify] Lipsync create result:', JSON.stringify(createResult).slice(0, 300));
+
+          const taskId = createResult.id || createResult.task_id;
+          if (!taskId) {
+            const errMsg = createResult.error || createResult.message || 'No task ID returned';
+            debugPanel(`[Creatify] v${item.version}: Lipsync create failed — ${errMsg}`);
+            debugPanel(`[Creatify] Full response: ${JSON.stringify(createResult).slice(0, 500)}`);
+            item.pipelineStage = 'failed';
+            item.status = 'failed';
+            msg.textContent = `⚠️ v${item.version}: Creatify lipsync failed — ${errMsg}`;
+            saveQueue();
+            continue;
+          }
+
+          item.creatifyTaskId = taskId;
+          debugPanel(`[Creatify] v${item.version}: Task ID = ${taskId} — polling…`);
+
+          // Poll until done
+          const finalResult = await pollCreatifyStatus(
+            () => API.creatify.getLipsyncStatus(taskId),
+            item, msg, 'lipsync'
+          );
+          if (!finalResult) { saveQueue(); continue; }
+
+          const videoUrl = finalResult.video_url || finalResult.output || finalResult.url;
+          if (videoUrl) {
+            item.videoUrl = videoUrl;
+            item.stitchedVideoUrl = videoUrl;
+            item.pipelineStage = 'queue';
+            msg.textContent = `v${item.version}: Creatify avatar video ready!`;
+            debugPanel(`[Creatify] v${item.version}: Video complete — ${videoUrl.slice(0, 80)}…`);
+          } else {
+            debugPanel(`[Creatify] v${item.version}: Done but no video URL: ${JSON.stringify(finalResult).slice(0, 300)}`);
+            item.pipelineStage = 'failed';
+            item.status = 'failed';
+            msg.textContent = `⚠️ v${item.version}: Creatify done but no video URL found.`;
+          }
+        }
+      } catch (err) {
+        console.error('[Creatify] Pipeline error:', err);
+        debugPanel(`[Creatify] v${item.version}: Error — ${err.message}`);
+        item.pipelineStage = 'failed';
+        item.status = 'failed';
+        msg.textContent = `⚠️ v${item.version}: Creatify error — ${err.message}`;
+      }
+
+      saveQueue();
+    }
+
+    // Final status
+    const succeeded = newItems.filter(i => i.pipelineStage === 'queue').length;
+    const failed = newItems.filter(i => i.pipelineStage === 'failed').length;
+
+    if (succeeded > 0) {
+      setStage(1, 'Stitch skipped — Creatify produces final video directly.');
+      setStage(2, `✓ Pipeline complete — ${succeeded} Creatify video(s) ready for approval.`);
+      renderQueue();
+      renderTracker();
+      updateBadge();
+    } else {
+      setStage(1, '');
+      setStage(2, `⚠️ All ${failed} Creatify video(s) failed. Check API key and script.`);
+      renderTracker();
+      updateBadge();
+    }
+  }
+
+  // Helper: poll Creatify task status until done/failed
+  async function pollCreatifyStatus(statusFn, item, msg, label) {
+    const MAX_POLLS = 120; // 120 * 5s = 10 minutes
+    for (let attempt = 0; attempt < MAX_POLLS; attempt++) {
+      await new Promise(r => setTimeout(r, 5000));
+      const status = await statusFn();
+      const st = (status.status || '').toLowerCase();
+
+      if (attempt % 6 === 0) {
+        console.log(`[Creatify] v${item.version} ${label} poll #${attempt}: status=${st}`);
+        msg.textContent = `v${item.version}: Creatify ${label}… (${Math.round(attempt * 5 / 60)}m elapsed)`;
+      }
+
+      if (st === 'done' || st === 'completed' || st === 'succeed') {
+        return status;
+      }
+      if (st === 'failed' || st === 'error') {
+        const errDetail = status.error || status.message || st;
+        debugPanel(`[Creatify] v${item.version}: ${label} failed — ${errDetail}`);
+        item.pipelineStage = 'failed';
+        item.status = 'failed';
+        msg.textContent = `⚠️ v${item.version}: Creatify ${label} failed — ${errDetail}`;
+        return null;
+      }
+    }
+    debugPanel(`[Creatify] v${item.version}: ${label} timed out after ${MAX_POLLS * 5}s`);
+    item.pipelineStage = 'failed';
+    item.status = 'failed';
+    msg.textContent = `⚠️ v${item.version}: Creatify ${label} timed out.`;
+    return null;
   }
 
   // ─── Queue Rendering ───
@@ -1944,15 +2268,18 @@ REJECTED — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).join('\n'
       },
     },
 
-    // ── Creatify — AI product video generation (via proxy) ──
+    // ── Creatify — AI avatar lipsync + AI shorts video generation (via proxy) ──
     creatify: {
-      _creatifyHeaders() {
+      _creatifyHeaders(json = true) {
         const [apiId, apiKey] = (apiKeys.creatify || '').includes(':')
           ? apiKeys.creatify.split(':')
           : [apiKeys.creatify || '', ''];
-        return { 'x-creatify-id': apiId, 'x-creatify-key': apiKey || apiId, 'Content-Type': 'application/json' };
+        const h = { 'x-creatify-id': apiId, 'x-creatify-key': apiKey || apiId };
+        if (json) h['Content-Type'] = 'application/json';
+        return h;
       },
 
+      // Legacy product_to_videos endpoints (kept for backward compat)
       async generatePreview(params) {
         console.log('[Creatify] Generate preview:', params);
         if (!apiKeys.creatify) return { ok: false, error: 'No API key set' };
@@ -1989,11 +2316,203 @@ REJECTED — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).join('\n'
         }
       },
 
-      async getStatus(taskId) {
+      async getProductVideoStatus(taskId) {
         if (!apiKeys.creatify) return { ok: false, error: 'No API key set' };
         try {
           const res = await fetch(backendUrl(`/api/proxy/creatify/${encodeURIComponent(taskId)}/status`), {
+            headers: this._creatifyHeaders(false),
+          });
+          const data = await res.json();
+          return { ok: res.ok, ...data };
+        } catch (err) {
+          return { ok: false, error: err.message };
+        }
+      },
+
+      // Avatar lipsync endpoints (POST /api/lipsyncs/)
+      async createLipsync(params) {
+        console.log('[Creatify] Create lipsync:', params);
+        if (!apiKeys.creatify) return { ok: false, error: 'No API key set' };
+        try {
+          const res = await fetch(backendUrl('/api/proxy/creatify/lipsyncs'), {
+            method: 'POST',
             headers: this._creatifyHeaders(),
+            body: JSON.stringify(params),
+          });
+          const data = await res.json();
+          return { ok: res.ok, ...data };
+        } catch (err) {
+          console.error('[Creatify] Lipsync error:', err);
+          return { ok: false, error: err.message };
+        }
+      },
+
+      async getLipsyncStatus(taskId) {
+        if (!apiKeys.creatify) return { ok: false, error: 'No API key set' };
+        try {
+          const res = await fetch(backendUrl(`/api/proxy/creatify/lipsyncs/${encodeURIComponent(taskId)}`), {
+            headers: this._creatifyHeaders(false),
+          });
+          const data = await res.json();
+          return { ok: res.ok, ...data };
+        } catch (err) {
+          return { ok: false, error: err.message };
+        }
+      },
+
+      // AI Shorts endpoints (POST /api/ai_shorts/)
+      async createAiShort(params) {
+        console.log('[Creatify] Create AI short:', params);
+        if (!apiKeys.creatify) return { ok: false, error: 'No API key set' };
+        try {
+          const res = await fetch(backendUrl('/api/proxy/creatify/ai-shorts'), {
+            method: 'POST',
+            headers: this._creatifyHeaders(),
+            body: JSON.stringify(params),
+          });
+          const data = await res.json();
+          return { ok: res.ok, ...data };
+        } catch (err) {
+          console.error('[Creatify] AI Shorts error:', err);
+          return { ok: false, error: err.message };
+        }
+      },
+
+      async getAiShortStatus(taskId) {
+        if (!apiKeys.creatify) return { ok: false, error: 'No API key set' };
+        try {
+          const res = await fetch(backendUrl(`/api/proxy/creatify/ai-shorts/${encodeURIComponent(taskId)}`), {
+            headers: this._creatifyHeaders(false),
+          });
+          const data = await res.json();
+          return { ok: res.ok, ...data };
+        } catch (err) {
+          return { ok: false, error: err.message };
+        }
+      },
+
+      async renderAiShort(taskId) {
+        if (!apiKeys.creatify) return { ok: false, error: 'No API key set' };
+        try {
+          const res = await fetch(backendUrl(`/api/proxy/creatify/ai-shorts/${encodeURIComponent(taskId)}/render`), {
+            method: 'POST',
+            headers: this._creatifyHeaders(),
+            body: JSON.stringify({}),
+          });
+          const data = await res.json();
+          return { ok: res.ok, ...data };
+        } catch (err) {
+          return { ok: false, error: err.message };
+        }
+      },
+
+      // AI Script generation
+      async createAiScript(params) {
+        if (!apiKeys.creatify) return { ok: false, error: 'No API key set' };
+        try {
+          const res = await fetch(backendUrl('/api/proxy/creatify/ai-scripts'), {
+            method: 'POST',
+            headers: this._creatifyHeaders(),
+            body: JSON.stringify(params),
+          });
+          const data = await res.json();
+          return { ok: res.ok, ...data };
+        } catch (err) {
+          return { ok: false, error: err.message };
+        }
+      },
+
+      async getAiScriptStatus(taskId) {
+        if (!apiKeys.creatify) return { ok: false, error: 'No API key set' };
+        try {
+          const res = await fetch(backendUrl(`/api/proxy/creatify/ai-scripts/${encodeURIComponent(taskId)}`), {
+            headers: this._creatifyHeaders(false),
+          });
+          const data = await res.json();
+          return { ok: res.ok, ...data };
+        } catch (err) {
+          return { ok: false, error: err.message };
+        }
+      },
+
+      // List available avatars and voices
+      async listAvatars(filters = {}) {
+        if (!apiKeys.creatify) return { ok: false, error: 'No API key set' };
+        try {
+          const qs = new URLSearchParams(filters).toString();
+          const res = await fetch(backendUrl(`/api/proxy/creatify/personas${qs ? '?' + qs : ''}`), {
+            headers: this._creatifyHeaders(false),
+          });
+          const data = await res.json();
+          return { ok: res.ok, avatars: Array.isArray(data) ? data : (data.results || data.avatars || [data]) };
+        } catch (err) {
+          return { ok: false, error: err.message, avatars: [] };
+        }
+      },
+
+      async listVoices() {
+        if (!apiKeys.creatify) return { ok: false, error: 'No API key set' };
+        try {
+          const res = await fetch(backendUrl('/api/proxy/creatify/voices'), {
+            headers: this._creatifyHeaders(false),
+          });
+          const data = await res.json();
+          return { ok: res.ok, voices: Array.isArray(data) ? data : (data.results || data.voices || []) };
+        } catch (err) {
+          return { ok: false, error: err.message, voices: [] };
+        }
+      },
+
+      // URL-to-video workflow
+      async createLink(params) {
+        if (!apiKeys.creatify) return { ok: false, error: 'No API key set' };
+        try {
+          const res = await fetch(backendUrl('/api/proxy/creatify/links'), {
+            method: 'POST',
+            headers: this._creatifyHeaders(),
+            body: JSON.stringify(params),
+          });
+          const data = await res.json();
+          return { ok: res.ok, ...data };
+        } catch (err) {
+          return { ok: false, error: err.message };
+        }
+      },
+
+      async createVideoFromLink(params) {
+        if (!apiKeys.creatify) return { ok: false, error: 'No API key set' };
+        try {
+          const res = await fetch(backendUrl('/api/proxy/creatify/link-to-videos'), {
+            method: 'POST',
+            headers: this._creatifyHeaders(),
+            body: JSON.stringify(params),
+          });
+          const data = await res.json();
+          return { ok: res.ok, ...data };
+        } catch (err) {
+          return { ok: false, error: err.message };
+        }
+      },
+
+      async getLinkVideoStatus(taskId) {
+        if (!apiKeys.creatify) return { ok: false, error: 'No API key set' };
+        try {
+          const res = await fetch(backendUrl(`/api/proxy/creatify/link-to-videos/${encodeURIComponent(taskId)}`), {
+            headers: this._creatifyHeaders(false),
+          });
+          const data = await res.json();
+          return { ok: res.ok, ...data };
+        } catch (err) {
+          return { ok: false, error: err.message };
+        }
+      },
+
+      // Credits
+      async getRemainingCredits() {
+        if (!apiKeys.creatify) return { ok: false, error: 'No API key set' };
+        try {
+          const res = await fetch(backendUrl('/api/proxy/creatify/credits'), {
+            headers: this._creatifyHeaders(false),
           });
           const data = await res.json();
           return { ok: res.ok, ...data };
