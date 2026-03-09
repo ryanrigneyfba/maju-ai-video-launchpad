@@ -1095,14 +1095,18 @@ REJECTED:\n${rejections.map((f) => `- "${f.notes}"`).join('\n') || '(none)'}`
 
       try {
         if (isAiShorts) {
-          // ── AI Shorts pipeline: create → poll preview → render → poll final ──
-          const prompt = item.aiPrompt?.prompt || item.notes || 'Maju Black Seed Oil wellness product showcase';
+          // ── AI Shorts pipeline: create → poll until done ──
+          // API: POST /api/ai_shorts/ with { script, aspect_ratio, style }
+          // Result field: video_output (when status=done)
+          const script = item.aiPrompt?.prompt || item.aiPrompt?.script || item.notes || 'Maju Black Seed Oil wellness product showcase';
+          const style = item.aiPrompt?.style || '4K realistic';
           msg.textContent = `v${item.version}: Creating Creatify AI short…`;
-          debugPanel(`[Creatify] v${item.version}: AI Short — prompt: ${prompt.slice(0, 100)}…`);
+          debugPanel(`[Creatify] v${item.version}: AI Short — script: ${script.slice(0, 100)}…`);
 
           const createResult = await API.creatify.createAiShort({
-            prompt: prompt,
-            aspect_ratio: item.aiPrompt?.aspect_ratio || '9:16',
+            script: script,
+            aspect_ratio: item.aiPrompt?.aspect_ratio || '9x16',
+            style: style,
           });
           console.log('[Creatify] AI Short create result:', JSON.stringify(createResult).slice(0, 300));
 
@@ -1118,31 +1122,17 @@ REJECTED:\n${rejections.map((f) => `- "${f.notes}"`).join('\n') || '(none)'}`
           }
 
           item.creatifyTaskId = taskId;
-          debugPanel(`[Creatify] v${item.version}: Task ID = ${taskId} — polling for preview…`);
+          debugPanel(`[Creatify] v${item.version}: Task ID = ${taskId} — polling…`);
 
-          // Poll until preview is ready
-          const previewResult = await pollCreatifyStatus(
-            () => API.creatify.getAiShortStatus(taskId),
-            item, msg, 'preview'
-          );
-          if (!previewResult) { saveQueue(); continue; }
-
-          // Trigger render
-          msg.textContent = `v${item.version}: Rendering Creatify AI short…`;
-          debugPanel(`[Creatify] v${item.version}: Preview done — triggering render…`);
-          const renderResult = await API.creatify.renderAiShort(taskId);
-          console.log('[Creatify] Render result:', JSON.stringify(renderResult).slice(0, 300));
-
-          // Poll until render is done
+          // Poll until done (AI Shorts is a single-step async task)
           const finalResult = await pollCreatifyStatus(
             () => API.creatify.getAiShortStatus(taskId),
-            item, msg, 'render'
+            item, msg, 'generating'
           );
           if (!finalResult) { saveQueue(); continue; }
 
-          // Extract video URL
-          const videoUrl = finalResult.video_url || finalResult.output || finalResult.url ||
-                          (finalResult.output_video && finalResult.output_video.url);
+          // Extract video URL (AI Shorts returns video_output)
+          const videoUrl = finalResult.video_output || finalResult.output || finalResult.video_url || finalResult.url;
           if (videoUrl) {
             item.videoUrl = videoUrl;
             item.stitchedVideoUrl = videoUrl;
@@ -1170,16 +1160,23 @@ REJECTED:\n${rejections.map((f) => `- "${f.notes}"`).join('\n') || '(none)'}`
           msg.textContent = `v${item.version}: Creating Creatify avatar lipsync…`;
           debugPanel(`[Creatify] v${item.version}: Avatar lipsync — script: ${script.slice(0, 100)}…`);
 
+          // Creatify Lipsync v1 API field names:
+          // text = spoken text, creator = avatar/persona UUID, accent = voice UUID
+          // model_version = e.g. "aurora_v1_fast", aspect_ratio = "9:16"
           const lipsyncParams = {
-            input_text: script,
+            text: script,
             aspect_ratio: '9:16',
+            no_caption: true,
+            no_music: true,
           };
 
           // Use avatar/voice from aiPrompt if available
-          if (item.aiPrompt?.avatar_id) lipsyncParams.avatar_id = item.aiPrompt.avatar_id;
-          if (item.aiPrompt?.avatar_style) lipsyncParams.avatar_style = item.aiPrompt.avatar_style;
-          if (item.aiPrompt?.voice_id) lipsyncParams.voice_id = item.aiPrompt.voice_id;
-          if (item.aiPrompt?.background_url) lipsyncParams.background_url = item.aiPrompt.background_url;
+          if (item.aiPrompt?.creator) lipsyncParams.creator = item.aiPrompt.creator;
+          if (item.aiPrompt?.avatar_id) lipsyncParams.creator = item.aiPrompt.avatar_id; // alias
+          if (item.aiPrompt?.accent) lipsyncParams.accent = item.aiPrompt.accent;
+          if (item.aiPrompt?.voice_id) lipsyncParams.accent = item.aiPrompt.voice_id; // alias
+          if (item.aiPrompt?.model_version) lipsyncParams.model_version = item.aiPrompt.model_version;
+          if (item.aiPrompt?.background_asset_image_url) lipsyncParams.background_asset_image_url = item.aiPrompt.background_asset_image_url;
 
           const createResult = await API.creatify.createLipsync(lipsyncParams);
           console.log('[Creatify] Lipsync create result:', JSON.stringify(createResult).slice(0, 300));
@@ -1262,11 +1259,12 @@ REJECTED:\n${rejections.map((f) => `- "${f.notes}"`).join('\n') || '(none)'}`
         msg.textContent = `v${item.version}: Creatify ${label}… (${Math.round(attempt * 5 / 60)}m elapsed)`;
       }
 
-      if (st === 'done' || st === 'completed' || st === 'succeed') {
+      // Creatify status values: pending → in_queue → running → done/failed
+      if (st === 'done' || st === 'completed' || st === 'succeed' || st === 'video_generated' || st === 'image_generated') {
         return status;
       }
       if (st === 'failed' || st === 'error') {
-        const errDetail = status.error || status.message || st;
+        const errDetail = status.error || status.failed_reason || status.message || st;
         debugPanel(`[Creatify] v${item.version}: ${label} failed — ${errDetail}`);
         item.pipelineStage = 'failed';
         item.status = 'failed';
