@@ -1284,7 +1284,7 @@ app.get('/api/proxy/creatify/credits', async (req, res) => {
   if (!apiId || !apiKey) return res.status(400).json({ error: 'Missing Creatify credentials' });
   try {
     const result = await proxyRequest(
-      'https://api.creatify.ai/api/workspace/remaining_credits/',
+      'https://api.creatify.ai/api/remaining_credits/',
       'GET',
       { 'X-API-ID': apiId, 'X-API-KEY': apiKey }
     );
