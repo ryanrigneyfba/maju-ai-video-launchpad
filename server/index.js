@@ -1277,6 +1277,41 @@ app.get('/api/proxy/creatify/link-to-videos/:taskId', async (req, res) => {
   }
 });
 
+// Creatify: Create custom avatar (DYOA — Design Your Own Avatar)
+app.post('/api/proxy/creatify/personas', async (req, res) => {
+  const apiId = req.headers['x-creatify-id'];
+  const apiKey = req.headers['x-creatify-key'];
+  if (!apiId || !apiKey) return res.status(400).json({ error: 'Missing Creatify credentials' });
+  try {
+    const result = await proxyRequest(
+      'https://api.creatify.ai/api/personas/',
+      'POST',
+      { 'X-API-ID': apiId, 'X-API-KEY': apiKey, 'Content-Type': 'application/json' },
+      req.body
+    );
+    res.status(result.status).json(result.data);
+  } catch (err) {
+    res.status(502).json({ error: err.message });
+  }
+});
+
+// Creatify: Get persona detail / training status
+app.get('/api/proxy/creatify/personas/:personaId', async (req, res) => {
+  const apiId = req.headers['x-creatify-id'];
+  const apiKey = req.headers['x-creatify-key'];
+  if (!apiId || !apiKey) return res.status(400).json({ error: 'Missing Creatify credentials' });
+  try {
+    const result = await proxyRequest(
+      `https://api.creatify.ai/api/personas/${encodeURIComponent(req.params.personaId)}/`,
+      'GET',
+      { 'X-API-ID': apiId, 'X-API-KEY': apiKey }
+    );
+    res.status(result.status).json(result.data);
+  } catch (err) {
+    res.status(502).json({ error: err.message });
+  }
+});
+
 // Creatify: Get remaining credits
 app.get('/api/proxy/creatify/credits', async (req, res) => {
   const apiId = req.headers['x-creatify-id'];

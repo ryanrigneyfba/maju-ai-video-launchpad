@@ -131,6 +131,40 @@
         </div>
       </div>
 
+      <!-- Create Custom Avatar (Creatify DYOA) -->
+      <div class="card" id="dyoa-card">
+        <h3 class="card-title">Create Custom Avatar (Creatify DYOA)</h3>
+        <p class="settings-note">Train a custom Creatify avatar from a reference image. Once trained, it auto-selects for Avatar Lipsync videos.</p>
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="dyoa-name">Avatar Name</label>
+            <input type="text" id="dyoa-name" value="Patient Maya" placeholder="e.g. Patient Maya">
+          </div>
+          <div class="form-group">
+            <label for="dyoa-gender">Gender</label>
+            <select id="dyoa-gender">
+              <option value="female" selected>Female</option>
+              <option value="male">Male</option>
+            </select>
+          </div>
+          <div class="form-group full-width">
+            <label for="dyoa-image-url">Training Image URL</label>
+            <input type="url" id="dyoa-image-url" placeholder="https://… (public URL of Patient Maya reference photo)">
+            <span class="api-hint">Provide a clear, front-facing photo — hair in bun, black tank top, minimal makeup, natural look.</span>
+          </div>
+        </div>
+        <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-top:8px;">
+          <button class="btn btn-primary" id="btn-dyoa-create">Create Avatar</button>
+          <span class="api-hint" id="dyoa-status-msg"></span>
+        </div>
+        <div class="hidden" id="dyoa-saved-info" style="margin-top:12px; padding:10px; background:var(--bg-main); border-radius:8px; border:1px solid var(--border);">
+          <strong>Saved Custom Avatar:</strong>
+          <span id="dyoa-saved-name"></span>
+          <code id="dyoa-saved-id" style="margin-left:8px; font-size:0.8rem;"></code>
+          <span id="dyoa-saved-status" style="margin-left:8px;"></span>
+        </div>
+      </div>
+
       <!-- Pipeline Status -->
       <div class="card hidden" id="pipeline-card">
         <h3 class="card-title">Pipeline Status</h3>

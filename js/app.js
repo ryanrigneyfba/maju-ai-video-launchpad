@@ -1170,9 +1170,10 @@ REJECTED:\n${rejections.map((f) => `- "${f.notes}"`).join('\n') || '(none)'}`
             no_music: true,
           };
 
-          // Use avatar/voice from aiPrompt if available
+          // Use avatar/voice from aiPrompt if available, fall back to custom DYOA avatar
           if (item.aiPrompt?.creator) lipsyncParams.creator = item.aiPrompt.creator;
-          if (item.aiPrompt?.avatar_id) lipsyncParams.creator = item.aiPrompt.avatar_id; // alias
+          else if (item.aiPrompt?.avatar_id) lipsyncParams.creator = item.aiPrompt.avatar_id;
+          else if (getCustomAvatarId()) lipsyncParams.creator = getCustomAvatarId();
           if (item.aiPrompt?.accent) lipsyncParams.accent = item.aiPrompt.accent;
           if (item.aiPrompt?.voice_id) lipsyncParams.accent = item.aiPrompt.voice_id; // alias
           if (item.aiPrompt?.model_version) lipsyncParams.model_version = item.aiPrompt.model_version;
@@ -1277,6 +1278,111 @@ REJECTED:\n${rejections.map((f) => `- "${f.notes}"`).join('\n') || '(none)'}`
     item.status = 'failed';
     msg.textContent = `⚠️ v${item.version}: Creatify ${label} timed out.`;
     return null;
+  }
+
+  // ─── DYOA — Design Your Own Avatar (Creatify Custom Avatar) ───
+  const DYOA_KEY = 'maju_creatify_custom_avatar';
+
+  function loadSavedAvatar() {
+    const saved = JSON.parse(localStorage.getItem(DYOA_KEY) || 'null');
+    const infoEl = $('#dyoa-saved-info');
+    if (saved && infoEl) {
+      infoEl.classList.remove('hidden');
+      $('#dyoa-saved-name').textContent = saved.name || 'Custom Avatar';
+      $('#dyoa-saved-id').textContent = saved.id;
+      $('#dyoa-saved-status').textContent = saved.trained ? '(trained)' : '(training…)';
+    }
+    return saved;
+  }
+
+  function saveDyoaAvatar(avatar) {
+    localStorage.setItem(DYOA_KEY, JSON.stringify(avatar));
+    loadSavedAvatar();
+  }
+
+  // On load: show saved avatar if exists and poll if still training
+  const savedAvatar = loadSavedAvatar();
+  if (savedAvatar && !savedAvatar.trained) {
+    pollDyoaTraining(savedAvatar.id);
+  }
+
+  async function pollDyoaTraining(personaId) {
+    const statusMsg = $('#dyoa-status-msg');
+    const MAX_POLLS = 120;
+    for (let i = 0; i < MAX_POLLS; i++) {
+      if (statusMsg) statusMsg.textContent = `Training… (${Math.round(i * 10 / 60)}m elapsed)`;
+      await new Promise(r => setTimeout(r, 10000));
+      const result = await API.creatify.getPersonaStatus(personaId);
+      const st = (result.status || '').toLowerCase();
+      console.log(`[DYOA] Poll #${i}: status=${st}`);
+
+      if (st === 'done' || st === 'completed' || st === 'active') {
+        const saved = JSON.parse(localStorage.getItem(DYOA_KEY) || '{}');
+        saved.trained = true;
+        saveDyoaAvatar(saved);
+        if (statusMsg) statusMsg.textContent = 'Avatar trained and ready!';
+        return;
+      }
+      if (st === 'failed' || st === 'error') {
+        if (statusMsg) statusMsg.textContent = `Training failed: ${result.error || result.message || st}`;
+        return;
+      }
+    }
+    if (statusMsg) statusMsg.textContent = 'Training timed out — check Creatify dashboard.';
+  }
+
+  // Wire up the Create Avatar button
+  document.addEventListener('DOMContentLoaded', () => {
+    const btn = $('#btn-dyoa-create');
+    if (btn) {
+      btn.addEventListener('click', async () => {
+        const name = ($('#dyoa-name') || {}).value || 'Patient Maya';
+        const gender = ($('#dyoa-gender') || {}).value || 'female';
+        const imageUrl = ($('#dyoa-image-url') || {}).value;
+        const statusMsg = $('#dyoa-status-msg');
+
+        if (!imageUrl) {
+          if (statusMsg) statusMsg.textContent = 'Please provide a training image URL.';
+          return;
+        }
+        if (!apiKeys.creatify) {
+          if (statusMsg) statusMsg.textContent = 'Set your Creatify API key in Settings first.';
+          return;
+        }
+
+        btn.disabled = true;
+        if (statusMsg) statusMsg.textContent = 'Creating avatar…';
+
+        const result = await API.creatify.createCustomAvatar({
+          name: name,
+          gender: gender,
+          image_input: imageUrl,
+          training_images: [imageUrl],
+        });
+
+        console.log('[DYOA] Create result:', JSON.stringify(result).slice(0, 500));
+        const personaId = result.id || result.persona_id;
+
+        if (!personaId) {
+          const errMsg = result.error || result.message || result.detail || 'No persona ID returned';
+          if (statusMsg) statusMsg.textContent = `Failed: ${errMsg}`;
+          btn.disabled = false;
+          return;
+        }
+
+        saveDyoaAvatar({ id: personaId, name: name, gender: gender, trained: false, imageUrl: imageUrl });
+        if (statusMsg) statusMsg.textContent = `Avatar created (${personaId}) — training started…`;
+
+        // Start polling for training completion
+        pollDyoaTraining(personaId).then(() => { btn.disabled = false; });
+      });
+    }
+  });
+
+  // Auto-inject saved custom avatar into Creatify lipsync pipeline
+  function getCustomAvatarId() {
+    const saved = JSON.parse(localStorage.getItem(DYOA_KEY) || 'null');
+    return (saved && saved.trained) ? saved.id : null;
   }
 
   // ─── Queue Rendering ───
@@ -2510,6 +2616,36 @@ REJECTED:\n${rejections.map((f) => `- "${f.notes}"`).join('\n') || '(none)'}`
         if (!apiKeys.creatify) return { ok: false, error: 'No API key set' };
         try {
           const res = await fetch(backendUrl('/api/proxy/creatify/credits'), {
+            headers: this._creatifyHeaders(false),
+          });
+          const data = await res.json();
+          return { ok: res.ok, ...data };
+        } catch (err) {
+          return { ok: false, error: err.message };
+        }
+      },
+
+      // DYOA — Design Your Own Avatar
+      async createCustomAvatar(params) {
+        console.log('[Creatify] Create custom avatar:', params);
+        if (!apiKeys.creatify) return { ok: false, error: 'No API key set' };
+        try {
+          const res = await fetch(backendUrl('/api/proxy/creatify/personas'), {
+            method: 'POST',
+            headers: this._creatifyHeaders(),
+            body: JSON.stringify(params),
+          });
+          const data = await res.json();
+          return { ok: res.ok, ...data };
+        } catch (err) {
+          return { ok: false, error: err.message };
+        }
+      },
+
+      async getPersonaStatus(personaId) {
+        if (!apiKeys.creatify) return { ok: false, error: 'No API key set' };
+        try {
+          const res = await fetch(backendUrl(`/api/proxy/creatify/personas/${encodeURIComponent(personaId)}`), {
             headers: this._creatifyHeaders(false),
           });
           const data = await res.json();
