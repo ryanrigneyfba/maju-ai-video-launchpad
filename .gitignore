@@ -1,0 +1,15 @@
+# Credentials / secrets
+.mcp.json
+.env
+
+# Dependencies
+node_modules/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Uploads & output (server runtime)
+server/uploads/
+server/output/
+server/audio/
