@@ -644,56 +644,16 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     return { url: null, error: 'Video timed out after 600s' };
   }
 
-  // Helper: full segment pipeline — preloaded scene image → Kling i2v (or Soul → Kling i2v, or Kling t2v fallback)
+  // Helper: animate preloaded scene image → Kling i2v ONLY.
+  // No fallbacks — we only spend credits on the preloaded image path.
   // Returns { url, error } object
   async function generateSegmentVideo(seg, segLabel, characterId, productImageUrl) {
-    // Priority 1: Use preloaded scene image (no Soul/JWT needed) → Kling image2video
-    if (seg.image_url) {
-      debugPanel(`[${segLabel}] Using preloaded scene image → Kling image2video…`);
-      return await animateImageToVideo(seg, seg.image_url, segLabel);
+    if (!seg.image_url) {
+      debugPanel(`[${segLabel}] ❌ No preloaded scene image — skipping (no fallback to avoid wasting credits)`);
+      return { url: null, error: 'No preloaded scene image available' };
     }
-
-    // Priority 2: If Higgsfield key is set, use hybrid pipeline: Soul/Flux image → Kling image2video
-    if (apiKeys.higgsfield) {
-      debugPanel(`[${segLabel}] Generating image via ${characterId ? 'Soul (character: ' + characterId + ')' : 'Flux Kontext Max'}${productImageUrl ? ' + product reference' : ''}…`);
-      const imageResult = await generateSegmentImage(seg, segLabel, characterId, productImageUrl);
-      if (imageResult.url) {
-        debugPanel(`[${segLabel}] Image ready — animating via Kling image2video…`);
-        return await animateImageToVideo(seg, imageResult.url, segLabel);
-      }
-      debugPanel(`[${segLabel}] Image failed (${imageResult.error}) — falling back to Kling text2video`);
-    }
-
-    // Fallback: Kling text-to-video (no reference image)
-    const result = await API.kling.generateVideo({
-      prompt: seg.prompt,
-      duration: seg.duration <= 5 ? 5 : 10,
-      aspect_ratio: '9:16',
-      model_name: seg.model || 'kling-v2-master',
-      mode: 'std',
-    });
-    console.log(`[Pipeline] Kling t2v submit for ${segLabel}:`, result.ok, 'taskId:', result.taskId);
-    if (!result.ok || !result.taskId) {
-      const errDetail = result.error || result.message || JSON.stringify(result).slice(0, 200);
-      debugPanel(`[${segLabel}] Kling submit failed: ${errDetail}`);
-      return { url: null, error: `Submit: ${errDetail}` };
-    }
-    for (let attempt = 0; attempt < 200; attempt++) {
-      await new Promise(r => setTimeout(r, 3000));
-      const status = await API.kling.getVideoStatus(result.taskId);
-      const st = (status.task_status || '').toLowerCase();
-      if (attempt % 5 === 0) console.log(`[Pipeline] Kling t2v ${segLabel} poll #${attempt}: status=${st}`);
-      if (st === 'succeed') {
-        const videos = status.task_result && status.task_result.videos;
-        const url = videos && videos[0] && videos[0].url;
-        return { url: url || null, error: url ? null : 'No video URL in result' };
-      }
-      if (st === 'failed') {
-        return { url: null, error: `Video failed: ${status.task_status_msg || 'unknown'}` };
-      }
-    }
-    console.warn(`[Pipeline] ${segLabel} timed out after 600s`);
-    return { url: null, error: 'Timed out after 600s' };
+    debugPanel(`[${segLabel}] Using preloaded scene image → Kling image2video…`);
+    return await animateImageToVideo(seg, seg.image_url, segLabel);
   }
 
   // Helper: run async tasks with a concurrency limit
@@ -740,7 +700,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
         debugPanel('[Pipeline] Scene: ' + item.scene.name + ' — no preloaded image, will generate via Soul API');
       }
 
-      // Generate ALL video segments in parallel via Kling (image→video via Soul + Kling i2v)
+      // Generate ALL video segments in parallel via Kling i2v (preloaded scene image → video)
       const KLING_CONCURRENCY = 3;
       msg.textContent = `v${item.version}: Generating ${segments.length} video segments via Kling…`;
       updateSegmentStatus('hook', 'Generating videos…', false);
