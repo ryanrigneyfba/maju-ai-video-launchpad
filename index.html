@@ -37,7 +37,7 @@
       </button>
     </nav>
     <div class="sidebar-footer">
-      <p class="version">v1.3.0</p>
+      <p class="version">v1.4.0</p>
     </div>
   </aside>
 
@@ -135,28 +135,16 @@
             </select>
           </div>
           <div class="form-group">
-            <label for="scene-select">Starting Scene</label>
+            <label for="scene-select">Story</label>
             <select id="scene-select">
-              <option value="random" selected>🎲 Random Scene</option>
-              <option value="scene-1">1 — Skincare Application</option>
-              <option value="scene-2">2 — Wellness Tea/Drink</option>
-              <option value="scene-3">3 — Hair Care</option>
-              <option value="scene-4">4 — Smoothie/Wellness Blend</option>
-              <option value="scene-5">5 — Close-up Product Showcase</option>
-              <option value="scene-6">6 — Cooking/Meal Prep</option>
-              <option value="scene-7">7 — Morning Skincare Routine</option>
-              <option value="scene-8">8 — Yoga/Meditation Wellness</option>
-              <option value="scene-9">9 — Evening Self-Care Wind-Down</option>
-              <option value="scene-10">10 — Post-Workout Recovery</option>
+              <option value="story-1" selected>🧅 De-Puff Face Snack (Kitchen)</option>
             </select>
           </div>
           <div class="form-group full-width" id="scene-preview-area" style="display:none;">
-            <div style="display:flex; gap:12px; align-items:center;">
-              <img id="scene-preview-img" style="width:120px; height:auto; border-radius:8px; border:1px solid var(--border);" alt="Scene preview">
-              <div>
-                <p id="scene-preview-name" style="font-weight:600; margin:0 0 4px;"></p>
-                <p id="scene-preview-desc" style="font-size:0.8rem; color:var(--text-dim); margin:0;"></p>
-              </div>
+            <div>
+              <p id="scene-preview-name" style="font-weight:600; margin:0 0 4px;"></p>
+              <p id="scene-preview-desc" style="font-size:0.8rem; color:var(--text-dim); margin:0;"></p>
+              <img id="scene-preview-img" style="display:none;" alt="">
             </div>
           </div>
           <div class="form-group full-width">

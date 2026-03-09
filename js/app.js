@@ -23,86 +23,29 @@
     },
   };
 
-  const SCENES = {
-    'scene-1': {
-      name: 'Skincare Application',
-      shareUrl: 'https://higgsfield.ai/s/jCi5uwCyKK4',
-      imageUrl: 'https://d8j0ntlcm91z4.cloudfront.net/user_37AyZ7rfikCUmAP45VFZYj00Qy3/hf_20260308_205239_6ee53a03-515a-41c6-95d8-adc8ec151b89.webp',
-      description: 'Young woman applying black seed oil to her face at a rustic wooden bathroom vanity',
-      prompt: 'Young woman with hair pulled back, standing at a rustic wooden bathroom vanity, gently applying black seed oil to her face with fingertips, glowing dewy skin, wearing soft sage green linen top, warm amber morning light filtering through sheer curtains, dried eucalyptus bundle hanging on wall, apothecary jars and natural skincare products on counter, muted earth tone bathroom with terracotta accents, calming spa-like atmosphere, shot on iPhone 15 Pro, natural iPhone camera quality, slight wide-angle lens distortion, authentic casual selfie in mirror, mobile photography aesthetic, natural skin texture visible, no airbrushing, 9:16 vertical',
-      productPrompt: 'black seed oil bottle sitting on rustic wooden vanity counter among amber glass apothecary jars, clearly visible MAJU label, herbal wellness bathroom setting',
-    },
-    'scene-2': {
-      name: 'Wellness Tea/Drink',
-      shareUrl: 'https://higgsfield.ai/s/nAo2zIqYKXA',
-      imageUrl: 'https://d8j0ntlcm91z4.cloudfront.net/user_37AyZ7rfikCUmAP45VFZYj00Qy3/hf_20260308_205751_feed6317-5633-47ce-9c63-469f387ec505.webp',
-      description: 'Young woman adding drops of black seed oil into a steaming cup of herbal tea',
-      prompt: 'Young woman in warm earthy kitchen, adding drops of black seed oil into a steaming ceramic cup of herbal tea, wearing cozy oatmeal-colored knit sweater, loose messy bun, warm golden morning light through window, wooden cutting board with fresh lemons, raw honey in glass jar, dried herbs and chamomile scattered on counter, terracotta pots with fresh herbs on windowsill, calming herbal apothecary kitchen aesthetic, steam rising from mug, shot on iPhone 15 Pro, natural iPhone camera quality, slight wide-angle lens distortion, authentic casual photo from across counter, mobile photography aesthetic, natural skin texture visible, no airbrushing, 9:16 vertical',
-      productPrompt: 'black seed oil bottle prominently placed on wooden counter next to herbal tea cup and honey jar, clearly visible MAJU label, warm herbal wellness kitchen setting',
-    },
-    'scene-3': {
-      name: 'Hair Care',
-      shareUrl: 'https://higgsfield.ai/s/8T6-8CspXbQ',
-      imageUrl: 'https://d8j0ntlcm91z4.cloudfront.net/user_37AyZ7rfikCUmAP45VFZYj00Qy3/hf_20260308_210253_e5b5ca62-9f9b-4d8c-88d8-38fe876a90fa.webp',
-      description: 'Young woman applying black seed oil to long dark hair at a vintage wooden vanity',
-      prompt: 'Young woman sitting at vintage wooden vanity, applying black seed oil to long dark hair ends with fingertips, wearing cream silk robe, warm amber candlelight glow, dried lavender bundles and natural wooden hairbrush on vanity, sage green wall in background, mirror reflection with soft warm lighting, fresh eucalyptus in vase, calming herbal bedroom aesthetic, muted earth tones throughout, shot on iPhone 15 Pro, natural iPhone camera quality, slight wide-angle lens distortion, authentic casual vanity mirror angle, mobile photography aesthetic, natural skin texture visible, no airbrushing, 9:16 vertical',
-      productPrompt: 'black seed oil bottle prominently placed on vintage wooden vanity next to dried lavender and natural hairbrush, clearly visible MAJU label, herbal beauty ritual setting',
-    },
-    'scene-4': {
-      name: 'Smoothie/Wellness Blend',
-      shareUrl: 'https://higgsfield.ai/s/U-O3_CG0Vtc',
-      imageUrl: 'https://d8j0ntlcm91z4.cloudfront.net/user_37AyZ7rfikCUmAP45VFZYj00Qy3/hf_20260308_210431_a0172956-1ccc-43f4-866c-39044d52938d.webp',
-      description: 'Young woman adding black seed oil drops into a green smoothie blender',
-      prompt: 'Young woman in earthy natural kitchen, adding black seed oil drops into glass blender with green smoothie, wearing loose sage green linen tank, hair in low bun, morning light streaming through window with herb garden visible, wooden cutting board with fresh spinach, avocado, ginger root, natural ceramic bowls, hanging dried herbs above counter, warm wood and stone kitchen aesthetic, calming wellness morning ritual, shot on iPhone 15 Pro, natural iPhone camera quality, slight wide-angle lens distortion, authentic casual photo, mobile photography aesthetic, natural skin texture visible, no airbrushing, iPhone POV, photorealistic, 9:16 vertical',
-      productPrompt: 'black seed oil bottle prominently placed on wooden kitchen counter next to green smoothie ingredients, clearly visible MAJU label, earthy wellness kitchen setting',
-    },
-    'scene-5': {
-      name: 'Close-up Product Showcase',
-      shareUrl: 'https://higgsfield.ai/s/tv9zFXAqTO8',
-      imageUrl: 'https://d8j0ntlcm91z4.cloudfront.net/user_37AyZ7rfikCUmAP45VFZYj00Qy3/hf_20260308_210755_6e8c0d05-c95e-4fac-8543-5a385fd94105.webp',
-      description: 'Close-up of young woman holding black seed oil bottle near her face',
-      prompt: 'Close-up of young woman holding black seed oil bottle near her face with both hands, soft gentle smile, glowing healthy skin with natural dewiness, wearing off-white linen top, soft diffused golden window light, shallow depth of field, background of blurred sage green and warm amber tones, dried botanical elements softly visible behind, herbal calming mood, the bottle is the clear focal point, shot on iPhone 15 Pro, natural iPhone camera quality, slight wide-angle lens distortion, authentic casual iPhone selfie angle, mobile photography aesthetic, natural skin texture visible, no airbrushing, 9:16 vertical',
-      productPrompt: 'black seed oil bottle held prominently in hands near face, clearly visible MAJU label facing camera, bottle is the focal point, herbal calming aesthetic',
-    },
-    'scene-6': {
-      name: 'Cooking/Meal Prep',
-      shareUrl: 'https://higgsfield.ai/s/PHq-AM-ThRs',
-      imageUrl: 'https://d8j0ntlcm91z4.cloudfront.net/user_37AyZ7rfikCUmAP45VFZYj00Qy3/hf_20260308_210932_3e576d92-9604-461e-bb06-2df4e43dd0d0.webp',
-      description: 'Young woman drizzling black seed oil over a fresh Mediterranean salad',
-      prompt: 'Young woman in warm natural kitchen drizzling black seed oil over a fresh Mediterranean salad bowl, wearing earthy olive green apron over white tee, wooden countertop with fresh vegetables, herbs, and cutting board, terracotta pots with fresh basil and rosemary on counter, warm overhead pendant lighting, natural stone backsplash, mortar and pestle nearby, calming earthy kitchen with green and amber tones, shot on iPhone 15 Pro, natural iPhone camera quality, slight wide-angle lens distortion, authentic casual photo, mobile photography aesthetic, natural skin texture visible, no airbrushing, iPhone POV from across island, photorealistic, 9:16 vertical',
-      productPrompt: 'black seed oil bottle prominently placed on wooden counter next to Mediterranean salad and fresh herbs, clearly visible MAJU label, earthy herbal cooking setting',
-    },
-    'scene-7': {
-      name: 'Morning Skincare Routine',
-      shareUrl: 'https://higgsfield.ai/s/_NM-RIKRLxo',
-      imageUrl: 'https://d8j0ntlcm91z4.cloudfront.net/user_37AyZ7rfikCUmAP45VFZYj00Qy3/hf_20260308_211258_828734cf-62b4-4908-86fc-98c5aa0a5867.webp',
-      description: 'Young woman at bathroom vanity applying black seed oil to her palm in morning light',
-      prompt: 'Young woman at bright bathroom vanity in morning light, fresh face with damp hair in towel, wearing soft white cotton robe, applying black seed oil to palm of hand, marble countertop with amber glass skincare bottles neatly arranged, fresh eucalyptus sprig in small vase, warm wood-framed mirror, soft sage green towels, natural apothecary bathroom aesthetic, calming morning ritual atmosphere, shot on iPhone 15 Pro, natural iPhone camera quality, slight wide-angle lens distortion, authentic casual iPhone mirror selfie angle, mobile photography aesthetic, natural skin texture visible, no airbrushing, 9:16 vertical',
-      productPrompt: 'black seed oil bottle prominently placed on marble vanity among amber glass skincare bottles, clearly visible MAJU label, natural apothecary bathroom setting',
-    },
-    'scene-8': {
-      name: 'Yoga/Meditation Wellness',
-      shareUrl: 'https://higgsfield.ai/s/mytFSTNgXvk',
-      imageUrl: 'https://d8j0ntlcm91z4.cloudfront.net/user_37AyZ7rfikCUmAP45VFZYj00Qy3/hf_20260308_193947_e0e25872-2de1-408b-a46e-c142f5191c6f.webp',
-      description: 'Young woman in peaceful yoga pose on mat in sunlit room with plants',
-      prompt: 'Young woman in peaceful meditation pose on yoga mat in sunlit room, eyes closed, serene expression, wearing muted sage green athletic set, natural light streaming through sheer white curtains, monstera and pothos plants nearby, natural wood floors, small altar-like setup with candle and crystals beside mat, warm amber and green tones throughout, calming zen atmosphere, shot on iPhone 15 Pro, natural iPhone camera quality, slight wide-angle lens distortion, authentic casual photo, mobile photography aesthetic, natural skin texture visible, no airbrushing, iPhone POV from low angle, photorealistic, 9:16 vertical',
-      productPrompt: 'black seed oil bottle sitting on yoga mat edge next to candle and crystals, clearly visible MAJU label, calming zen wellness setting',
-    },
-    'scene-9': {
-      name: 'Evening Self-Care Wind-Down',
-      shareUrl: 'https://higgsfield.ai/s/yfOuFwHUAgQ',
-      imageUrl: 'https://d8j0ntlcm91z4.cloudfront.net/user_37AyZ7rfikCUmAP45VFZYj00Qy3/hf_20260308_204711_b7066a08-d399-4300-8bf5-f0ea73ed9875.webp',
-      description: 'Young woman relaxing on couch journaling with candles and herbal tea',
-      prompt: 'Young woman relaxing on couch wrapped in soft knit blanket, journaling in leather-bound notebook, wearing cozy sage green pajama set, warm amber glow from beeswax candles on coffee table, dried lavender in small vase, steaming cup of herbal tea on wooden coaster, houseplants in corner, muted earth tones throughout living room, peaceful evening wind-down ritual, calming herbal atmosphere, shot on iPhone 15 Pro, natural iPhone camera quality, slight wide-angle lens distortion, authentic casual photo, mobile photography aesthetic, natural skin texture visible, no airbrushing, iPhone POV from across couch, photorealistic, 9:16 vertical',
-      productPrompt: 'black seed oil bottle sitting on coffee table next to beeswax candles and herbal tea, clearly visible MAJU label, calming evening self-care setting',
-    },
-    'scene-10': {
-      name: 'Post-Workout Recovery',
-      shareUrl: 'https://higgsfield.ai/s/RU2GCS2UpS4',
-      imageUrl: 'https://d8j0ntlcm91z4.cloudfront.net/user_37AyZ7rfikCUmAP45VFZYj00Qy3/hf_20260308_211956_51db7c89-3c58-4f03-b473-5e508983a099.webp',
-      description: 'Young woman post-workout on bench in natural light home gym',
-      prompt: 'Young woman post-workout sitting on wooden bench in bright natural light home gym, towel around shoulders, light sweat glow, wearing muted olive green sports bra and leggings, drinking from glass water bottle, natural wood and concrete gym aesthetic, small potted plant on shelf, warm sunlight from window, resistance bands and yoga mat visible, calming recovery moment, earth tones throughout, shot on iPhone 15 Pro, natural iPhone camera quality, slight wide-angle lens distortion, authentic casual photo, mobile photography aesthetic, natural skin texture visible, no airbrushing, iPhone POV, photorealistic, 9:16 vertical',
-      productPrompt: 'black seed oil bottle sitting on wooden gym bench next to glass water bottle and towel, clearly visible MAJU label, earthy natural recovery setting',
+  // ─── STORIES: 5 per-segment images that tell a visual narrative ───
+  // Each story has a unique image for every segment (hook → reveal → demo → result → glow)
+  // so Kling i2v animates 5 DIFFERENT starting frames instead of the same one 5×.
+  // imageUrl = null means the image hasn't been generated yet on Higgsfield.
+  const STORIES = {
+    'story-1': {
+      name: 'De-Puff Face Snack (Kitchen)',
+      description: 'Red onion + black seed oil + salt — the viral de-puff hack',
+      segmentImages: {
+        hook:   { imageUrl: null, description: 'Whole peeled red onion on dark rustic cutting board, dramatic moody kitchen lighting, MAJU bottle in background' },
+        reveal: { imageUrl: null, description: 'Peeled red onion cut in half, black seed oil being drizzled over it with salt sprinkled, dark kitchen' },
+        demo:   { imageUrl: null, description: 'Patient Maya biting into raw peeled red onion glistening with oil, fun/surprised expression, dark moody kitchen' },
+        result: { imageUrl: null, description: 'Close-up of her face — smooth de-puffed glowing skin, calm satisfied expression, warm morning light' },
+        glow:   { imageUrl: null, description: 'Her holding MAJU bottle near face, confident radiant smile, glowing skin, warm golden kitchen light' },
+      },
+      // Flux Kontext Max prompts — use these on higgsfield.ai to generate each frame
+      generationPrompts: {
+        hook:   'A whole peeled red onion sitting on a dark rustic wooden cutting board. Dramatic moody warm golden-hour lighting from one side. Dark kitchen background with warm amber tones. A dark glass bottle labeled "MAJU BLACK SEED OIL" sits in the background slightly out of focus. The onion skin is completely removed, revealing the smooth purple-red layers underneath. Shot on iPhone 15 Pro, natural mobile photography, vertical 9:16 format, photorealistic.',
+        reveal: 'A peeled red onion cut cleanly in half on a dark rustic wooden cutting board, with dark black seed oil being poured from a bottle labeled "MAJU BLACK SEED OIL" over the onion halves. A small pinch of coarse salt is sprinkled on top. Dramatic moody warm golden-hour lighting, dark kitchen background. Oil glistening on the purple-red onion flesh. Shot on iPhone 15 Pro, natural mobile photography, vertical 9:16 format, photorealistic.',
+        demo:   'A young woman with her hair in a bun wearing a black tank top, taking a big bite out of a raw peeled red onion half glistening with dark oil. She has a fun slightly surprised expression mid-bite. Dark moody kitchen with warm golden lighting behind her. A dark bottle labeled "MAJU BLACK SEED OIL" is visible on the counter. Shot on iPhone 15 Pro, authentic unpolished moment, vertical 9:16 format, photorealistic, natural skin texture.',
+        result: 'Close-up portrait of a young woman with her hair in a bun, gently touching her smooth glowing cheek with one hand. Her skin looks visibly de-puffed, dewy, and healthy. Soft warm morning light on her face in a dark moody kitchen. She has a calm satisfied expression. Minimal makeup, natural skin texture visible. Shot on iPhone 15 Pro, authentic casual selfie angle, vertical 9:16 format, photorealistic.',
+        glow:   'A young woman with her hair in a bun wearing a black tank top, holding a dark bottle labeled "MAJU BLACK SEED OIL" near her face with a confident radiant smile. Her skin is glowing and healthy looking. Warm golden-hour lighting in a dark moody kitchen. The bottle label is clearly visible facing camera. Shot on iPhone 15 Pro, authentic casual iPhone selfie, vertical 9:16 format, photorealistic, natural skin texture.',
+      },
     },
   };
 
@@ -254,33 +197,56 @@
     })
   );
 
-  // Scene selector preview
-  function updateScenePreview() {
+  // Story selector preview — shows 5-frame storyboard
+  function updateStoryPreview() {
     const sel = $('#scene-select');
     if (!sel) return;
     const val = sel.value;
     const area = $('#scene-preview-area');
-    if (val === 'random' || !SCENES[val]) {
+    if (!STORIES[val]) {
       if (area) area.style.display = 'none';
       return;
     }
-    const scene = SCENES[val];
+    const story = STORIES[val];
     if (area) {
       area.style.display = '';
-      const img = $('#scene-preview-img');
       const name = $('#scene-preview-name');
       const desc = $('#scene-preview-desc');
-      // Use share URL as thumbnail via og:image proxy — fallback to placeholder
-      if (img) img.src = scene.shareUrl;
-      if (img) img.onerror = function() { this.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="120" height="213" fill="%231a1a2e"><rect width="120" height="213" rx="8"/><text x="60" y="110" fill="%23888" text-anchor="middle" font-size="12">Scene ' + val.split('-')[1] + '</text></svg>'; };
-      if (name) name.textContent = scene.name;
-      if (desc) desc.textContent = scene.description;
+      if (name) name.textContent = story.name;
+      if (desc) desc.textContent = story.description;
+      // Build 5-frame storyboard strip
+      let strip = $('#storyboard-strip');
+      if (!strip) {
+        strip = document.createElement('div');
+        strip.id = 'storyboard-strip';
+        strip.style.cssText = 'display:flex; gap:6px; margin-top:8px; overflow-x:auto;';
+        area.appendChild(strip);
+      }
+      const segNames = ['hook', 'reveal', 'demo', 'result', 'glow'];
+      strip.innerHTML = segNames.map(s => {
+        const si = story.segmentImages[s];
+        const hasImg = si && si.imageUrl;
+        const label = s.charAt(0).toUpperCase() + s.slice(1);
+        return `<div style="text-align:center; min-width:80px;">
+          <div style="width:80px; height:110px; border-radius:6px; border:1px solid var(--border); background:${hasImg ? 'url(' + si.imageUrl + ') center/cover' : 'var(--bg-secondary)'}; display:flex; align-items:center; justify-content:center;">
+            ${hasImg ? '' : '<span style="font-size:20px;">🖼️</span>'}
+          </div>
+          <span style="font-size:0.65rem; color:var(--text-dim);">${label}</span>
+          ${hasImg ? '<span style="font-size:0.6rem; color:var(--success);">✓</span>' : '<span style="font-size:0.6rem; color:var(--warning);">needed</span>'}
+        </div>`;
+      }).join('');
+      // Hide old single-image preview
+      const oldImg = $('#scene-preview-img');
+      if (oldImg) oldImg.style.display = 'none';
     }
   }
 
-  // Scene selector preview event listener
+  // Story selector event listener
   const sceneSelect = $('#scene-select');
-  if (sceneSelect) sceneSelect.addEventListener('change', updateScenePreview);
+  if (sceneSelect) {
+    sceneSelect.addEventListener('change', updateStoryPreview);
+    updateStoryPreview(); // show preview on load since story-1 is pre-selected
+  }
 
   // ─── Claude AI Learning Loop ───
   async function getClaudeOptimizedPrompt(videoType, avatar, product, userNotes) {
@@ -418,10 +384,8 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     const postMode = $('input[name="postMode"]:checked').value;
     const schedDate = $('#schedule-date')?.value || '';
     const notes = $('#notes').value.trim();
-    const sceneVal = $('#scene-select') ? $('#scene-select').value : 'random';
-    const selectedScene = sceneVal === 'random'
-      ? SCENES['scene-' + (Math.floor(Math.random() * 10) + 1)]
-      : SCENES[sceneVal];
+    const sceneVal = $('#scene-select') ? $('#scene-select').value : 'story-1';
+    const selectedStory = STORIES[sceneVal] || null;
 
     // If Claude key is set, get AI-optimized prompt first
     let aiPrompt = null;
@@ -446,8 +410,8 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
         postMode,
         schedDate: postMode === 'schedule' ? schedDate : null,
         notes,
-        scene: selectedScene,
-        sceneId: sceneVal,
+        story: selectedStory,
+        storyId: sceneVal,
         aiPrompt, // Claude-optimized prompt (null if no key)
         instagramCaption: aiPrompt?.instagramCaption || '',
         hashtags: aiPrompt?.hashtags || [],
@@ -502,13 +466,17 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     // - Higgsfield key = real pipeline (generates fresh images)
     // - Neither = simulate
     const pendingItems = queue.filter(q => q.pipelineStage === 'generate');
-    const hasPreloadedScenes = pendingItems.every(item => item.scene && item.scene.imageUrl);
-    const canRunReal = apiKeys.higgsfield || (hasPreloadedScenes && apiKeys.kling);
-    console.log('[Pipeline] apiKeys.higgsfield =', apiKeys.higgsfield ? '(set)' : '(empty)', '| apiKeys.kling =', apiKeys.kling ? '(set)' : '(empty)', '| preloaded scenes:', hasPreloadedScenes, '| All keys:', Object.keys(apiKeys).filter(k => apiKeys[k]));
+    // Check if all stories have at least some preloaded segment images
+    const hasPreloadedStory = pendingItems.every(item => {
+      if (!item.story || !item.story.segmentImages) return false;
+      return Object.values(item.story.segmentImages).some(si => si.imageUrl);
+    });
+    const canRunReal = apiKeys.higgsfield || (hasPreloadedStory && apiKeys.kling);
+    console.log('[Pipeline] apiKeys.higgsfield =', apiKeys.higgsfield ? '(set)' : '(empty)', '| apiKeys.kling =', apiKeys.kling ? '(set)' : '(empty)', '| preloaded story:', hasPreloadedStory, '| All keys:', Object.keys(apiKeys).filter(k => apiKeys[k]));
     if (!canRunReal) {
       let stage = 0;
       const sim = [
-        '⚠️ No API keys configured — video generation simulated. Add Kling key in Settings (Higgsfield optional with preloaded scenes).',
+        '⚠️ No API keys configured — video generation simulated. Add Higgsfield key in Settings and ensure story images are loaded.',
         'FFmpeg stitch simulated (no backend connected).',
         '✓ Pipeline complete — videos in queue (simulated).',
       ];
@@ -691,13 +659,22 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       const segments = testMode ? allSegments.slice(0, 1) : allSegments;
       if (testMode) debugPanel('[Test Mode] Generating 1 segment only (hook)');
 
-      // Inject preloaded scene image into each segment so the pipeline uses it directly
-      // for Kling i2v animation — no Soul API / JWT required.
-      if (item.scene && item.scene.imageUrl) {
-        debugPanel('[Pipeline] Scene: ' + item.scene.name + ' — using preloaded image for Kling i2v');
-        segments.forEach(seg => { if (!seg.image_url) seg.image_url = item.scene.imageUrl; });
-      } else if (item.scene) {
-        debugPanel('[Pipeline] Scene: ' + item.scene.name + ' — no preloaded image, will generate via Soul API');
+      // Inject per-segment preloaded images from the selected story.
+      // Each segment (hook, reveal, demo, result, glow) gets its OWN starting image.
+      if (item.story && item.story.segmentImages) {
+        debugPanel('[Pipeline] Story: ' + item.story.name + ' — injecting per-segment images');
+        let injected = 0;
+        segments.forEach(seg => {
+          const si = item.story.segmentImages[seg.name];
+          if (si && si.imageUrl && !seg.image_url) {
+            seg.image_url = si.imageUrl;
+            injected++;
+          }
+        });
+        debugPanel(`[Pipeline] Injected ${injected}/${segments.length} segment images from story`);
+        if (injected < segments.length) {
+          debugPanel('[Pipeline] ⚠️ Some segments missing images — they will fail (no fallback)');
+        }
       }
 
       // Generate ALL video segments in parallel via Kling i2v (preloaded scene image → video)
