@@ -705,15 +705,14 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       const segments = testMode ? allSegments.slice(0, 1) : allSegments;
       if (testMode) debugPanel('[Test Mode] Generating 1 segment only (hook)');
 
-      // Inject scene image into segments for Kling image-to-video (skip Higgsfield generation)
-      const sceneImageUrl = item.scene && item.scene.imageUrl;
-      if (sceneImageUrl) {
-        segments.forEach(seg => { if (!seg.image_url) seg.image_url = sceneImageUrl; });
-        debugPanel('[Pipeline] Using pre-generated scene image: ' + item.scene.name);
-        console.log('[Pipeline] Scene image injected for all segments: ' + sceneImageUrl.slice(0, 80) + '...');
+      // Scene images are generated at runtime via Soul API (Patient Maya + product reference).
+      // The Soul API returns platform.higgsfield.ai URLs that Kling i2v can access.
+      // (CDN share-page URLs are not accessible to Kling's backend.)
+      if (item.scene) {
+        debugPanel('[Pipeline] Scene: ' + item.scene.name + ' — generating fresh image via Soul API');
       }
 
-      // Generate ALL video segments in parallel via Kling (text→video, no image step needed)
+      // Generate ALL video segments in parallel via Kling (image→video via Soul + Kling i2v)
       const KLING_CONCURRENCY = 3;
       msg.textContent = `v${item.version}: Generating ${segments.length} video segments via Kling…`;
       updateSegmentStatus('hook', 'Generating videos…', false);
