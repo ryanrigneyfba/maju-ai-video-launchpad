@@ -32,11 +32,11 @@
       name: 'De-Puff Face Snack (Kitchen)',
       description: 'Red onion + black seed oil + salt — the viral de-puff hack',
       segmentImages: {
-        hook:   { imageUrl: null, description: 'Whole peeled red onion on dark rustic cutting board, dramatic moody kitchen lighting, MAJU bottle in background' },
-        reveal: { imageUrl: null, description: 'Peeled red onion cut in half, black seed oil being drizzled over it with salt sprinkled, dark kitchen' },
-        demo:   { imageUrl: null, description: 'Patient Maya biting into raw peeled red onion glistening with oil, fun/surprised expression, dark moody kitchen' },
-        result: { imageUrl: null, description: 'Close-up of her face — smooth de-puffed glowing skin, calm satisfied expression, warm morning light' },
-        glow:   { imageUrl: null, description: 'Her holding MAJU bottle near face, confident radiant smile, glowing skin, warm golden kitchen light' },
+        hook:   { imageUrl: 'https://d8j0ntlcm91z4.cloudfront.net/user_37AyZ7rfikCUmAP45VFZYj00Qy3/hf_20260309_203105_6ee9fb77-da41-448c-a730-3cc5d9b5c2e2.png', description: 'Whole peeled red onion on dark rustic cutting board, dramatic moody kitchen lighting, MAJU bottle in background' },
+        reveal: { imageUrl: 'https://d8j0ntlcm91z4.cloudfront.net/user_37AyZ7rfikCUmAP45VFZYj00Qy3/hf_20260309_203512_7934ffd4-a47f-4c62-9b01-d1e84e1bb075.png', description: 'Peeled red onion cut in half, black seed oil being drizzled over it with salt sprinkled, dark kitchen' },
+        demo:   { imageUrl: 'https://d8j0ntlcm91z4.cloudfront.net/user_37AyZ7rfikCUmAP45VFZYj00Qy3/hf_20260309_203747_755048a5-bf04-4c4a-9758-2fb2b1544b22.png', description: 'Patient Maya biting into raw peeled red onion glistening with oil, fun/surprised expression, dark moody kitchen' },
+        result: { imageUrl: 'https://d8j0ntlcm91z4.cloudfront.net/user_37AyZ7rfikCUmAP45VFZYj00Qy3/hf_20260309_204209_5b5efe1e-676c-4a9e-aab0-d0c85bf17bb1.png', description: 'Close-up of her face — smooth de-puffed glowing skin, calm satisfied expression, warm morning light' },
+        glow:   { imageUrl: 'https://d8j0ntlcm91z4.cloudfront.net/user_37AyZ7rfikCUmAP45VFZYj00Qy3/hf_20260309_204531_323f2eb0-3e13-46c0-9322-cbe87daf355a.png', description: 'Her holding MAJU bottle near face, confident radiant smile, glowing skin, warm golden kitchen light' },
       },
       // Flux Kontext Max prompts — use these on higgsfield.ai to generate each frame
       generationPrompts: {
