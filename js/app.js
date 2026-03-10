@@ -986,8 +986,17 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
   document.addEventListener('click', (e) => {
     if (!e.target.classList.contains('btn-restitch')) return;
     const itemId = e.target.dataset.id;
-    const item = queue.find(q => q.id === itemId);
-    if (!item) return;
+    console.log('[Re-stitch] Clicked for item:', itemId);
+    let item = queue.find(q => q.id === itemId);
+    // Fallback: if item not in IIFE queue, read from localStorage
+    if (!item) {
+      try {
+        const stored = JSON.parse(localStorage.getItem(CONFIG.storageKeys.queue) || '[]');
+        item = stored.find(q => q.id === itemId);
+        if (item) console.log('[Re-stitch] Found item in localStorage fallback');
+      } catch (e2) { /* ignore */ }
+    }
+    if (!item) { console.warn('[Re-stitch] Item not found:', itemId); return; }
     const clips = (item.segmentVideos || []).map(sv => sv.url).filter(Boolean);
     if (clips.length === 0) {
       alert('No segment video URLs stored — cannot re-stitch.');
@@ -1008,8 +1017,23 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
         if (data.jobId) {
           item.stitchJobId = data.jobId;
           item.stitchedVideoUrl = backendUrl('/api/download/' + data.jobId);
-          saveQueue();
+          // Update in IIFE queue if present, otherwise update localStorage directly
+          const qIdx = queue.findIndex(q => q.id === itemId);
+          if (qIdx >= 0) {
+            queue[qIdx] = item;
+            saveQueue();
+          } else {
+            try {
+              const stored = JSON.parse(localStorage.getItem(CONFIG.storageKeys.queue) || '[]');
+              const sIdx = stored.findIndex(q => q.id === itemId);
+              if (sIdx >= 0) { stored[sIdx] = item; }
+              else { stored.push(item); }
+              localStorage.setItem(CONFIG.storageKeys.queue, JSON.stringify(stored));
+              queue = stored; // sync IIFE queue
+            } catch (e3) { /* ignore */ }
+          }
           debugPanel('[Re-stitch] Started job ' + data.jobId + ' for item ' + itemId);
+          console.log('[Re-stitch] Job started:', data.jobId);
           setTimeout(() => renderQueue(getActiveFilter()), 3000);
         }
       })
