@@ -72,8 +72,7 @@ const SOP_SEGMENTS = {
     { name: 'hook', label: 'Hook (0-3s)', maxDuration: 3 },
     { name: 'reveal', label: 'Reveal (3-6s)', maxDuration: 3 },
     { name: 'demo', label: 'Demo (6-9s)', maxDuration: 3 },
-    { name: 'result', label: 'Result + Benefits (9-12s)', maxDuration: 3 },
-    { name: 'glow', label: 'Glow + CTA (12-15s)', maxDuration: 3 },
+    { name: 'glow', label: 'Glow + CTA (9-12s)', maxDuration: 3 },
   ],
 };
 
