@@ -873,7 +873,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
             if (st.status === 'done') {
               stitchDone = true;
               const dlUrl = API.backend.downloadUrl(stitchResult.jobId);
-              newItems.forEach(ni => { ni.stitchJobId = stitchResult.jobId; ni.stitchedVideoUrl = dlUrl; });
+              newItems.forEach(ni => { ni.stitchJobId = stitchResult.jobId; ni.stitchedVideoUrl = dlUrl; ni.audioBg = stitchOptions.audioBg || null; ni.captions = stitchOptions.captions || null; });
               msg.textContent = 'Stitch complete!';
               stitchPassed = true;
             } else if (st.status === 'error') {
@@ -1004,9 +1004,13 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     }
     e.target.textContent = 'Re-stitching...';
     e.target.disabled = true;
-    const body = { clips };
+    const body = { clips, options: { maxClipDuration: 3 } };
+    if (item.captions && item.captions.length) body.options.captions = item.captions;
     if (item.captionsSrt) body.captionsSrt = item.captionsSrt;
     if (item.captionsAss) body.captionsAss = item.captionsAss;
+    // Music: use stored audioBg, fallback to current dashboard selection
+    if (item.audioBg) { body.options.audioBg = item.audioBg; }
+    else { const audioSel = document.getElementById('audio-select'); if (audioSel && audioSel.value) body.options.audioBg = audioSel.value; }
     fetch(backendUrl('/api/stitch'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
