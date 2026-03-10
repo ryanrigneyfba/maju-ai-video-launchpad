@@ -23,6 +23,7 @@ RUN mkdir -p ig-research-agent/data
 COPY server/package*.json ./server/
 RUN cd server && npm ci --production && npm install better-sqlite3
 COPY server/*.js ./server/
+COPY server/audio-defaults/ ./server/audio-defaults/
 
 # Create directories
 RUN mkdir -p server/uploads server/output server/audio
