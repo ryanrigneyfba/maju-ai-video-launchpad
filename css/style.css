@@ -386,3 +386,23 @@ code{background:var(--bg-input);padding:1px 5px;border-radius:4px;font-size:.8re
   background:var(--accent);color:#fff;
   margin-bottom:.3rem;font-weight:500;
 }
+
+/* ── Video Error State ── */
+.queue-video.video-error{
+  background:var(--bg-input);
+  border:1px dashed var(--danger);
+  display:flex;align-items:center;justify-content:center;
+  min-height:120px;
+}
+.video-error-msg{
+  text-align:center;font-size:.78rem;color:var(--text-dim);
+  padding:.8rem;line-height:1.6;
+}
+.btn-restitch{
+  margin-top:.4rem;
+  padding:.35rem .8rem;font-size:.78rem;
+  background:var(--accent);color:#fff;
+  border:none;border-radius:var(--radius);cursor:pointer;
+}
+.btn-restitch:hover{filter:brightness(1.15)}
+.btn-restitch:disabled{opacity:.5;cursor:not-allowed}

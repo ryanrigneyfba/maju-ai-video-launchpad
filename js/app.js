@@ -1502,7 +1502,7 @@ REJECTED:\n${rejections.map((f) => `- "${f.notes}"`).join('\n') || '(none)'}`
         ${(() => {
           const vSrc = item.stitchedVideoUrl || item.videoUrl || (item.segmentVideos && item.segmentVideos[0]?.url);
           return vSrc
-            ? `<div class="queue-video"><video src="${vSrc}" controls preload="auto" playsinline muted></video></div>`
+            ? `<div class="queue-video"><video src="${vSrc}" controls preload="auto" playsinline muted onerror="this.parentElement.classList.add('video-error');this.outerHTML='<div class=\\'video-error-msg\\'>Video unavailable<br><button class=\\'btn-sm btn-restitch\\' data-id=\\'${item.id}\\'>↻ Re-stitch</button></div>'"></video></div>`
             : '<div class="queue-video queue-video-placeholder"><span>Video generating…</span></div>';
         })()}
         <div class="queue-info">
@@ -1568,6 +1568,38 @@ REJECTED:\n${rejections.map((f) => `- "${f.notes}"`).join('\n') || '(none)'}`
       $('#reject-notes').value = '';
       $('#reject-notes').focus();
     }
+  });
+
+  // Re-stitch handler (for broken video previews)
+  document.addEventListener('click', (e) => {
+    if (!e.target.classList.contains('btn-restitch')) return;
+    const id = e.target.dataset.id;
+    const item = queue.find(q => q.id === id);
+    if (!item || !item.segmentVideos || !item.segmentVideos.length) return;
+    e.target.textContent = 'Re-stitching…';
+    e.target.disabled = true;
+    const clips = item.segmentVideos.map(s => ({ url: s.url, label: s.label || s.name }));
+    API.backend.autoStitch(clips, {}).then(async (res) => {
+      if (!res.jobId) throw new Error('No jobId returned');
+      let done = false;
+      while (!done) {
+        await new Promise(r => setTimeout(r, 1500));
+        const st = await API.backend.jobStatus(res.jobId);
+        if (st.status === 'done') {
+          done = true;
+          item.stitchJobId = res.jobId;
+          item.stitchedVideoUrl = API.backend.downloadUrl(res.jobId);
+          saveQueue();
+          renderQueue(getActiveFilter());
+        } else if (st.status === 'error') {
+          throw new Error(st.error || 'Stitch failed');
+        }
+      }
+    }).catch(err => {
+      console.error('[Re-stitch]', err);
+      e.target.textContent = 'Failed — retry?';
+      e.target.disabled = false;
+    });
   });
 
   // ─── Approval Modal ───
@@ -2875,7 +2907,7 @@ REJECTED:\n${rejections.map((f) => `- "${f.notes}"`).join('\n') || '(none)'}`
   // ─── Auto-Stitch Segment Status Updates ───
   // Called by the pipeline to update segment status in the stitch panel
   function updateSegmentStatus(segment, statusText, isReady) {
-    const el = $(`#seg-${segment}`);
+    const el = $(`#seg-${segment.toLowerCase()}`);
     if (el) {
       el.textContent = statusText;
       if (isReady) el.classList.add('ready');
@@ -3067,7 +3099,7 @@ REJECTED:\n${rejections.map((f) => `- "${f.notes}"`).join('\n') || '(none)'}`
   // Analytics is loaded lazily — triggered from nav click handler below
 
   // ─── Wire Approve → Metricool Post ───
-  function scheduleApprovedItem(item) {
+  async function scheduleApprovedItem(item) {
     if (!apiKeys.metricool) {
       console.log('[Metricool] No API key — skip scheduling');
       return;
@@ -3075,7 +3107,23 @@ REJECTED:\n${rejections.map((f) => `- "${f.notes}"`).join('\n') || '(none)'}`
     const caption = item.instagramCaption || `${item.productName} — ${item.typeName}`;
     const tags = (item.hashtags || []).map(t => `#${t.replace(/^#/, '')}`).join(' ');
     const fullContent = tags ? `${caption}\n\n${tags}` : caption;
-    const videoSrc = item.stitchedVideoUrl || item.videoUrl;
+
+    // Try to get a direct public URL for the video (Metricool needs a fetchable URL)
+    let videoSrc = null;
+    if (item.stitchJobId) {
+      try {
+        const urlRes = await fetch(backendUrl(`/api/download/${item.stitchJobId}/url`));
+        if (urlRes.ok) {
+          const urlData = await urlRes.json();
+          videoSrc = urlData.url;
+          console.log('[Metricool] Got direct video URL:', videoSrc);
+        }
+      } catch (err) {
+        console.warn('[Metricool] Could not fetch direct URL:', err.message);
+      }
+    }
+    if (!videoSrc) videoSrc = item.stitchedVideoUrl || item.videoUrl;
+
     const postParams = {
       content: fullContent,
       networks: [{ network: 'instagram', type: 'reels' }],
@@ -3085,7 +3133,8 @@ REJECTED:\n${rejections.map((f) => `- "${f.notes}"`).join('\n') || '(none)'}`
         : undefined,
     };
     console.log('[Metricool] Scheduling Instagram Reel:', { content: fullContent.substring(0, 80) + '...', hasVideo: !!videoSrc });
-    return API.metricool.schedulePost(postParams).then((res) => {
+    try {
+      const res = await API.metricool.schedulePost(postParams);
       if (res.ok) {
         console.log('[Metricool] Post scheduled:', res);
         item.metricoolId = res.postId || res.id;
@@ -3094,9 +3143,9 @@ REJECTED:\n${rejections.map((f) => `- "${f.notes}"`).join('\n') || '(none)'}`
         console.warn('[Metricool] Schedule failed:', res);
       }
       return res;
-    }).catch(err => {
+    } catch (err) {
       console.error('[Metricool] Error scheduling:', err);
-    });
+    }
   }
 
   // ─── Init ───

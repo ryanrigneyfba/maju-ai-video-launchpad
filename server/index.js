@@ -49,8 +49,31 @@ const upload = multer({
   },
 });
 
-// ─── Job Tracking ───
+// ─── Job Tracking (persistent) ───
+const JOBS_FILE = path.join(__dirname, 'jobs.json');
 const jobs = new Map();
+
+function persistJobs() {
+  try {
+    const obj = {};
+    for (const [k, v] of jobs) obj[k] = v;
+    fs.writeFileSync(JOBS_FILE, JSON.stringify(obj, null, 2));
+  } catch (err) {
+    console.error('[Jobs] Failed to persist:', err.message);
+  }
+}
+
+function loadJobs() {
+  try {
+    if (fs.existsSync(JOBS_FILE)) {
+      const data = JSON.parse(fs.readFileSync(JOBS_FILE, 'utf8'));
+      for (const [k, v] of Object.entries(data)) jobs.set(k, v);
+      console.log(`[Jobs] Loaded ${jobs.size} jobs from disk`);
+    }
+  } catch (err) {
+    console.error('[Jobs] Failed to load:', err.message);
+  }
+}
 
 // ─── SOP Segment Definitions ───
 // Based on Selfcare Snack Reel SOP
@@ -185,6 +208,7 @@ app.post('/api/stitch', (req, res) => {
     error: null,
     createdAt: new Date().toISOString(),
   });
+  persistJobs();
 
   // Build FFmpeg concat command
   runStitch(jobId, clips, outputPath, options);
@@ -217,6 +241,7 @@ app.post(
       error: null,
       createdAt: new Date().toISOString(),
     });
+    persistJobs();
 
     runStitch(jobId, clips, outputPath, options);
 
@@ -243,14 +268,65 @@ app.get('/api/jobs', (req, res) => {
   res.json({ jobs: all });
 });
 
-// Download finished video
+// Download finished video (resilient 3-level fallback)
 app.get('/api/download/:id', (req, res) => {
-  const job = jobs.get(req.params.id);
-  if (!job) return res.status(404).json({ error: 'Job not found' });
-  if (job.status !== 'done') return res.status(400).json({ error: 'Job not complete' });
-  const filePath = path.join(OUTPUT_DIR, job.outputFile);
-  if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'File missing' });
-  res.download(filePath);
+  const id = req.params.id;
+
+  // Level 1: check in-memory jobs map
+  const job = jobs.get(id);
+  if (job && job.status === 'done' && job.outputFile) {
+    const filePath = path.join(OUTPUT_DIR, job.outputFile);
+    if (fs.existsSync(filePath)) return res.download(filePath);
+  }
+
+  // Level 2: check persisted jobs.json
+  try {
+    if (fs.existsSync(JOBS_FILE)) {
+      const data = JSON.parse(fs.readFileSync(JOBS_FILE, 'utf8'));
+      const saved = data[id];
+      if (saved && saved.status === 'done' && saved.outputFile) {
+        const filePath = path.join(OUTPUT_DIR, saved.outputFile);
+        if (fs.existsSync(filePath)) return res.download(filePath);
+      }
+    }
+  } catch {}
+
+  // Level 3: direct file check (jobId.mp4)
+  const directPath = path.join(OUTPUT_DIR, `${id}.mp4`);
+  if (fs.existsSync(directPath)) return res.download(directPath);
+
+  res.status(404).json({ error: 'Video not found — job may have been lost after server restart' });
+});
+
+// Get download URL for a finished video (for Metricool scheduling)
+app.get('/api/download/:id/url', (req, res) => {
+  const id = req.params.id;
+  const job = jobs.get(id);
+
+  // Check if file exists via same 3-level fallback
+  let outputFile = null;
+  if (job && job.status === 'done' && job.outputFile) {
+    outputFile = job.outputFile;
+  } else {
+    try {
+      if (fs.existsSync(JOBS_FILE)) {
+        const data = JSON.parse(fs.readFileSync(JOBS_FILE, 'utf8'));
+        const saved = data[id];
+        if (saved && saved.status === 'done' && saved.outputFile) outputFile = saved.outputFile;
+      }
+    } catch {}
+    if (!outputFile && fs.existsSync(path.join(OUTPUT_DIR, `${id}.mp4`))) {
+      outputFile = `${id}.mp4`;
+    }
+  }
+
+  if (!outputFile) return res.status(404).json({ error: 'Video not found' });
+
+  // Return the public URL for this video
+  const protocol = req.protocol;
+  const host = req.get('host');
+  const url = `${protocol}://${host}/output/${outputFile}`;
+  res.json({ url });
 });
 
 // ─── FFmpeg Stitching Logic ───
@@ -356,11 +432,13 @@ function runStitch(jobId, clips, outputPath, options = {}) {
       job.error = `FFmpeg exited with code ${code}`;
       job.ffmpegLog = stderrData.slice(-500);
     }
+    persistJobs();
   });
 
   ffmpeg.on('error', (err) => {
     job.status = 'error';
     job.error = err.message;
+    persistJobs();
   });
 }
 
@@ -443,6 +521,7 @@ app.post('/api/auto-stitch', async (req, res) => {
     error: null,
     createdAt: new Date().toISOString(),
   });
+  persistJobs();
 
   res.json({ jobId, status: 'downloading' });
 
@@ -467,6 +546,7 @@ app.post('/api/auto-stitch', async (req, res) => {
     const job = jobs.get(jobId);
     job.status = 'processing';
     job.progress = 45;
+    persistJobs();
 
     // Stitch the downloaded clips in order
     runStitch(jobId, downloadedClips, outputPath, options);
@@ -474,6 +554,7 @@ app.post('/api/auto-stitch', async (req, res) => {
     const job = jobs.get(jobId);
     job.status = 'error';
     job.error = `Download failed: ${err.message}`;
+    persistJobs();
   }
 });
 
@@ -1357,6 +1438,7 @@ app.use(express.static(path.join(__dirname, '..'), {
 }));
 
 // ─── Start ───
+loadJobs();
 app.listen(PORT, () => {
   console.log(`MAJU Backend running on http://localhost:${PORT}`);
   console.log(`  Frontend:  http://localhost:${PORT} (serves index.html)`);
@@ -1365,6 +1447,7 @@ app.listen(PORT, () => {
   console.log(`  POST /api/pipeline       — Upload + stitch in one step`);
   console.log(`  GET  /api/jobs/:id       — Check job status`);
   console.log(`  GET  /api/download/:id   — Download finished video`);
+  console.log(`  GET  /api/download/:id/url — Get public video URL`);
   console.log(`  GET  /api/health         — Health check`);
   console.log(`  /api/proxy/higgsfield/*  — Higgsfield proxy`);
   console.log(`  /api/proxy/kling/*       — Kling AI proxy`);
