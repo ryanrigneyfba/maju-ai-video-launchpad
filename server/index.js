@@ -65,6 +65,38 @@ const upload = multer({
 // ─── Job Tracking ───
 const jobs = new Map();
 
+const JOBS_FILE = path.join(__dirname, 'jobs.json');
+
+// Load jobs from persistent storage on startup
+function loadJobs() {
+  try {
+    if (fs.existsSync(JOBS_FILE)) {
+      const data = JSON.parse(fs.readFileSync(JOBS_FILE, 'utf8'));
+      if (data && typeof data === 'object') {
+        Object.entries(data).forEach(([jobId, jobData]) => {
+          jobs.set(jobId, jobData);
+        });
+        console.log('[Jobs] Loaded ' + jobs.size + ' persisted jobs from disk');
+      }
+    }
+  } catch (err) {
+    console.error('[Jobs] Error loading jobs from disk:', err.message);
+  }
+}
+
+// Save all jobs to persistent storage
+function persistJobs() {
+  try {
+    const jobsObj = {};
+    jobs.forEach((job, jobId) => {
+      jobsObj[jobId] = job;
+    });
+    fs.writeFileSync(JOBS_FILE, JSON.stringify(jobsObj, null, 2));
+  } catch (err) {
+    console.error('[Jobs] Error persisting jobs to disk:', err.message);
+  }
+}
+
 // ─── SOP Segment Definitions ───
 // Based on Selfcare Snack Reel SOP
 const SOP_SEGMENTS = {
@@ -197,6 +229,7 @@ app.post('/api/stitch', (req, res) => {
     error: null,
     createdAt: new Date().toISOString(),
   });
+  persistJobs();
 
   // Build FFmpeg concat command
   runStitch(jobId, clips, outputPath, options);
@@ -229,6 +262,7 @@ app.post(
       error: null,
       createdAt: new Date().toISOString(),
     });
+    persistJobs();
 
     runStitch(jobId, clips, outputPath, options);
 
@@ -257,12 +291,72 @@ app.get('/api/jobs', (req, res) => {
 
 // Download finished video
 app.get('/api/download/:id', (req, res) => {
-  const job = jobs.get(req.params.id);
-  if (!job) return res.status(404).json({ error: 'Job not found' });
-  if (job.status !== 'done') return res.status(400).json({ error: 'Job not complete' });
+  const jobId = req.params.id;
+  let job = jobs.get(jobId);
+
+  // Level 2: Try loading from persisted JSON if not in memory
+  if (!job) {
+    try {
+      if (fs.existsSync(JOBS_FILE)) {
+        const data = JSON.parse(fs.readFileSync(JOBS_FILE, 'utf8'));
+        if (data && data[jobId]) {
+          job = data[jobId];
+          jobs.set(jobId, job);          // re-hydrate in memory
+          console.log('[Download] Re-hydrated job', jobId, 'from disk');
+        }
+      }
+    } catch (err) {
+      console.error('[Download] Error reading jobs file:', err.message);
+    }
+  }
+
+  // Level 3: Check for file directly on disk
+  if (!job) {
+    const directPath = path.join(OUTPUT_DIR, jobId + '.mp4');
+    if (fs.existsSync(directPath)) {
+      console.log('[Download] Found orphan file for', jobId);
+      return res.download(directPath);
+    }
+    return res.status(404).json({ error: 'Job not found' });
+  }
+
+  if (job.status !== 'done') {
+    return res.status(400).json({ error: 'Job not complete', status: job.status });
+  }
+
   const filePath = path.join(OUTPUT_DIR, job.outputFile);
-  if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'File missing' });
+  if (!fs.existsSync(filePath)) {
+    return res.status(404).json({ error: 'Output file missing from disk' });
+  }
   res.download(filePath);
+});
+
+// Direct URL endpoint for Metricool / external consumers
+app.get('/api/download/:id/url', (req, res) => {
+  const jobId = req.params.id;
+  let job = jobs.get(jobId);
+  if (!job) {
+    try {
+      if (fs.existsSync(JOBS_FILE)) {
+        const data = JSON.parse(fs.readFileSync(JOBS_FILE, 'utf8'));
+        if (data && data[jobId]) { job = data[jobId]; }
+      }
+    } catch (err) { /* ignore */ }
+  }
+  let outputFile = null;
+  if (job && job.outputFile) {
+    const filePath = path.join(OUTPUT_DIR, job.outputFile);
+    if (fs.existsSync(filePath)) { outputFile = job.outputFile; }
+  } else {
+    const directPath = path.join(OUTPUT_DIR, jobId + '.mp4');
+    if (fs.existsSync(directPath)) { outputFile = jobId + '.mp4'; }
+  }
+  if (!outputFile) return res.status(404).json({ error: 'Job not found or file missing' });
+  if (job && job.status !== 'done') return res.status(400).json({ error: 'Job not complete' });
+  const protocol = req.protocol || 'https';
+  const host = req.get('host');
+  const url = protocol + '://' + host + '/output/' + outputFile;
+  res.json({ url, jobId, file: outputFile });
 });
 
 // ─── FFmpeg Stitching Logic ───
@@ -426,16 +520,19 @@ Style: Default,Arial,22,&H00FFFFFF,&H000000FF,&H00000000,&H80000000,1,0,0,0,100,
       job.progress = 100;
       job.outputFile = path.basename(outputPath);
       job.completedAt = new Date().toISOString();
+      persistJobs();
     } else {
       job.status = 'error';
       job.error = `FFmpeg exited with code ${code}`;
       job.ffmpegLog = stderrData.slice(-500);
+      persistJobs();
     }
   });
 
   ffmpeg.on('error', (err) => {
     job.status = 'error';
     job.error = err.message;
+    persistJobs();
   });
 }
 
@@ -528,6 +625,7 @@ app.post('/api/auto-stitch', async (req, res) => {
     createdAt: new Date().toISOString(),
   });
 
+  persistJobs();
   res.json({ jobId, status: 'downloading' });
 
   // Download all clips in parallel, then stitch
@@ -555,6 +653,7 @@ app.post('/api/auto-stitch', async (req, res) => {
     const job = jobs.get(jobId);
     job.status = 'processing';
     job.progress = 45;
+    persistJobs();
 
     // Stitch the downloaded clips in order
     runStitch(jobId, downloadedClips, outputPath, options);
@@ -562,6 +661,7 @@ app.post('/api/auto-stitch', async (req, res) => {
     const job = jobs.get(jobId);
     job.status = 'error';
     job.error = `Download failed: ${err.message}`;
+      persistJobs();
   }
 });
 
@@ -1487,6 +1587,7 @@ app.post('/api/ig-research/:tool', (req, res) => {
 
 // ─── Start ───
 app.listen(PORT, () => {
+  loadJobs();
   console.log(`MAJU Backend running on http://localhost:${PORT}`);
   console.log(`  Frontend:  http://localhost:${PORT} (serves index.html)`);
   console.log(`  Dashboard: http://localhost:${PORT}/dashboard`);

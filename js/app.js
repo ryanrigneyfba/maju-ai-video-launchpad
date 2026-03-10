@@ -770,10 +770,10 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
         debugPanel('[Pipeline] Story: ' + item.story.name + ' — injecting per-segment images');
         let injected = 0;
         segments.forEach(seg => {
-          let si = item.story.segmentImages[seg.name];
+          let si = item.story.segmentImages[seg.name.toLowerCase()];
           // Fallback: if the optimizer renamed the segment, map to canonical key
-          if (!si && SEGMENT_IMAGE_FALLBACKS[seg.name]) {
-            si = item.story.segmentImages[SEGMENT_IMAGE_FALLBACKS[seg.name]];
+          if (!si && SEGMENT_IMAGE_FALLBACKS[seg.name.toLowerCase()]) {
+            si = item.story.segmentImages[SEGMENT_IMAGE_FALLBACKS[seg.name.toLowerCase()]];
             if (si) debugPanel(`[Pipeline] Mapped segment "${seg.name}" → "${SEGMENT_IMAGE_FALLBACKS[seg.name]}" image`);
           }
           if (si && si.imageUrl && !seg.image_url) {
@@ -935,7 +935,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
         ${(() => {
           const vSrc = item.stitchedVideoUrl || item.videoUrl || (item.segmentVideos && item.segmentVideos[0]?.url);
           return vSrc
-            ? `<div class="queue-video"><video src="${vSrc}" controls preload="auto" playsinline muted></video></div>`
+            ? `<div class="queue-video"><video src="${vSrc}" controls preload="auto" playsinline muted onerror="this.parentElement.innerHTML='<div class=queue-video-error><span>⚠️ Video Unavailable</span><small>Server may have restarted.<br>File: ${vSrc.split('/').pop()}</small><button class=btn-restitch data-id=${item.id} data-src=${encodeURIComponent(vSrc)}>Re-stitch</button></div>'"></video></div>`
             : '<div class="queue-video queue-video-placeholder"><span>Video generating…</span></div>';
         })()}
         <div class="queue-info">
@@ -981,6 +981,44 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       renderQueue(btn.dataset.filter);
     })
   );
+
+  // Re-stitch button handler (for videos that failed to load after restart)
+  document.addEventListener('click', (e) => {
+    if (!e.target.classList.contains('btn-restitch')) return;
+    const itemId = e.target.dataset.id;
+    const item = approvalQueue.find(q => q.id === itemId);
+    if (!item) return;
+    const clips = (item.segmentVideos || []).map(sv => sv.url).filter(Boolean);
+    if (clips.length === 0) {
+      alert('No segment video URLs stored — cannot re-stitch.');
+      return;
+    }
+    e.target.textContent = 'Re-stitching...';
+    e.target.disabled = true;
+    const body = { clips };
+    if (item.captionsSrt) body.captionsSrt = item.captionsSrt;
+    if (item.captionsAss) body.captionsAss = item.captionsAss;
+    fetch(BACKEND + '/api/stitch', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (data.jobId) {
+          item.stitchJobId = data.jobId;
+          item.stitchedVideoUrl = BACKEND + '/api/download/' + data.jobId;
+          saveQueue();
+          debugPanel('[Re-stitch] Started job ' + data.jobId + ' for item ' + itemId);
+          setTimeout(() => renderQueue(getActiveFilter()), 3000);
+        }
+      })
+      .catch(err => {
+        alert('Re-stitch failed: ' + err.message);
+        e.target.textContent = 'Re-stitch';
+        e.target.disabled = false;
+      });
+  });
 
   // Queue actions (approve / reject)
   document.addEventListener('click', (e) => {
@@ -2181,7 +2219,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
   // Analytics is loaded lazily — triggered from nav click handler below
 
   // ─── Wire Approve → Metricool Post ───
-  function scheduleApprovedItem(item) {
+  async function scheduleApprovedItem(item) {
     if (!apiKeys.metricool) {
       console.error('[Metricool] ❌ No API key found in apiKeys.metricool — cannot schedule. Check localStorage key "maju_api_keys".');
       alert('Metricool scheduling failed: No API key configured. Go to API Settings and save your Metricool key.');
@@ -2196,10 +2234,28 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       alert('Metricool scheduling failed: No video URL available for this item.');
       return Promise.resolve({ ok: false, error: 'no_video_url' });
     }
+    // Try to get a direct/static URL for the video (survives server restarts)
+    let finalVideoSrc = videoSrc;
+    if (videoSrc && videoSrc.includes('/api/download/')) {
+      try {
+        const urlEndpoint = videoSrc.replace('/api/download/', '/api/download/') + '/url';
+        const urlRes = await fetch(urlEndpoint);
+        if (urlRes.ok) {
+          const urlData = await urlRes.json();
+          if (urlData.url) {
+            finalVideoSrc = urlData.url;
+            console.log('[Metricool] Using direct URL:', finalVideoSrc);
+          }
+        }
+      } catch (e) {
+        console.warn('[Metricool] Could not fetch direct URL, using original:', e.message);
+      }
+    }
+
     const postParams = {
       content: fullContent,
       networks: [{ network: 'instagram', type: 'reels' }],
-      media: [{ url: videoSrc, type: 'video' }],
+      media: [{ url: finalVideoSrc, type: 'video' }],
       publicationDate: item.schedDate
         ? { dateTime: item.schedDate, timezone: Intl.DateTimeFormat().resolvedOptions().timeZone }
         : undefined,
