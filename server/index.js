@@ -266,35 +266,57 @@ app.get('/api/download/:id', (req, res) => {
 });
 
 // ─── FFmpeg Stitching Logic ───
+// Uses filter_complex with trim filters for frame-accurate hard cuts (no transition artifacts)
 function runStitch(jobId, clips, outputPath, options = {}) {
   const job = jobs.get(jobId);
   const resolution = options.resolution || '1080x1920'; // 9:16 vertical default
-
-  // Create concat file list for FFmpeg
-  const concatListPath = path.join(UPLOAD_DIR, `${jobId}-concat.txt`);
+  const [w, h] = resolution.split('x');
   const clipDurations = options.clipDurations || [];
   const maxClipDur = options.maxClipDuration || 3;
-  const concatContent = clips
-    .map((c, i) => {
-      let entry = `file '${path.join(UPLOAD_DIR, c.filename)}'`;
-      const dur = clipDurations[i] || maxClipDur;
-      if (dur) entry += `\nduration ${dur}`;
-      return entry;
-    })
-    .join('\n');
-  fs.writeFileSync(concatListPath, concatContent);
 
-  // Build video filter chain
-  const [w, h] = resolution.split('x');
-  const vfParts = [
-    `scale=${w}:${h}:force_original_aspect_ratio=decrease`,
-    `pad=${w}:${h}:(ow-iw)/2:(oh-ih)/2:black`,
-  ];
+  // Each clip is a separate input for precise trim control
+  const args = ['-y'];
+  clips.forEach(c => {
+    args.push('-i', path.join(UPLOAD_DIR, c.filename));
+  });
 
-  // Burn-in captions from SOP segments
-  // options.captions: array of { text, startTime, endTime } for each segment
+  // Audio background track input (index = clips.length)
+  let hasAudioInput = false;
+  let audioInputIdx = clips.length;
+  if (options.audioBg) {
+    const audioPath = fs.existsSync(path.join(AUDIO_DIR, options.audioBg))
+      ? path.join(AUDIO_DIR, options.audioBg)
+      : path.join(UPLOAD_DIR, options.audioBg);
+    if (fs.existsSync(audioPath)) {
+      args.push('-i', audioPath);
+      hasAudioInput = true;
+    }
+  }
+
+  // Build filter_complex: trim each clip, scale, pad, then concat
+  const filterParts = [];
+  const concatInputs = [];
+
+  clips.forEach((c, i) => {
+    const dur = clipDurations[i] || maxClipDur;
+    const label = `v${i}`;
+    filterParts.push(
+      `[${i}:v]trim=0:${dur},setpts=PTS-STARTPTS,` +
+      `scale=${w}:${h}:force_original_aspect_ratio=decrease,` +
+      `pad=${w}:${h}:(ow-iw)/2:(oh-ih)/2:black,` +
+      `fps=30[${label}]`
+    );
+    concatInputs.push(`[${label}]`);
+  });
+
+  // Concat all trimmed clips
+  filterParts.push(
+    `${concatInputs.join('')}concat=n=${clips.length}:v=1:a=0[vcat]`
+  );
+
+  // Apply subtitles on the concatenated output
+  let finalLabel = 'vcat';
   if (options.captions && options.captions.length) {
-    // Generate SRT subtitle file
     const srtPath = path.join(UPLOAD_DIR, `${jobId}-captions.srt`);
     const srtContent = options.captions.map((cap, i) => {
       const start = formatSrtTime(cap.startTime || 0);
@@ -303,49 +325,28 @@ function runStitch(jobId, clips, outputPath, options = {}) {
     }).join('\n');
     fs.writeFileSync(srtPath, srtContent);
 
-    // Burn subtitles with bold white text, black outline — reel-style captions
     const escapedSrt = srtPath.replace(/\\/g, '/').replace(/:/g, '\\:');
-    vfParts.push(
-      `subtitles='${escapedSrt}':force_style='FontSize=22,FontName=Arial,Bold=1,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,Outline=2,Shadow=1,Alignment=2,MarginV=80'`
+    filterParts.push(
+      `[vcat]subtitles='${escapedSrt}':force_style='FontSize=22,FontName=Arial,Bold=1,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,Outline=2,Shadow=1,Alignment=2,MarginV=80'[vout]`
     );
+    finalLabel = 'vout';
   }
 
-  // Static text overlay if provided (separate from captions)
+  // Static text overlay if provided
   if (options.overlayText) {
     const escaped = options.overlayText.replace(/'/g, "'\\''").replace(/:/g, '\\:');
-    vfParts.push(
-      `drawtext=text='${escaped}':fontsize=48:fontcolor=white:x=(w-tw)/2:y=h-80:shadowcolor=black:shadowx=2:shadowy=2`
+    const prevLabel = finalLabel;
+    finalLabel = 'vtxt';
+    filterParts.push(
+      `[${prevLabel}]drawtext=text='${escaped}':fontsize=48:fontcolor=white:x=(w-tw)/2:y=h-80:shadowcolor=black:shadowx=2:shadowy=2[${finalLabel}]`
     );
   }
 
-  // Build FFmpeg args — inputs first, then filters, then output settings
-  const args = [
-    '-y',
-    '-f', 'concat',
-    '-safe', '0',
-    '-i', concatListPath,
-  ];
+  args.push('-filter_complex', filterParts.join(';'));
+  args.push('-map', `[${finalLabel}]`);
 
-  // Audio background track — must be added as input BEFORE filters
-  let hasAudioInput = false;
-  if (options.audioBg) {
-    const audioPath = fs.existsSync(path.join(AUDIO_DIR, options.audioBg)) ? path.join(AUDIO_DIR, options.audioBg) : path.join(UPLOAD_DIR, options.audioBg);
-    if (fs.existsSync(audioPath)) {
-      args.push('-i', audioPath);
-      hasAudioInput = true;
-    }
-  }
-
-  // Video filter applied only to video stream (not audio)
-  args.push('-filter:v', vfParts.join(','));
-
-  // Stream mapping when audio is present
   if (hasAudioInput) {
-    args.push(
-      '-map', '0:v',     // video from concat input
-      '-map', '1:a',     // audio from background track
-      '-shortest'        // stop when shortest stream ends
-    );
+    args.push('-map', `${audioInputIdx}:a`, '-shortest');
   }
 
   // Output settings
@@ -364,18 +365,15 @@ function runStitch(jobId, clips, outputPath, options = {}) {
   let stderrData = '';
   ffmpeg.stderr.on('data', (data) => {
     stderrData += data.toString();
-    // Parse progress from FFmpeg output
     const timeMatch = data.toString().match(/time=(\d{2}):(\d{2}):(\d{2})/);
     if (timeMatch) {
       const secs = parseInt(timeMatch[1]) * 3600 + parseInt(timeMatch[2]) * 60 + parseInt(timeMatch[3]);
-      // Estimate total ~30s for a selfcare snack reel
       job.progress = Math.min(95, Math.round((secs / 30) * 100));
     }
   });
 
   ffmpeg.on('close', (code) => {
     // Clean up temp files
-    try { fs.unlinkSync(concatListPath); } catch {}
     try { fs.unlinkSync(path.join(UPLOAD_DIR, `${jobId}-captions.srt`)); } catch {}
 
     if (code === 0) {
