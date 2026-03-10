@@ -469,7 +469,9 @@ function runStitch(jobId, clips, outputPath, options = {}) {
   // Apply subtitles on the concatenated output using ASS format for per-caption styling
   let finalLabel = 'vcat';
   if (options.captions && options.captions.length) {
-    const defaultMarginV = options.captionMarginV || 80;
+    // Instagram Reels safe zone: MarginV 500 places captions at ~74% from top
+    // Above IG UI (~bottom 300px) and below face area (~top 50%)
+    const defaultMarginV = options.captionMarginV || 500;
     const assPath = path.join(UPLOAD_DIR, `${jobId}-captions.ass`);
 
     // Build ASS subtitle file for per-caption MarginV control
@@ -486,7 +488,7 @@ Style: Default,Arial,64,&H00FFFFFF,&H000000FF,&H00000000,&H80000000,1,0,0,0,100,
     // Create per-caption styles if any caption has custom marginV
     options.captions.forEach((cap, i) => {
       if (cap.marginV && cap.marginV !== defaultMarginV) {
-        assContent += `Style: Cap${i},Arial,22,&H00FFFFFF,&H000000FF,&H00000000,&H80000000,1,0,0,0,100,100,0,0,1,2,1,2,10,10,${cap.marginV},1\n`;
+        assContent += `Style: Cap${i},Arial,64,&H00FFFFFF,&H000000FF,&H00000000,&H80000000,1,0,0,0,100,100,0,0,1,4,2,2,20,20,${cap.marginV},1\n`;
       }
     });
 
