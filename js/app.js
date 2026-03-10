@@ -583,23 +583,27 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     runRealPipeline(steps, msg, setStage);
   }
 
+  // Universal negative prompt for ALL Kling i2v calls — blocks transitions, zooms, morphs
+  const KLING_NEGATIVE_PROMPT = 'transition, fade, dissolve, wipe, zoom in, zoom out, dolly, pan, tilt, camera movement, camera shake, morph, transform, cross-fade, flash, glitch, distortion, lens flare, speed ramp, slow motion, time-lapse, split screen, picture-in-picture, text overlay, watermark, logo';
+
   // SOP v3.0 default Kling prompts — 4 segments, hard cuts, organic text on every clip
   // Avatar: Patient Maya (Bree Alba) — young woman, black tank top, hair in bun, minimal makeup, natural look
   // Product: Maju's Black Seed Oil 8oz dark bottle with "MAJU BLACK SEED OIL" label
   // NOTE: "result" segment removed — glow now covers results + benefits + CTA
+  // IMPORTANT: Every prompt ends with "Static locked-off camera, no transitions, no camera movement."
   // Keyed by story ID so the correct fallback prompts are used per scene
   const STORY_SEGMENT_PROMPTS = {
     'story-1': [
-      { name: 'hook', duration: 3, prompt: 'A young woman with her hair in a bun wearing a black tank top stands in a dark moody kitchen with warm golden lighting. She holds a whole red onion near her face, holding it up toward the camera with a slight smile. A dark glass bottle labeled "MAJU BLACK SEED OIL" sits prominently on the wooden counter beside her. Minimal movement, mostly still pose. Cinematic warm golden-hour lighting from a window, dark cabinets in background. Vertical 9:16 format, smooth natural motion.', textOverlay: 'de-puff your face snack', model: 'kling-v2-master' },
-      { name: 'reveal', duration: 3, prompt: 'A young woman with hair in a bun wearing a black tank top pours dark oil from a bottle labeled "MAJU BLACK SEED OIL" onto a halved red onion on a wooden cutting board. Camera slightly wider showing her waist up. She looks down at the onion as she pours, the bottle label clearly readable facing camera. Dark moody kitchen with warm golden lighting, dark cabinets behind her. Smooth satisfying pour motion, oil glistening on the onion. Vertical 9:16 format.', textOverlay: '1 red onion\n+ black seed oil\n+ salt', model: 'kling-v2-master' },
-      { name: 'demo', duration: 3, prompt: 'Tight close-up of a young woman with her hair in a bun wearing a black tank top biting into a raw red onion half glistening with dark oil. She takes a big crunchy bite, chews with a slight grimace then settles into it and nods approvingly. A dark bottle labeled "MAJU BLACK SEED OIL" is visible on the counter behind her. Warm golden kitchen lighting, dark moody background. Authentic unpolished eating reaction. Vertical 9:16 format, natural motion.', textOverlay: 'yes she ate a raw onion', model: 'kling-v2-master' },
-      { name: 'glow', duration: 3, prompt: 'A young woman with hair in a bun wearing a black tank top holds a dark bottle labeled "MAJU BLACK SEED OIL" near her glowing face with a confident radiant smile. Her skin looks visibly de-puffed and dewy. She gently touches her cheek with her free hand. Warm soft golden lighting emphasizes her healthy glowing skin. Dark moody kitchen background. Vertical 9:16 format, slow smooth motion.', textOverlay: 'drains bloat + reduces puffiness\ncomment "puffy" for the link', model: 'kling-v2-master' },
+      { name: 'hook', duration: 3, prompt: 'A young woman with her hair in a bun wearing a black tank top stands in a dark moody kitchen with warm golden lighting. She holds a whole red onion near her face, holding it up toward the camera with a slight smile. A dark glass bottle labeled "MAJU BLACK SEED OIL" sits prominently on the wooden counter beside her. Minimal movement, mostly still pose. Cinematic warm golden-hour lighting from a window, dark cabinets in background. Vertical 9:16 format. Static locked-off camera, no transitions, no camera movement, no zooming.', textOverlay: 'de-puff your face snack', model: 'kling-v2-master' },
+      { name: 'reveal', duration: 3, prompt: 'A young woman with hair in a bun wearing a black tank top pours dark oil from a bottle labeled "MAJU BLACK SEED OIL" onto a halved red onion on a wooden cutting board. Camera slightly wider showing her waist up. She looks down at the onion as she pours, the bottle label clearly readable facing camera. Dark moody kitchen with warm golden lighting, dark cabinets behind her. Smooth satisfying pour motion, oil glistening on the onion. Vertical 9:16 format. Static locked-off camera, no transitions, no camera movement, no zooming.', textOverlay: '1 red onion\n+ black seed oil\n+ salt', model: 'kling-v2-master' },
+      { name: 'demo', duration: 3, prompt: 'Tight close-up of a young woman with her hair in a bun wearing a black tank top biting into a raw red onion half glistening with dark oil. She takes a big crunchy bite, chews with a slight grimace then settles into it and nods approvingly. A dark bottle labeled "MAJU BLACK SEED OIL" is visible on the counter behind her. Warm golden kitchen lighting, dark moody background. Authentic unpolished eating reaction. Vertical 9:16 format. Static locked-off camera, no transitions, no camera movement, no zooming.', textOverlay: 'yes she ate a raw onion', model: 'kling-v2-master' },
+      { name: 'glow', duration: 3, prompt: 'A young woman with hair in a bun wearing a black tank top holds a dark bottle labeled "MAJU BLACK SEED OIL" near her glowing face with a confident radiant smile. Her skin looks visibly de-puffed and dewy. She gently touches her cheek with her free hand. Warm soft golden lighting emphasizes her healthy glowing skin. Dark moody kitchen background. Vertical 9:16 format. Static locked-off camera, no transitions, no camera movement, no zooming.', textOverlay: 'drains bloat + reduces puffiness\ncomment "puffy" for the link', model: 'kling-v2-master' },
     ],
     'story-2': [
-      { name: 'hook', duration: 3, prompt: 'A young woman with her hair in a bun wearing a black tank top sits at a rustic dining table in a warm cozy dining room. Large windows behind her show heavy snow falling outside. She looks at the camera with a knowing smile. A vibrant winter wellness salad and a dark bottle labeled "MAJU BLACK SEED OIL" sit on the table in front of her. Warm amber interior lighting, hygge winter atmosphere. Vertical 9:16 format, smooth natural motion.', textOverlay: 'my face is not puffy after eating this salad', model: 'kling-v2-master' },
-      { name: 'reveal', duration: 3, prompt: 'Close-up of a dark bottle labeled "MAJU BLACK SEED OIL" being tilted to drizzle dark golden oil over a vibrant winter wellness salad on a rustic dining table. The oil streams in a satisfying pour over fresh greens, roasted vegetables, and seeds. Warm cozy dining room with snowy windows in background. Warm amber lighting, oil glistening. Vertical 9:16 format, smooth satisfying pour motion.', textOverlay: 'winter wellness salad\n+ black seed oil\n+ the good stuff', model: 'kling-v2-master' },
-      { name: 'demo', duration: 3, prompt: 'A young woman with her hair in a bun wearing a black tank top uses a fork to take a big bite of a vibrant winter wellness salad glistening with dark oil. She chews and nods with genuine satisfaction, eyes closing slightly as she enjoys the flavor. A dark bottle labeled "MAJU BLACK SEED OIL" is visible on the table beside the salad bowl. Warm cozy dining room, snowy window behind. Vertical 9:16 format, authentic eating moment.', textOverlay: 'she actually likes it', model: 'kling-v2-master' },
-      { name: 'glow', duration: 3, prompt: 'A young woman with her hair in a bun wearing a black tank top holds a dark bottle labeled "MAJU BLACK SEED OIL" near her glowing face with a warm confident smile. Her skin looks radiant and healthy. Cozy warm dining room with snowy landscape visible through windows behind her. Warm amber golden lighting emphasizes her healthy glowing skin. Vertical 9:16 format, slow smooth motion.', textOverlay: 'clears skin + reduces puffiness\ncomment "salad" for the link', model: 'kling-v2-master' },
+      { name: 'hook', duration: 3, prompt: 'A young woman with her hair in a bun wearing a black tank top sits at a rustic dining table in a warm cozy dining room. Large windows behind her show heavy snow falling outside. She looks at the camera with a knowing smile. A vibrant winter wellness salad and a dark bottle labeled "MAJU BLACK SEED OIL" sit on the table in front of her. Warm amber interior lighting, hygge winter atmosphere. Vertical 9:16 format. Static locked-off camera, no transitions, no camera movement, no zooming.', textOverlay: 'my face is not puffy after eating this salad', model: 'kling-v2-master' },
+      { name: 'reveal', duration: 3, prompt: 'Close-up of a dark bottle labeled "MAJU BLACK SEED OIL" being tilted to drizzle dark golden oil over a vibrant winter wellness salad on a rustic dining table. The oil streams in a satisfying pour over fresh greens, roasted vegetables, and seeds. Warm cozy dining room with snowy windows in background. Warm amber lighting, oil glistening. Vertical 9:16 format. Static locked-off camera, no transitions, no camera movement, no zooming.', textOverlay: 'winter wellness salad\n+ black seed oil\n+ the good stuff', model: 'kling-v2-master' },
+      { name: 'demo', duration: 3, prompt: 'A young woman with her hair in a bun wearing a black tank top uses a fork to take a big bite of a vibrant winter wellness salad glistening with dark oil. She chews and nods with genuine satisfaction, eyes closing slightly as she enjoys the flavor. A dark bottle labeled "MAJU BLACK SEED OIL" is visible on the table beside the salad bowl. Warm cozy dining room, snowy window behind. Vertical 9:16 format. Static locked-off camera, no transitions, no camera movement, no zooming.', textOverlay: 'she actually likes it', model: 'kling-v2-master' },
+      { name: 'glow', duration: 3, prompt: 'A young woman with her hair in a bun wearing a black tank top holds a dark bottle labeled "MAJU BLACK SEED OIL" near her glowing face with a warm confident smile. Her skin looks radiant and healthy. Cozy warm dining room with snowy landscape visible through windows behind her. Warm amber golden lighting emphasizes her healthy glowing skin. Vertical 9:16 format. Static locked-off camera, no transitions, no camera movement, no zooming.', textOverlay: 'clears skin + reduces puffiness\ncomment "salad" for the link', model: 'kling-v2-master' },
     ],
   };
   // Backward-compat alias
@@ -672,6 +676,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
   async function animateImageToVideo(seg, imageUrl, segLabel) {
     const result = await API.kling.generateFromImage({
       prompt: seg.prompt,
+      negative_prompt: KLING_NEGATIVE_PROMPT,
       image_url: imageUrl,
       duration: seg.duration <= 5 ? 5 : 10,
       aspect_ratio: '9:16',
@@ -2178,33 +2183,42 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
   // ─── Wire Approve → Metricool Post ───
   function scheduleApprovedItem(item) {
     if (!apiKeys.metricool) {
-      console.log('[Metricool] No API key — skip scheduling');
-      return;
+      console.error('[Metricool] ❌ No API key found in apiKeys.metricool — cannot schedule. Check localStorage key "maju_api_keys".');
+      alert('Metricool scheduling failed: No API key configured. Go to API Settings and save your Metricool key.');
+      return Promise.resolve({ ok: false, error: 'no_api_key' });
     }
     const caption = item.instagramCaption || `${item.productName} — ${item.typeName}`;
     const tags = (item.hashtags || []).map(t => `#${t.replace(/^#/, '')}`).join(' ');
     const fullContent = tags ? `${caption}\n\n${tags}` : caption;
     const videoSrc = item.stitchedVideoUrl || item.videoUrl;
+    if (!videoSrc) {
+      console.error('[Metricool] ❌ No video URL found on item — cannot schedule without media.', { itemId: item.id, hasStitchedUrl: !!item.stitchedVideoUrl, hasVideoUrl: !!item.videoUrl });
+      alert('Metricool scheduling failed: No video URL available for this item.');
+      return Promise.resolve({ ok: false, error: 'no_video_url' });
+    }
     const postParams = {
       content: fullContent,
       networks: [{ network: 'instagram', type: 'reels' }],
-      media: videoSrc ? [{ url: videoSrc, type: 'video' }] : [],
+      media: [{ url: videoSrc, type: 'video' }],
       publicationDate: item.schedDate
         ? { dateTime: item.schedDate, timezone: Intl.DateTimeFormat().resolvedOptions().timeZone }
         : undefined,
     };
-    console.log('[Metricool] Scheduling Instagram Reel:', { content: fullContent.substring(0, 80) + '...', hasVideo: !!videoSrc });
+    console.log('[Metricool] Scheduling Instagram Reel:', { content: fullContent.substring(0, 80) + '...', videoSrc: videoSrc.substring(0, 80), schedDate: item.schedDate || 'immediate' });
     return API.metricool.schedulePost(postParams).then((res) => {
       if (res.ok) {
-        console.log('[Metricool] Post scheduled:', res);
+        console.log('[Metricool] ✅ Post scheduled successfully:', res);
         item.metricoolId = res.postId || res.id;
         saveQueue();
       } else {
-        console.warn('[Metricool] Schedule failed:', res);
+        console.error('[Metricool] ❌ Schedule failed — API returned not ok:', JSON.stringify(res));
+        alert('Metricool scheduling failed: ' + (res.message || res.error || JSON.stringify(res)));
       }
       return res;
     }).catch(err => {
-      console.error('[Metricool] Error scheduling:', err);
+      console.error('[Metricool] ❌ Error scheduling (exception):', err.message || err, err.stack || '');
+      alert('Metricool scheduling error: ' + (err.message || 'Unknown error. Check console for details.'));
+      return { ok: false, error: err.message };
     });
   }
 
