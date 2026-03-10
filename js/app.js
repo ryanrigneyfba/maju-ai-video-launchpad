@@ -1034,7 +1034,43 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
           }
           debugPanel('[Re-stitch] Started job ' + data.jobId + ' for item ' + itemId);
           console.log('[Re-stitch] Job started:', data.jobId);
-          setTimeout(() => renderQueue(getActiveFilter()), 3000);
+          // Poll job status until done, then re-render with video
+          const pollJobId = data.jobId;
+          const pollItemId = itemId;
+          const videoContainer = e.target.closest('.queue-video') || e.target.closest('.queue-video-error')?.parentElement;
+          if (videoContainer) {
+            videoContainer.innerHTML = '<div class="queue-video-error"><span>⏳ Stitching in progress...</span><small>Job: ' + pollJobId.substring(0,8) + '... <span class="stitch-progress">0%</span></small></div>';
+          }
+          const pollInterval = setInterval(() => {
+            fetch(backendUrl('/api/jobs/' + pollJobId))
+              .then(r => r.json())
+              .then(jobData => {
+                if (videoContainer) {
+                  const progEl = videoContainer.querySelector('.stitch-progress');
+                  if (progEl) progEl.textContent = (jobData.progress || 0) + '%';
+                }
+                if (jobData.status === 'done') {
+                  clearInterval(pollInterval);
+                  console.log('[Re-stitch] Job completed:', pollJobId);
+                  // Update the item URL and re-render
+                  const qIdx2 = queue.findIndex(q => q.id === pollItemId);
+                  if (qIdx2 >= 0) {
+                    queue[qIdx2].stitchedVideoUrl = backendUrl('/api/download/' + pollJobId);
+                    saveQueue();
+                  }
+                  renderQueue(getActiveFilter());
+                } else if (jobData.status === 'error' || jobData.error) {
+                  clearInterval(pollInterval);
+                  console.error('[Re-stitch] Job failed:', jobData.error);
+                  if (videoContainer) {
+                    videoContainer.innerHTML = '<div class="queue-video-error"><span>❌ Stitch Failed</span><small>' + (jobData.error || 'Unknown error') + '</small><button class="btn-restitch" data-id="' + pollItemId + '">Re-stitch</button></div>';
+                  }
+                }
+              })
+              .catch(err => {
+                console.warn('[Re-stitch] Poll error:', err.message);
+              });
+          }, 5000);
         }
       })
       .catch(err => {
