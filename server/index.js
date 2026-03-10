@@ -276,8 +276,14 @@ function runStitch(jobId, clips, outputPath, options = {}) {
 
   // Each clip is a separate input for precise trim control
   const args = ['-y'];
-  clips.forEach(c => {
-    args.push('-i', path.join(UPLOAD_DIR, c.filename));
+  clips.forEach((c, i) => {
+    const dur = clipDurations[i] || maxClipDur;
+    if (c.isImage) {
+      // Image input: loop to create video of specified duration
+      args.push('-loop', '1', '-t', String(dur), '-i', path.join(UPLOAD_DIR, c.filename));
+    } else {
+      args.push('-i', path.join(UPLOAD_DIR, c.filename));
+    }
   });
 
   // Audio background track input (index = clips.length)
@@ -300,12 +306,22 @@ function runStitch(jobId, clips, outputPath, options = {}) {
   clips.forEach((c, i) => {
     const dur = clipDurations[i] || maxClipDur;
     const label = `v${i}`;
-    filterParts.push(
-      `[${i}:v]trim=0:${dur},setpts=PTS-STARTPTS,` +
-      `scale=${w}:${h}:force_original_aspect_ratio=decrease,` +
-      `pad=${w}:${h}:(ow-iw)/2:(oh-ih)/2:black,` +
-      `fps=30[${label}]`
-    );
+    if (c.isImage) {
+      // Image: duration already set via -loop/-t input flags, just scale/pad/fps
+      filterParts.push(
+        `[${i}:v]scale=${w}:${h}:force_original_aspect_ratio=decrease,` +
+        `pad=${w}:${h}:(ow-iw)/2:(oh-ih)/2:black,` +
+        `fps=30[${label}]`
+      );
+    } else {
+      // Video: trim to exact duration, then scale/pad/fps
+      filterParts.push(
+        `[${i}:v]trim=0:${dur},setpts=PTS-STARTPTS,` +
+        `scale=${w}:${h}:force_original_aspect_ratio=decrease,` +
+        `pad=${w}:${h}:(ow-iw)/2:(oh-ih)/2:black,` +
+        `fps=30[${label}]`
+      );
+    }
     concatInputs.push(`[${label}]`);
   });
 
@@ -314,20 +330,48 @@ function runStitch(jobId, clips, outputPath, options = {}) {
     `${concatInputs.join('')}concat=n=${clips.length}:v=1:a=0[vcat]`
   );
 
-  // Apply subtitles on the concatenated output
+  // Apply subtitles on the concatenated output using ASS format for per-caption styling
   let finalLabel = 'vcat';
   if (options.captions && options.captions.length) {
-    const srtPath = path.join(UPLOAD_DIR, `${jobId}-captions.srt`);
-    const srtContent = options.captions.map((cap, i) => {
-      const start = formatSrtTime(cap.startTime || 0);
-      const end = formatSrtTime(cap.endTime || (cap.startTime || 0) + 3);
-      return `${i + 1}\n${start} --> ${end}\n${cap.text}\n`;
-    }).join('\n');
-    fs.writeFileSync(srtPath, srtContent);
+    const defaultMarginV = options.captionMarginV || 80;
+    const assPath = path.join(UPLOAD_DIR, `${jobId}-captions.ass`);
 
-    const escapedSrt = srtPath.replace(/\\/g, '/').replace(/:/g, '\\:');
+    // Build ASS subtitle file for per-caption MarginV control
+    let assContent = `[Script Info]
+ScriptType: v4.00+
+PlayResX: ${w}
+PlayResY: ${h}
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Default,Arial,22,&H00FFFFFF,&H000000FF,&H00000000,&H80000000,1,0,0,0,100,100,0,0,1,2,1,2,10,10,${defaultMarginV},1
+`;
+
+    // Create per-caption styles if any caption has custom marginV
+    options.captions.forEach((cap, i) => {
+      if (cap.marginV && cap.marginV !== defaultMarginV) {
+        assContent += `Style: Cap${i},Arial,22,&H00FFFFFF,&H000000FF,&H00000000,&H80000000,1,0,0,0,100,100,0,0,1,2,1,2,10,10,${cap.marginV},1\n`;
+      }
+    });
+
+    assContent += `\n[Events]\nFormat: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\n`;
+
+    options.captions.forEach((cap, i) => {
+      const startSec = cap.startTime || 0;
+      const endSec = cap.endTime || (startSec + 3);
+      const start = formatAssTime(startSec);
+      const end = formatAssTime(endSec);
+      const styleName = (cap.marginV && cap.marginV !== defaultMarginV) ? `Cap${i}` : 'Default';
+      // Replace newlines with ASS line break
+      const text = (cap.text || '').replace(/\n/g, '\\N');
+      assContent += `Dialogue: 0,${start},${end},${styleName},,0,0,0,,${text}\n`;
+    });
+
+    fs.writeFileSync(assPath, assContent);
+
+    const escapedAss = assPath.replace(/\\/g, '/').replace(/:/g, '\\:');
     filterParts.push(
-      `[vcat]subtitles='${escapedSrt}':force_style='FontSize=22,FontName=Arial,Bold=1,PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,Outline=2,Shadow=1,Alignment=2,MarginV=80'[vout]`
+      `[vcat]ass='${escapedAss}'[vout]`
     );
     finalLabel = 'vout';
   }
@@ -375,6 +419,7 @@ function runStitch(jobId, clips, outputPath, options = {}) {
   ffmpeg.on('close', (code) => {
     // Clean up temp files
     try { fs.unlinkSync(path.join(UPLOAD_DIR, `${jobId}-captions.srt`)); } catch {}
+    try { fs.unlinkSync(path.join(UPLOAD_DIR, `${jobId}-captions.ass`)); } catch {}
 
     if (code === 0) {
       job.status = 'done';
@@ -401,6 +446,15 @@ function formatSrtTime(seconds) {
   const s = Math.floor(seconds % 60);
   const ms = Math.round((seconds % 1) * 1000);
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')},${String(ms).padStart(3, '0')}`;
+}
+
+// Format time for ASS subtitles: H:MM:SS.cc (centiseconds)
+function formatAssTime(seconds) {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = Math.floor(seconds % 60);
+  const cs = Math.round((seconds % 1) * 100);
+  return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}.${String(cs).padStart(2, '0')}`;
 }
 
 // ─── Audio / Music Management ───
@@ -479,13 +533,17 @@ app.post('/api/auto-stitch', async (req, res) => {
   // Download all clips in parallel, then stitch
   try {
     const downloadedClips = [];
+    const imageExts = ['.png', '.jpg', '.jpeg', '.webp', '.gif', '.bmp'];
     const downloadPromises = clips.map(async (clip, i) => {
-      const ext = '.mp4';
+      // Detect if URL is an image by extension
+      const urlPath = new URL(clip.url).pathname.toLowerCase();
+      const isImage = imageExts.some(ext => urlPath.endsWith(ext));
+      const ext = isImage ? urlPath.match(/\.\w+$/)[0] : '.mp4';
       const filename = `${jobId}-clip-${i}${ext}`;
       const filepath = path.join(UPLOAD_DIR, filename);
 
       await downloadFile(clip.url, filepath);
-      downloadedClips[i] = { filename };
+      downloadedClips[i] = { filename, isImage };
 
       const job = jobs.get(jobId);
       const dlProgress = Math.round(((downloadedClips.filter(Boolean).length) / clips.length) * 40);
