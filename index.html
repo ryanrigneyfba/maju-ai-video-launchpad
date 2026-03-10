@@ -4,7 +4,19 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MAJU AI Video Launchpad</title>
-  <link rel="stylesheet" href="css/style.css?v=1.4.3">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      corePlugins: { preflight: false },
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+        }
+      }
+    }
+  </script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
@@ -37,7 +49,7 @@
       </button>
     </nav>
     <div class="sidebar-footer">
-      <p class="version">v1.4.0</p>
+      <p class="version">v1.1.0</p>
     </div>
   </aside>
 
@@ -46,61 +58,7 @@
     <header class="topbar">
       <button class="menu-toggle" id="menu-toggle">☰</button>
       <h2 class="page-title" id="page-title">Dashboard</h2>
-      <div class="jwt-status" id="jwt-status" title="Higgsfield Soul connection status">
-        <span class="jwt-dot" id="jwt-dot"></span>
-        <span class="jwt-label" id="jwt-label">Checking…</span>
-        <button class="btn btn-xs jwt-connect-btn" id="jwt-connect-btn" style="display:none;">Connect</button>
-      </div>
     </header>
-
-    <!-- Higgsfield Connect Modal -->
-    <div class="modal-overlay hidden" id="hf-connect-modal">
-      <div class="modal-card">
-        <button class="modal-close" id="hf-modal-close">&times;</button>
-        <h3 style="margin-bottom:12px;">🔗 Connect to Higgsfield</h3>
-        <p style="font-size:0.9rem; color:var(--text-dim); margin-bottom:16px;">
-          Patient Maya's likeness requires the Higgsfield Soul engine. You need to be logged
-          into <strong>higgsfield.ai</strong> with the auto-relay userscript installed.
-        </p>
-        <div class="connect-steps">
-          <div class="connect-step">
-            <span class="step-badge">1</span>
-            <div>
-              <strong>Install the userscript</strong> (one-time)
-              <p style="font-size:0.8rem; color:var(--text-dim); margin:4px 0 0;">
-                Install <a href="https://www.tampermonkey.net/" target="_blank" style="color:var(--accent);">Tampermonkey</a>, then
-                <a href="https://ryanrigneyfba.github.io/maju-ai-video-launchpad/maju-jwt-relay.user.js" target="_blank" style="color:var(--accent);">click here to install the MAJU relay script</a>.
-              </p>
-            </div>
-          </div>
-          <div class="connect-step">
-            <span class="step-badge">2</span>
-            <div>
-              <strong>Open Higgsfield &amp; log in</strong>
-              <p style="font-size:0.8rem; color:var(--text-dim); margin:4px 0 0;">
-                The userscript auto-relays your session token every 40 seconds.
-              </p>
-              <button class="btn btn-primary btn-sm" id="hf-open-btn" style="margin-top:8px;">
-                Open higgsfield.ai →
-              </button>
-            </div>
-          </div>
-          <div class="connect-step">
-            <span class="step-badge">3</span>
-            <div>
-              <strong>Keep the tab open</strong>
-              <p style="font-size:0.8rem; color:var(--text-dim); margin:4px 0 0;">
-                As long as higgsfield.ai is open in any tab, the connection stays active. You'll see a green
-                "MAJU: Connected ✓" badge on that tab.
-              </p>
-            </div>
-          </div>
-        </div>
-        <div class="connect-status" id="modal-jwt-status" style="margin-top:16px; padding:10px; border-radius:8px; background:var(--bg-input); text-align:center; font-size:0.85rem;">
-          Waiting for connection…
-        </div>
-      </div>
-    </div>
 
     <!-- Dashboard View -->
     <section class="view active" id="view-dashboard">
@@ -116,16 +74,16 @@
           <div class="form-group">
             <label for="versions">Versions</label>
             <select id="versions">
-              <option value="1" selected>1 version</option>
+              <option value="1">1 version</option>
               <option value="2">2 versions</option>
-              <option value="3">3 versions</option>
+              <option value="3" selected>3 versions</option>
               <option value="5">5 versions</option>
             </select>
           </div>
           <div class="form-group">
             <label for="avatar">Avatar</label>
             <select id="avatar">
-              <option value="6bceded1-e872-41d7-824b-8476faf87fa4" data-ig="@breealba" selected>Patient Maya (Bree Alba)</option>
+              <option value="pateit" data-ig="@breealba" selected>Patient Maya (Bree Alba)</option>
             </select>
           </div>
           <div class="form-group">
@@ -133,20 +91,6 @@
             <select id="product">
               <option value="majurender8oz" selected>Maju's Black Seed Oil 8oz</option>
             </select>
-          </div>
-          <div class="form-group">
-            <label for="scene-select">Story</label>
-            <select id="scene-select">
-              <option value="story-1" selected>🧅 De-Puff Face Snack (Kitchen)</option>
-              <option value="story-2">❄️ Winter Wellness Salad (Dining Room)</option>
-            </select>
-          </div>
-          <div class="form-group full-width" id="scene-preview-area" style="display:none;">
-            <div>
-              <p id="scene-preview-name" style="font-weight:600; margin:0 0 4px;"></p>
-              <p id="scene-preview-desc" style="font-size:0.8rem; color:var(--text-dim); margin:0;"></p>
-              <img id="scene-preview-img" style="display:none;" alt="">
-            </div>
           </div>
           <div class="form-group full-width">
             <label>Posting</label>
@@ -198,26 +142,149 @@
 
       <!-- Pipeline Status -->
       <div class="card hidden" id="pipeline-card">
-        <h3 class="card-title">Pipeline Status</h3>
-        <div class="pipeline">
+        <!-- Header -->
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="card-title" style="margin-bottom:0">Pipeline Status</h3>
+          <span class="text-xs font-medium px-2.5 py-1 rounded-full border" id="pipeline-stage-badge"
+                style="background:rgba(108,92,231,.12);color:#a78bfa;border-color:rgba(108,92,231,.25)">
+            Initializing
+          </span>
+        </div>
+
+        <!-- Mini pipeline steps -->
+        <div class="pipeline mb-5">
           <div class="pipeline-step" data-step="generate">
             <span class="step-num">1</span>
-            <span class="step-label">Higgsfield Generate</span>
+            <span class="step-label">Generate</span>
           </div>
           <div class="pipeline-step" data-step="stitch">
             <span class="step-num">2</span>
-            <span class="step-label">FFmpeg Stitch</span>
+            <span class="step-label">Stitch</span>
           </div>
           <div class="pipeline-step" data-step="queue">
             <span class="step-num">3</span>
-            <span class="step-label">Approval Queue</span>
+            <span class="step-label">Queue</span>
           </div>
           <div class="pipeline-step" data-step="post">
             <span class="step-num">4</span>
-            <span class="step-label">Post via Metricool</span>
+            <span class="step-label">Post</span>
           </div>
         </div>
-        <p class="pipeline-msg" id="pipeline-msg"></p>
+
+        <!-- Segment Progress Bars -->
+        <div class="space-y-2.5" id="segment-trackers">
+          <!-- Hook -->
+          <div class="rounded-lg p-3 border" id="seg-track-hook"
+               style="background:#151821;border-color:#2a2e3d">
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                     style="background:rgba(139,92,246,.1)">
+                  <i data-lucide="zap" class="w-4 h-4" style="color:#a78bfa"></i>
+                </div>
+                <div>
+                  <p class="text-sm font-medium leading-none" style="color:#e2e4ea;margin-bottom:3px">Hook</p>
+                  <p class="text-[11px] leading-none" style="color:#8a8fa3">0 &ndash; 3s</p>
+                </div>
+              </div>
+              <span class="seg-track-status text-xs font-medium" style="color:#8a8fa3">Waiting</span>
+            </div>
+            <div class="w-full h-1.5 rounded-full overflow-hidden" style="background:rgba(30,41,59,.6)">
+              <div class="seg-track-bar h-full rounded-full transition-all duration-700 ease-out"
+                   style="width:0%;background:linear-gradient(90deg,#8b5cf6,#6d28d9)"></div>
+            </div>
+          </div>
+
+          <!-- Reveal -->
+          <div class="rounded-lg p-3 border" id="seg-track-reveal"
+               style="background:#151821;border-color:#2a2e3d">
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                     style="background:rgba(59,130,246,.1)">
+                  <i data-lucide="eye" class="w-4 h-4" style="color:#60a5fa"></i>
+                </div>
+                <div>
+                  <p class="text-sm font-medium leading-none" style="color:#e2e4ea;margin-bottom:3px">Reveal</p>
+                  <p class="text-[11px] leading-none" style="color:#8a8fa3">3 &ndash; 6s</p>
+                </div>
+              </div>
+              <span class="seg-track-status text-xs font-medium" style="color:#8a8fa3">Waiting</span>
+            </div>
+            <div class="w-full h-1.5 rounded-full overflow-hidden" style="background:rgba(30,41,59,.6)">
+              <div class="seg-track-bar h-full rounded-full transition-all duration-700 ease-out"
+                   style="width:0%;background:linear-gradient(90deg,#3b82f6,#2563eb)"></div>
+            </div>
+          </div>
+
+          <!-- Demo -->
+          <div class="rounded-lg p-3 border" id="seg-track-demo"
+               style="background:#151821;border-color:#2a2e3d">
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                     style="background:rgba(16,185,129,.1)">
+                  <i data-lucide="play-circle" class="w-4 h-4" style="color:#34d399"></i>
+                </div>
+                <div>
+                  <p class="text-sm font-medium leading-none" style="color:#e2e4ea;margin-bottom:3px">Demo</p>
+                  <p class="text-[11px] leading-none" style="color:#8a8fa3">6 &ndash; 11s</p>
+                </div>
+              </div>
+              <span class="seg-track-status text-xs font-medium" style="color:#8a8fa3">Waiting</span>
+            </div>
+            <div class="w-full h-1.5 rounded-full overflow-hidden" style="background:rgba(30,41,59,.6)">
+              <div class="seg-track-bar h-full rounded-full transition-all duration-700 ease-out"
+                   style="width:0%;background:linear-gradient(90deg,#10b981,#059669)"></div>
+            </div>
+          </div>
+
+          <!-- Result + Benefits -->
+          <div class="rounded-lg p-3 border" id="seg-track-result"
+               style="background:#151821;border-color:#2a2e3d">
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                     style="background:rgba(245,158,11,.1)">
+                  <i data-lucide="sparkles" class="w-4 h-4" style="color:#fbbf24"></i>
+                </div>
+                <div>
+                  <p class="text-sm font-medium leading-none" style="color:#e2e4ea;margin-bottom:3px">Result + Benefits</p>
+                  <p class="text-[11px] leading-none" style="color:#8a8fa3">11 &ndash; 13s</p>
+                </div>
+              </div>
+              <span class="seg-track-status text-xs font-medium" style="color:#8a8fa3">Waiting</span>
+            </div>
+            <div class="w-full h-1.5 rounded-full overflow-hidden" style="background:rgba(30,41,59,.6)">
+              <div class="seg-track-bar h-full rounded-full transition-all duration-700 ease-out"
+                   style="width:0%;background:linear-gradient(90deg,#f59e0b,#d97706)"></div>
+            </div>
+          </div>
+
+          <!-- The Glow -->
+          <div class="rounded-lg p-3 border" id="seg-track-endcard"
+               style="background:#151821;border-color:#2a2e3d">
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                     style="background:rgba(244,63,94,.1)">
+                  <i data-lucide="sun" class="w-4 h-4" style="color:#fb7185"></i>
+                </div>
+                <div>
+                  <p class="text-sm font-medium leading-none" style="color:#e2e4ea;margin-bottom:3px">The Glow</p>
+                  <p class="text-[11px] leading-none" style="color:#8a8fa3">13 &ndash; 15s</p>
+                </div>
+              </div>
+              <span class="seg-track-status text-xs font-medium" style="color:#8a8fa3">Waiting</span>
+            </div>
+            <div class="w-full h-1.5 rounded-full overflow-hidden" style="background:rgba(30,41,59,.6)">
+              <div class="seg-track-bar h-full rounded-full transition-all duration-700 ease-out"
+                   style="width:0%;background:linear-gradient(90deg,#f43f5e,#e11d48)"></div>
+            </div>
+          </div>
+        </div>
+
+        <p class="pipeline-msg mt-3" id="pipeline-msg"></p>
       </div>
 
       <!-- FFmpeg Auto-Stitch Panel -->
@@ -232,8 +299,9 @@
         <div class="stitch-segments" id="stitch-segments">
           <div class="stitch-segment"><span>1. Hook (0-3s)</span> <span class="file-status" id="seg-hook">Waiting…</span></div>
           <div class="stitch-segment"><span>2. Reveal (3-6s)</span> <span class="file-status" id="seg-reveal">Waiting…</span></div>
-          <div class="stitch-segment"><span>3. Demo (6-9s)</span> <span class="file-status" id="seg-demo">Waiting…</span></div>
-          <div class="stitch-segment"><span>4. Glow + CTA (9-12s)</span> <span class="file-status" id="seg-glow">Waiting…</span></div>
+          <div class="stitch-segment"><span>3. Demo (6-11s)</span> <span class="file-status" id="seg-demo">Waiting…</span></div>
+          <div class="stitch-segment"><span>4. Result + Benefits (11-13s)</span> <span class="file-status" id="seg-result">Waiting…</span></div>
+          <div class="stitch-segment"><span>5. The Glow (13-15s)</span> <span class="file-status" id="seg-endcard">Waiting…</span></div>
         </div>
 
         <div class="stitch-progress hidden" id="stitch-progress">
@@ -381,13 +449,6 @@
             </div>
             <span class="api-hint">Flux Kontext Max (images) + Kling 2.6 (video) — all through one API — <code>cloud.higgsfield.ai</code></span>
           </div>
-          <div class="api-field">
-            <label>Product Reference Image URL</label>
-            <div class="api-input-row">
-              <input type="text" id="setting-product-image-url" placeholder="https://… (direct URL to product bottle render)">
-            </div>
-            <span class="api-hint">Maju Black Seed Oil 8oz bottle render — used by Flux Kontext to place your exact product packaging in every generated image</span>
-          </div>
 
           <div class="api-field">
             <label>Metricool API Key</label>
@@ -461,7 +522,6 @@
     </div>
   </div>
 
-  <script src="js/app.js?v=1.4.8"></script>
-  <script src="js/fnf-patch.js?v=1.0.0"></script>
+  <script src="js/app.js?v=1.1.3"></script>
 </body>
 </html>

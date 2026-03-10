@@ -986,7 +986,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
   document.addEventListener('click', (e) => {
     if (!e.target.classList.contains('btn-restitch')) return;
     const itemId = e.target.dataset.id;
-    const item = approvalQueue.find(q => q.id === itemId);
+    const item = queue.find(q => q.id === itemId);
     if (!item) return;
     const clips = (item.segmentVideos || []).map(sv => sv.url).filter(Boolean);
     if (clips.length === 0) {
@@ -998,7 +998,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     const body = { clips };
     if (item.captionsSrt) body.captionsSrt = item.captionsSrt;
     if (item.captionsAss) body.captionsAss = item.captionsAss;
-    fetch(BACKEND + '/api/stitch', {
+    fetch(backendUrl('/api/stitch'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
@@ -1007,7 +1007,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       .then(data => {
         if (data.jobId) {
           item.stitchJobId = data.jobId;
-          item.stitchedVideoUrl = BACKEND + '/api/download/' + data.jobId;
+          item.stitchedVideoUrl = backendUrl('/api/download/' + data.jobId);
           saveQueue();
           debugPanel('[Re-stitch] Started job ' + data.jobId + ' for item ' + itemId);
           setTimeout(() => renderQueue(getActiveFilter()), 3000);
