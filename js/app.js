@@ -46,6 +46,22 @@
         glow:   'A young woman with her hair in a bun wearing a black tank top, holding a dark bottle labeled "MAJU BLACK SEED OIL" near her face with a confident radiant smile. Her skin is glowing and healthy looking. Warm golden-hour lighting in a dark moody kitchen. The bottle label is clearly visible facing camera. Shot on iPhone 15 Pro, authentic casual iPhone selfie, vertical 9:16 format, photorealistic, natural skin texture.',
       },
     },
+    'story-2': {
+      name: 'Winter Wellness Salad (Dining Room)',
+      description: 'Cozy snow-day salad drizzled with black seed oil — warm glow, cold outside',
+      segmentImages: {
+        hook:   { imageUrl: 'https://d8j0ntlcm91z4.cloudfront.net/user_37AyZ7rfikCUmAP45VFZYj00Qy3/hf_20260310_052719_8d0dd370-3234-421c-9532-86fd9f36d477.png', description: 'Patient Maya in bright warm dining room with large snowy windows, cream sweater, looking at camera with a slight smile, table set with fresh vegetables' },
+        reveal: { imageUrl: 'https://d8j0ntlcm91z4.cloudfront.net/user_37AyZ7rfikCUmAP45VFZYj00Qy3/hf_20260310_052735_e5bdde6e-8c8d-440b-9d4d-d7289a886dd4.png', description: 'MAJU BLACK SEED OIL bottle on bright white marble countertop, warm dining room, large windows showing heavy snowfall outside, soft bokeh' },
+        demo:   { imageUrl: 'https://d8j0ntlcm91z4.cloudfront.net/user_37AyZ7rfikCUmAP45VFZYj00Qy3/hf_20260310_054110_8c809993-0d70-4b82-ae88-1d54013d43a2.png', description: 'Patient Maya drizzling dark oil from MAJU bottle onto a fresh salad, bright dining room, large snowy windows, warm natural light' },
+        glow:   { imageUrl: 'https://d8j0ntlcm91z4.cloudfront.net/user_37AyZ7rfikCUmAP45VFZYj00Qy3/hf_20260310_052736_d34a58b3-30fd-4e51-8a31-1652bfc3d679.png', description: 'Patient Maya holding MAJU BLACK SEED OIL bottle near her face, confident smile, bright dining room with snowy winter landscape outside, warm golden light' },
+      },
+      generationPrompts: {
+        hook:   'A young woman with her hair in a bun wearing a cozy cream sweater, standing in a bright warm dining room with large windows showing heavy snow falling outside. She looks directly at the camera with a slight smile. The dining room has warm wood tones, a set table with fresh vegetables, and soft natural light streaming through the snowy windows. Photorealistic, warm interior lighting, winter atmosphere.',
+        reveal: 'A dark bottle labeled \'MAJU BLACK SEED OIL\' sitting on a bright white marble countertop in a warm dining room. Behind the bottle, large windows show heavy snowfall outside. Warm interior lighting, morning sunlight, cozy winter setting. The bottle is centered in frame with soft bokeh background.',
+        demo:   'A young woman with her hair in a bun wearing a cozy cream sweater, drizzling dark oil from a MAJU BLACK SEED OIL bottle onto a fresh salad in a bright dining room. Large windows behind her show heavy snow falling outside. Warm natural light, winter morning, cozy domestic scene.',
+        glow:   'A young woman with her hair in a bun wearing a cozy cream sweater, holding a dark bottle labeled \'MAJU BLACK SEED OIL\' near her face, smiling confidently at the camera in a bright dining room. Large windows behind her show a beautiful snowy winter landscape. Warm golden light, radiant skin, cozy winter atmosphere.',
+      },
+    },
   };
 
   // ─── State ───
