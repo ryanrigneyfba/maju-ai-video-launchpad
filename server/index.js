@@ -13,6 +13,8 @@ const { v4: uuidv4 } = require('uuid');
 const { spawn } = require('child_process');
 const path = require('path');
 const fs = require('fs');
+const https = require('https');
+const http = require('http');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -199,42 +201,82 @@ app.post('/api/upload', upload.array('clips', 10), (req, res) => {
 });
 
 // Stitch video from uploaded clips
-app.post('/api/stitch', (req, res) => {
-  const { clips, options = {} } = req.body;
-
-  // clips: array of { filename } in stitch order
-  // options: { resolution, overlayText, audioBg, format }
+app.post('/api/stitch', async (req, res) => {
+  const { clips, captionsSrt, captionsAss, options = {} } = req.body;
+  // clips: array of URLs (strings) OR array of { filename } objects
   if (!clips || !clips.length) {
     return res.status(400).json({ error: 'No clips provided' });
   }
 
-  // Validate all clip files exist
-  for (const clip of clips) {
-    const clipPath = path.join(UPLOAD_DIR, clip.filename);
-    if (!fs.existsSync(clipPath)) {
-      return res.status(400).json({ error: `Clip not found: ${clip.filename}` });
+  try {
+    // Normalize clips: download remote URLs, keep local filenames
+    const resolvedClips = [];
+    for (const clip of clips) {
+      if (typeof clip === 'string' && clip.startsWith('http')) {
+        // Remote URL - download to UPLOAD_DIR
+        const dlName = uuidv4() + '.mp4';
+        const dlPath = path.join(UPLOAD_DIR, dlName);
+        console.log('[Stitch] Downloading remote clip: ' + clip.substring(0, 80) + '...');
+        await new Promise((resolve, reject) => {
+          const mod = clip.startsWith('https') ? https : http;
+          const file = fs.createWriteStream(dlPath);
+          mod.get(clip, (response) => {
+            if (response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) {
+              file.close();
+              fs.unlinkSync(dlPath);
+              const rMod = response.headers.location.startsWith('https') ? https : http;
+              const file2 = fs.createWriteStream(dlPath);
+              rMod.get(response.headers.location, (r2) => {
+                r2.pipe(file2);
+                file2.on('finish', () => { file2.close(); resolve(); });
+              }).on('error', reject);
+              return;
+            }
+            response.pipe(file);
+            file.on('finish', () => { file.close(); resolve(); });
+          }).on('error', (err) => {
+            fs.unlink(dlPath, () => {});
+            reject(err);
+          });
+        });
+        console.log('[Stitch] Downloaded: ' + dlName);
+        resolvedClips.push({ filename: dlName });
+      } else if (typeof clip === 'object' && clip.filename) {
+        const clipPath = path.join(UPLOAD_DIR, clip.filename);
+        if (!fs.existsSync(clipPath)) {
+          return res.status(400).json({ error: 'Clip not found: ' + clip.filename });
+        }
+        resolvedClips.push(clip);
+      } else {
+        return res.status(400).json({ error: 'Invalid clip format' });
+      }
     }
+
+    const jobId = uuidv4();
+    const outputFile = jobId + '.mp4';
+    const outputPath = path.join(OUTPUT_DIR, outputFile);
+
+    if (captionsAss) options.captionsAss = captionsAss;
+    if (captionsSrt) options.captionsSrt = captionsSrt;
+
+    jobs.set(jobId, {
+      id: jobId,
+      status: 'processing',
+      progress: 0,
+      clips: resolvedClips.length,
+      outputFile: null,
+      error: null,
+      createdAt: new Date().toISOString(),
+    });
+    persistJobs();
+
+    runStitch(jobId, resolvedClips, outputPath, options);
+
+    res.json({ jobId, status: 'processing' });
+  } catch (err) {
+    console.error('[Stitch] Error:', err.message);
+    res.status(500).json({ error: 'Stitch setup failed: ' + err.message });
   }
-
-  const jobId = uuidv4();
-  const outputFile = `${jobId}.mp4`;
-  const outputPath = path.join(OUTPUT_DIR, outputFile);
-
-  jobs.set(jobId, {
-    id: jobId,
-    status: 'processing',
-    progress: 0,
-    clips: clips.length,
-    outputFile: null,
-    error: null,
-    createdAt: new Date().toISOString(),
-  });
-  persistJobs();
-
-  // Build FFmpeg concat command
-  runStitch(jobId, clips, outputPath, options);
-
-  res.json({ jobId, status: 'processing' });
 });
 
 // Full pipeline: upload + stitch in one request
@@ -699,8 +741,6 @@ function downloadFile(url, destPath) {
 // Proxy third-party API calls to avoid CORS issues from the browser.
 // Frontend sends API keys in x-api-key-value header; backend forwards them properly.
 
-const https = require('https');
-const http = require('http');
 const crypto = require('crypto');
 function proxyRequest(targetUrl, method, headers, body) {
   return new Promise((resolve, reject) => {
