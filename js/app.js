@@ -98,17 +98,27 @@
     console.log('[Hydrate] Backfilled instagramCaption/hashtags from aiPrompt on legacy items');
   }
 
-  // Second pass: generate defaults for items still missing caption/hashtags
+  // Second pass: generate defaults for items still missing caption/hashtags (story-aware)
+  const DEFAULT_IG_CAPTIONS = {
+    'story-1': {
+      caption: 'Wake up puffy? This weird snack actually works. Red onion + black seed oil + salt = natural de-puff. Comment "puffy" and I\'ll send you the link to the oil I use! 🖤\nSave & follow @majusuperfoods for more wellness snacks',
+      hashtags: ['blackseedoil','depuff','facesnack','skincaretips','naturalremedy','antiinflammatory','puffyface','wellnesstips','majublackseedoil','skincareroutine','majusuperfoods','holistichealth'],
+    },
+    'story-2': {
+      caption: 'My face is not puffy after eating this salad. Winter wellness salad + black seed oil = the glow up your skin needs. Comment "salad" and I\'ll send you the link to the oil I use! 🖤\nSave & follow @majusuperfoods for more wellness snacks',
+      hashtags: ['blackseedoil','winterwellness','salad','skincaretips','naturalremedy','antiinflammatory','clearskin','wellnesstips','majublackseedoil','healthyeating','majusuperfoods','holistichealth','glowup','saladrecipe','winterskincare'],
+    },
+  };
   let defaultsAdded = false;
   queue.forEach(item => {
     if (!item.instagramCaption) {
-      const pName = item.productName || item.aiPrompt?.segments?.[0]?.textOverlay || 'Black Seed Oil';
-      const hook = item.aiPrompt?.hookVariant || item.typeName || 'wellness snack';
-      item.instagramCaption = hook + ' ✨\nTry this with ' + pName + '. Your skin will thank you! 🖤\nSave & follow @majusuperfoods for more wellness snacks';
+      const storyDefaults = DEFAULT_IG_CAPTIONS[item.storyId] || DEFAULT_IG_CAPTIONS['story-1'];
+      item.instagramCaption = item.aiPrompt?.instagramCaption || storyDefaults.caption;
       defaultsAdded = true;
     }
     if (!item.hashtags || !item.hashtags.length) {
-      item.hashtags = ['blackseedoil','depuff','facesnack','skincaretips','naturalremedy','antiinflammatory','puffyface','wellnesstips','majublackseedoil','skincareroutine','majusuperfoods','holistichealth'];
+      const storyDefaults = DEFAULT_IG_CAPTIONS[item.storyId] || DEFAULT_IG_CAPTIONS['story-1'];
+      item.hashtags = item.aiPrompt?.hashtags || storyDefaults.hashtags;
       defaultsAdded = true;
     }
   });
@@ -264,7 +274,7 @@
   }
 
   // ─── Claude AI Learning Loop ───
-  async function getClaudeOptimizedPrompt(videoType, avatar, product, userNotes) {
+  async function getClaudeOptimizedPrompt(videoType, avatar, product, userNotes, storyId) {
     if (!apiKeys.claude) return null;
 
     // Build context from feedback log
@@ -275,6 +285,56 @@
     const approvals = relevantFeedback.filter((f) => f.action === 'approve');
     const rejections = relevantFeedback.filter((f) => f.action === 'reject');
 
+    // ─── Story-aware system prompt for Claude Haiku ───
+    const STORY_PROMPTS = {
+      'story-1': {
+        theme: 'Anti-Puffy Face Snack',
+        setting: 'dark moody kitchen with warm golden lighting, dark cabinets',
+        recipe: 'red onion + Maju Black Seed Oil + salt',
+        hookOptions: [
+          'de-puff your face snack',
+          'wake up puffy? eat this',
+          'the anti-bloat snack nobody talks about',
+          'she ate a raw onion for her face',
+          'puffy face? try this weird snack',
+        ],
+        revealText: '1 red onion\\n+ black seed oil\\n+ salt',
+        demoText: 'yes she ate a raw onion',
+        glowBenefits: 'drains bloat + reduces puffiness',
+        ctaWord: 'puffy',
+        segments: {
+          hook: 'She holds a whole red onion near her face with a slight smile.',
+          reveal: 'She pours dark oil from the MAJU bottle onto a halved red onion on a cutting board. Smooth satisfying pour.',
+          demo: 'She bites into a raw red onion glistening with oil. Authentic grimace then nods approvingly.',
+          glow: 'She holds the MAJU bottle near her glowing face with a confident radiant smile. Skin looks de-puffed and dewy.',
+        },
+      },
+      'story-2': {
+        theme: 'Winter Wellness Salad',
+        setting: 'warm cozy dining room with large windows showing heavy snow outside, rustic table, amber lighting',
+        recipe: 'winter wellness salad + Maju Black Seed Oil',
+        hookOptions: [
+          'my face is not puffy after eating this salad',
+          'this salad cleared my skin in a week',
+          'winter salad that actually helps your face',
+          'eat this when your face is puffy',
+          'the salad your skin has been waiting for',
+        ],
+        revealText: 'winter wellness salad\\n+ black seed oil\\n+ the good stuff',
+        demoText: 'she actually likes it',
+        glowBenefits: 'clears skin + reduces puffiness',
+        ctaWord: 'salad',
+        segments: {
+          hook: 'She sits at a rustic dining table with a vibrant salad and MAJU bottle. Snowy windows behind her. Knowing smile.',
+          reveal: 'Dark oil being drizzled from MAJU bottle over a vibrant winter wellness salad. Satisfying pour, oil glistening.',
+          demo: 'She takes a big bite of the salad glistening with oil. Genuine satisfaction, nods approvingly.',
+          glow: 'She holds the MAJU bottle near her glowing face with a warm confident smile. Radiant healthy skin.',
+        },
+      },
+    };
+
+    const sp = STORY_PROMPTS[storyId] || STORY_PROMPTS['story-1'];
+
     const systemPrompt = `You are a video production AI assistant for MAJU, a wellness brand. You generate optimized Kling AI text-to-video prompts.
 
 Format: ${videoType}
@@ -282,7 +342,8 @@ Avatar: ${avatar} (Patient Maya / Bree Alba — young woman, hair in bun, black 
 Product: ${product} (Maju's Black Seed Oil 8oz — dark glass bottle with "MAJU BLACK SEED OIL" label)
 Video model: Kling v2 Master (text-to-video, 5s per segment)
 
-This is the "Anti-Puffy Face Snack" Selfcare Snack Reel — red onion + Maju Black Seed Oil + salt. Total duration: 12 seconds (4 segments x 3s each), 9:16 vertical.
+This is the "${sp.theme}" Selfcare Snack Reel — ${sp.recipe}. Total duration: 12 seconds (4 segments x 3s each), 9:16 vertical.
+Setting: ${sp.setting}.
 
 The video has exactly 4 segments. Each segment is generated as a 5-second Kling text-to-video clip (trimmed to 3s at stitch). Prompts must be rich, descriptive, and cinematic — Kling generates from text alone (no reference image).
 
@@ -290,37 +351,37 @@ EVERY segment MUST have a textOverlay — no segment should ever be null. Text s
 
 SEGMENT 1: HOOK (0-3s) — Stop the scroll
 Text overlay variations (pick one, keep it short + slightly controversial/curiosity-driven):
-- "de-puff your face snack"
-- "wake up puffy? eat this"
-- "the anti-bloat snack nobody talks about"
-- "she ate a raw onion for her face"
-- "puffy face? try this weird snack"
+${sp.hookOptions.map(h => '- "' + h + '"').join('\n')}
 
 SEGMENT 2: THE REVEAL — Ingredients + Pour (3-6s) — Product placement money shot
-Text overlay: "1 red onion\\n+ black seed oil\\n+ salt"
+Text overlay: "${sp.revealText}"
 
-SEGMENT 3: THE DEMO — Eating the Snack (6-9s) — Viral moment, authentic reaction
-Text overlay: "yes she ate a raw onion" (or similar short organic reaction text)
+SEGMENT 3: THE DEMO — Eating/Using (6-9s) — Viral moment, authentic reaction
+Text overlay: "${sp.demoText}" (or similar short organic reaction text)
 
 SEGMENT 4: THE GLOW — Results + Benefits + CTA (9-12s) — Payoff beauty shot with call to action
 Text overlay MUST end with the CTA. Format:
-"drains bloat + reduces puffiness\\ncomment \\"puffy\\" for the link"
-NEVER use "shop now", "link in bio", or any salesy CTA. The CTA is ALWAYS: comment "puffy" for the link.
+"${sp.glowBenefits}\ncomment \\"${sp.ctaWord}\\" for the link"
+NEVER use "shop now", "link in bio", or any salesy CTA. The CTA is ALWAYS: comment "${sp.ctaWord}" for the link.
 
 CRITICAL RULES FOR EVERY PROMPT:
 - EVERY prompt MUST describe Patient Maya: "a young woman with her hair in a bun wearing a black tank top"
 - EVERY prompt MUST include the Maju bottle: "a dark bottle labeled MAJU BLACK SEED OIL"
-- The bottle MUST be visible in EVERY segment — on the counter, in her hand, or in the foreground
+- The bottle MUST be visible in EVERY segment — on the table, in her hand, or in the foreground
 - Bottle label must be readable in at least Reveal + Glow segments
-- Kitchen: ALWAYS dark/moody (dark cabinets, warm wood), NEVER bright/white
-- Lighting: ALWAYS warm golden-hour (3200-4000K), soft, flattering
-- Eating reaction must be AUTHENTIC — slight grimace then acceptance, NOT polished
+- Setting: ${sp.setting}
 - Movement: smooth, natural, never robotic
 - Each prompt should be 2-3 sentences of rich visual description for Kling text-to-video
 - Include "Vertical 9:16 format" in each prompt
 - NEVER use "shop now" anywhere — not in textOverlay, not in CTA, not in instagramCaption
 
-For A/B testing, vary: hook text (controversial/curiosity angles), glow benefit phrasing, and lighting intensity. CTA is always "comment puffy for the link" — do NOT vary the CTA.
+SEGMENT ACTIONS:
+- Hook: ${sp.segments.hook}
+- Reveal: ${sp.segments.reveal}
+- Demo: ${sp.segments.demo}
+- Glow: ${sp.segments.glow}
+
+For A/B testing, vary: hook text (controversial/curiosity angles), glow benefit phrasing, and lighting intensity. CTA is always "comment ${sp.ctaWord} for the link" — do NOT vary the CTA.
 
 Return ONLY a JSON object with these fields:
 - "segments": array of 4 objects, each with { "name": segment name, "prompt": optimized Kling text-to-video prompt, "duration": 3, "textOverlay": text to show (NEVER null), "model": "kling-v2-master" }
@@ -328,11 +389,8 @@ Return ONLY a JSON object with these fields:
 - "reasoning": 1 sentence explaining what you optimized based on feedback
 - "captions": array of 4 objects for each segment with { "text": "caption text", "startTime": seconds, "endTime": seconds }
 - "hookVariant": which hook text variant this version uses
-- "instagramCaption": a ready-to-post Instagram caption (hook line + value prop + CTA with "comment puffy", 150-300 characters, NO hashtags here)
-- "hashtags": array of 10-15 relevant hashtags (strings without the # prefix, e.g. ["blackseedoil","wellness","skincare"])
-
-Example:
-{"segments":[{"name":"hook","prompt":"A young woman with her hair in a bun wearing a black tank top stands in a dark moody kitchen with warm golden lighting. She holds a whole red onion near her face, looking at the camera with a calm confident expression. A dark bottle labeled MAJU BLACK SEED OIL sits on the counter. Vertical 9:16 format.","duration":3,"textOverlay":"de-puff your face snack","model":"kling-v2-master"},{"name":"reveal","prompt":"A young woman with hair in a bun wearing a black tank top pours dark oil from a bottle labeled MAJU BLACK SEED OIL onto a halved red onion on a cutting board. Dark moody kitchen, warm golden lighting. Vertical 9:16 format.","duration":3,"textOverlay":"1 red onion\\n+ black seed oil\\n+ salt","model":"kling-v2-master"},{"name":"demo","prompt":"Tight close-up of a young woman with hair in a bun wearing a black tank top biting into a raw red onion glistening with oil. Authentic reaction, slight grimace then nods approvingly. A dark bottle labeled MAJU BLACK SEED OIL on counter behind her. Warm golden kitchen lighting. Vertical 9:16 format.","duration":3,"textOverlay":"yes she ate a raw onion","model":"kling-v2-master"},{"name":"glow","prompt":"A young woman with hair in a bun wearing a black tank top holds a dark bottle labeled MAJU BLACK SEED OIL near her glowing face with a confident radiant smile. Her skin looks visibly de-puffed and dewy. She gently touches her cheek. Warm golden lighting, dark moody kitchen. Vertical 9:16 format.","duration":3,"textOverlay":"drains bloat + reduces puffiness\\ncomment \\"puffy\\" for the link","model":"kling-v2-master"}],"direction":"Warm, moody kitchen. Authentic reactions. Organic creator feel.","reasoning":"Used SOP v3.0 — 4 segments, organic text on every clip, CTA drives comments.","captions":[{"text":"de-puff your face snack","startTime":0,"endTime":3},{"text":"1 red onion + black seed oil + salt","startTime":3,"endTime":6},{"text":"yes she ate a raw onion","startTime":6,"endTime":9},{"text":"drains bloat + reduces puffiness, comment puffy for the link","startTime":9,"endTime":12}],"hookVariant":"de-puff your face snack","instagramCaption":"Wake up puffy? This weird snack actually works. Red onion + black seed oil + salt = natural de-puff. Comment \\"puffy\\" and I'll send you the link to the oil I use!","hashtags":["blackseedoil","depuff","wellness","skincare","naturalremedies","majuoil","antiinflammatory","selfcare","beautyhack","healthysnack","glowup","facialcare","holistic","puffyface","bloatremedy"]}`;
+- "instagramCaption": a ready-to-post Instagram caption (hook line + value prop + CTA with "comment ${sp.ctaWord}", 150-300 characters, NO hashtags here)
+- "hashtags": array of 10-15 relevant hashtags (strings without the # prefix, e.g. ["blackseedoil","wellness","skincare"])`;
 
     const feedbackContext = relevantFeedback.length
       ? `\n\nPast feedback for this format (${relevantFeedback.length} entries):
@@ -415,7 +473,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       const btn = $('#submit-video');
       btn.disabled = true;
       btn.textContent = '🧠 Claude is optimizing your prompt…';
-      aiPrompt = await getClaudeOptimizedPrompt(type, avatar, product, notes);
+      aiPrompt = await getClaudeOptimizedPrompt(type, avatar, product, notes, sceneVal);
       btn.disabled = false;
       btn.textContent = '🚀 Generate & Send to Queue';
     }
@@ -529,12 +587,23 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
   // Avatar: Patient Maya (Bree Alba) — young woman, black tank top, hair in bun, minimal makeup, natural look
   // Product: Maju's Black Seed Oil 8oz dark bottle with "MAJU BLACK SEED OIL" label
   // NOTE: "result" segment removed — glow now covers results + benefits + CTA
-  const DEFAULT_SEGMENT_PROMPTS = [
-    { name: 'hook', duration: 3, prompt: 'A young woman with her hair in a bun wearing a black tank top stands in a dark moody kitchen with warm golden lighting. She holds a whole red onion near her face, holding it up toward the camera with a slight smile. A dark glass bottle labeled "MAJU BLACK SEED OIL" sits prominently on the wooden counter beside her. Minimal movement, mostly still pose. Cinematic warm golden-hour lighting from a window, dark cabinets in background. Vertical 9:16 format, smooth natural motion.', textOverlay: 'de-puff your face snack', model: 'kling-v2-master' },
-    { name: 'reveal', duration: 3, prompt: 'A young woman with hair in a bun wearing a black tank top pours dark oil from a bottle labeled "MAJU BLACK SEED OIL" onto a halved red onion on a wooden cutting board. Camera slightly wider showing her waist up. She looks down at the onion as she pours, the bottle label clearly readable facing camera. Dark moody kitchen with warm golden lighting, dark cabinets behind her. Smooth satisfying pour motion, oil glistening on the onion. Vertical 9:16 format.', textOverlay: '1 red onion\n+ black seed oil\n+ salt', model: 'kling-v2-master' },
-    { name: 'demo', duration: 3, prompt: 'Tight close-up of a young woman with hair in a bun wearing a black tank top biting into a raw red onion half glistening with dark oil. She takes a big crunchy bite, chews with a slight grimace then settles into it and nods approvingly. A dark bottle labeled "MAJU BLACK SEED OIL" is visible on the counter behind her. Warm golden kitchen lighting, dark moody background. Authentic unpolished eating reaction. Vertical 9:16 format, natural motion.', textOverlay: 'yes she ate a raw onion', model: 'kling-v2-master' },
-    { name: 'glow', duration: 3, prompt: 'A young woman with hair in a bun wearing a black tank top holds a dark bottle labeled "MAJU BLACK SEED OIL" near her glowing face with a confident radiant smile. Her skin looks visibly de-puffed and dewy. She gently touches her cheek with her free hand. Warm soft golden lighting emphasizes her healthy glowing skin. Dark moody kitchen background. Vertical 9:16 format, slow smooth motion.', textOverlay: 'drains bloat + reduces puffiness\ncomment "puffy" for the link', model: 'kling-v2-master' },
-  ];
+  // Keyed by story ID so the correct fallback prompts are used per scene
+  const STORY_SEGMENT_PROMPTS = {
+    'story-1': [
+      { name: 'hook', duration: 3, prompt: 'A young woman with her hair in a bun wearing a black tank top stands in a dark moody kitchen with warm golden lighting. She holds a whole red onion near her face, holding it up toward the camera with a slight smile. A dark glass bottle labeled "MAJU BLACK SEED OIL" sits prominently on the wooden counter beside her. Minimal movement, mostly still pose. Cinematic warm golden-hour lighting from a window, dark cabinets in background. Vertical 9:16 format, smooth natural motion.', textOverlay: 'de-puff your face snack', model: 'kling-v2-master' },
+      { name: 'reveal', duration: 3, prompt: 'A young woman with hair in a bun wearing a black tank top pours dark oil from a bottle labeled "MAJU BLACK SEED OIL" onto a halved red onion on a wooden cutting board. Camera slightly wider showing her waist up. She looks down at the onion as she pours, the bottle label clearly readable facing camera. Dark moody kitchen with warm golden lighting, dark cabinets behind her. Smooth satisfying pour motion, oil glistening on the onion. Vertical 9:16 format.', textOverlay: '1 red onion\n+ black seed oil\n+ salt', model: 'kling-v2-master' },
+      { name: 'demo', duration: 3, prompt: 'Tight close-up of a young woman with her hair in a bun wearing a black tank top biting into a raw red onion half glistening with dark oil. She takes a big crunchy bite, chews with a slight grimace then settles into it and nods approvingly. A dark bottle labeled "MAJU BLACK SEED OIL" is visible on the counter behind her. Warm golden kitchen lighting, dark moody background. Authentic unpolished eating reaction. Vertical 9:16 format, natural motion.', textOverlay: 'yes she ate a raw onion', model: 'kling-v2-master' },
+      { name: 'glow', duration: 3, prompt: 'A young woman with hair in a bun wearing a black tank top holds a dark bottle labeled "MAJU BLACK SEED OIL" near her glowing face with a confident radiant smile. Her skin looks visibly de-puffed and dewy. She gently touches her cheek with her free hand. Warm soft golden lighting emphasizes her healthy glowing skin. Dark moody kitchen background. Vertical 9:16 format, slow smooth motion.', textOverlay: 'drains bloat + reduces puffiness\ncomment "puffy" for the link', model: 'kling-v2-master' },
+    ],
+    'story-2': [
+      { name: 'hook', duration: 3, prompt: 'A young woman with her hair in a bun wearing a black tank top sits at a rustic dining table in a warm cozy dining room. Large windows behind her show heavy snow falling outside. She looks at the camera with a knowing smile. A vibrant winter wellness salad and a dark bottle labeled "MAJU BLACK SEED OIL" sit on the table in front of her. Warm amber interior lighting, hygge winter atmosphere. Vertical 9:16 format, smooth natural motion.', textOverlay: 'my face is not puffy after eating this salad', model: 'kling-v2-master' },
+      { name: 'reveal', duration: 3, prompt: 'Close-up of a dark bottle labeled "MAJU BLACK SEED OIL" being tilted to drizzle dark golden oil over a vibrant winter wellness salad on a rustic dining table. The oil streams in a satisfying pour over fresh greens, roasted vegetables, and seeds. Warm cozy dining room with snowy windows in background. Warm amber lighting, oil glistening. Vertical 9:16 format, smooth satisfying pour motion.', textOverlay: 'winter wellness salad\n+ black seed oil\n+ the good stuff', model: 'kling-v2-master' },
+      { name: 'demo', duration: 3, prompt: 'A young woman with her hair in a bun wearing a black tank top uses a fork to take a big bite of a vibrant winter wellness salad glistening with dark oil. She chews and nods with genuine satisfaction, eyes closing slightly as she enjoys the flavor. A dark bottle labeled "MAJU BLACK SEED OIL" is visible on the table beside the salad bowl. Warm cozy dining room, snowy window behind. Vertical 9:16 format, authentic eating moment.', textOverlay: 'she actually likes it', model: 'kling-v2-master' },
+      { name: 'glow', duration: 3, prompt: 'A young woman with her hair in a bun wearing a black tank top holds a dark bottle labeled "MAJU BLACK SEED OIL" near her glowing face with a warm confident smile. Her skin looks radiant and healthy. Cozy warm dining room with snowy landscape visible through windows behind her. Warm amber golden lighting emphasizes her healthy glowing skin. Vertical 9:16 format, slow smooth motion.', textOverlay: 'clears skin + reduces puffiness\ncomment "salad" for the link', model: 'kling-v2-master' },
+    ],
+  };
+  // Backward-compat alias
+  const DEFAULT_SEGMENT_PROMPTS = STORY_SEGMENT_PROMPTS['story-1'];
 
   // Helper: poll a Higgsfield image request until done
   async function pollImageStatus(requestId, segLabel, timeoutLabel) {
@@ -676,7 +745,8 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     const allSegmentVideos = []; // { url, label } for stitching
 
     for (const item of newItems) {
-      const allSegments = (item.aiPrompt && item.aiPrompt.segments) || DEFAULT_SEGMENT_PROMPTS;
+      const storyFallback = STORY_SEGMENT_PROMPTS[item.storyId] || DEFAULT_SEGMENT_PROMPTS;
+      const allSegments = (item.aiPrompt && item.aiPrompt.segments) || storyFallback;
       const testMode = $('#test-mode') && $('#test-mode').checked;
       const segments = testMode ? allSegments.slice(0, 1) : allSegments;
       if (testMode) debugPanel('[Test Mode] Generating 1 segment only (hook)');
@@ -772,8 +842,9 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       if (firstItem && firstItem.aiPrompt && firstItem.aiPrompt.captions) {
         stitchOptions.captions = firstItem.aiPrompt.captions;
       } else {
-        // Fallback: build captions from segment textOverlay data
-        const segs = (firstItem && firstItem.aiPrompt && firstItem.aiPrompt.segments) || DEFAULT_SEGMENT_PROMPTS;
+        // Fallback: build captions from segment textOverlay data (story-aware)
+        const storySegs = STORY_SEGMENT_PROMPTS[firstItem && firstItem.storyId] || DEFAULT_SEGMENT_PROMPTS;
+        const segs = (firstItem && firstItem.aiPrompt && firstItem.aiPrompt.segments) || storySegs;
         stitchOptions.captions = segs
           .filter(seg => seg.textOverlay && seg.textOverlay !== 'NONE')
           .map(seg => {
@@ -1194,7 +1265,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     // Build spend log from queue items
     const spendRows = [];
     for (const item of queue) {
-      const segments = (item.aiPrompt && item.aiPrompt.segments) || DEFAULT_SEGMENT_PROMPTS;
+      const segments = (item.aiPrompt && item.aiPrompt.segments) || (STORY_SEGMENT_PROMPTS[item.storyId] || DEFAULT_SEGMENT_PROMPTS);
       const segCount = item.segmentVideos ? item.segmentVideos.length : 0
       const imageCount = 0; // Kling generates video directly, no separate image step
       const videoCount = segCount;
