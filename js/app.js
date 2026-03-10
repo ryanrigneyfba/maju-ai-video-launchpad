@@ -2127,7 +2127,12 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
         opt.textContent = `${t.filename} (${(t.size / 1024).toFixed(0)} KB)`;
         select.appendChild(opt);
       });
-      if (current) select.value = current;
+      // Auto-select: restore previous selection, or pick the first available track
+      if (current) {
+        select.value = current;
+      } else if (tracks.length > 0) {
+        select.value = tracks[0].filename;
+      }
       // Show/hide preview + delete buttons
       const previewBtn = document.getElementById('audio-preview-btn');
       const deleteBtn = document.getElementById('audio-delete-btn');
