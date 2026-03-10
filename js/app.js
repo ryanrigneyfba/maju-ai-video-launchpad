@@ -683,11 +683,24 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
 
       // Inject per-segment preloaded images from the selected story.
       // Each segment (hook, reveal, demo, glow) gets its OWN starting image.
+      // The Claude optimizer may rename segments (e.g. glow → glow_cta, or add result_benefits),
+      // so we map optimizer names back to the canonical story image keys.
+      const SEGMENT_IMAGE_FALLBACKS = {
+        glow_cta: 'glow',
+        result_benefits: 'glow',
+        benefits: 'glow',
+        cta: 'glow',
+      };
       if (item.story && item.story.segmentImages) {
         debugPanel('[Pipeline] Story: ' + item.story.name + ' — injecting per-segment images');
         let injected = 0;
         segments.forEach(seg => {
-          const si = item.story.segmentImages[seg.name];
+          let si = item.story.segmentImages[seg.name];
+          // Fallback: if the optimizer renamed the segment, map to canonical key
+          if (!si && SEGMENT_IMAGE_FALLBACKS[seg.name]) {
+            si = item.story.segmentImages[SEGMENT_IMAGE_FALLBACKS[seg.name]];
+            if (si) debugPanel(`[Pipeline] Mapped segment "${seg.name}" → "${SEGMENT_IMAGE_FALLBACKS[seg.name]}" image`);
+          }
           if (si && si.imageUrl && !seg.image_url) {
             seg.image_url = si.imageUrl;
             injected++;
