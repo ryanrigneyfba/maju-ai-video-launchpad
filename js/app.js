@@ -1443,14 +1443,18 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
   // ─── API Settings ───
   // Load saved keys into form fields
   function loadApiKeys() {
-    if (apiKeys.backendUrl) $('#api-backend-url').value = apiKeys.backendUrl;
-    if (apiKeys.claude) $('#api-claude').value = apiKeys.claude;
-    if (apiKeys.higgsfield) $('#api-higgsfield').value = apiKeys.higgsfield;
-    if (apiKeys.higgsfieldSecret) $('#api-higgsfield-secret').value = apiKeys.higgsfieldSecret;
-    if (apiKeys.metricool) $('#api-metricool').value = apiKeys.metricool;
-    if (apiKeys.arcads) $('#api-arcads').value = apiKeys.arcads;
-    if (apiKeys.creatify) $('#api-creatify').value = apiKeys.creatify;
-    if (apiKeys.productImageUrl) $('#setting-product-image-url').value = apiKeys.productImageUrl;
+    try {
+      if (apiKeys.backendUrl) $('#api-backend-url').value = apiKeys.backendUrl;
+      if (apiKeys.claude) $('#api-claude').value = apiKeys.claude;
+      if (apiKeys.higgsfield) $('#api-higgsfield').value = apiKeys.higgsfield;
+      if (apiKeys.higgsfieldSecret) $('#api-higgsfield-secret').value = apiKeys.higgsfieldSecret;
+      if (apiKeys.metricool) $('#api-metricool').value = apiKeys.metricool;
+      if (apiKeys.arcads) $('#api-arcads').value = apiKeys.arcads;
+      if (apiKeys.creatify) $('#api-creatify').value = apiKeys.creatify;
+      if (apiKeys.productImageUrl) $('#setting-product-image-url').value = apiKeys.productImageUrl;
+    } catch (e) {
+      console.warn('[loadApiKeys] Some fields not in DOM yet:', e.message);
+    }
   }
 
   // Sync keys from backend on load (so keys work on any device)
