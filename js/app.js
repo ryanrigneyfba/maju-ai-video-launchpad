@@ -23,10 +23,11 @@
     },
   };
 
-  // ─── STORIES: 5 per-segment images that tell a visual narrative ───
-  // Each story has a unique image for every segment (hook → reveal → demo → result → glow)
-  // so Kling i2v animates 5 DIFFERENT starting frames instead of the same one 5×.
+  // ─── STORIES: 4 per-segment images that tell a visual narrative ───
+  // Each story has a unique image for every segment (hook → reveal → demo → glow)
+  // so Kling i2v animates 4 DIFFERENT starting frames instead of the same one 4×.
   // imageUrl = null means the image hasn't been generated yet on Higgsfield.
+  // NOTE: "result" segment was removed — glow now covers results + benefits + CTA.
   const STORIES = {
     'story-1': {
       name: 'De-Puff Face Snack (Kitchen)',
@@ -35,7 +36,6 @@
         hook:   { imageUrl: 'https://d8j0ntlcm91z4.cloudfront.net/user_37AyZ7rfikCUmAP45VFZYj00Qy3/hf_20260310_000815_ed387b3d-d33c-495d-abb3-07c7a319fd89.png', description: 'Patient Maya in dark moody kitchen with warm golden lighting, whole red onion nearby, MAJU Black Seed Oil bottle on counter, calm confident expression' },
         reveal: { imageUrl: 'https://d8j0ntlcm91z4.cloudfront.net/user_37AyZ7rfikCUmAP45VFZYj00Qy3/hf_20260309_203512_7934ffd4-a47f-4c62-9b01-d1e84e1bb075.png', description: 'Peeled red onion cut in half, black seed oil being drizzled over it with salt sprinkled, dark kitchen' },
         demo:   { imageUrl: 'https://d8j0ntlcm91z4.cloudfront.net/user_37AyZ7rfikCUmAP45VFZYj00Qy3/hf_20260309_203747_755048a5-bf04-4c4a-9758-2fb2b1544b22.png', description: 'Patient Maya biting into raw peeled red onion glistening with oil, fun/surprised expression, dark moody kitchen' },
-        result: { imageUrl: 'https://d8j0ntlcm91z4.cloudfront.net/user_37AyZ7rfikCUmAP45VFZYj00Qy3/hf_20260309_204209_5b5efe1e-676c-4a9e-aab0-d0c85bf17bb1.png', description: 'Close-up of her face — smooth de-puffed glowing skin, calm satisfied expression, warm morning light' },
         glow:   { imageUrl: 'https://d8j0ntlcm91z4.cloudfront.net/user_37AyZ7rfikCUmAP45VFZYj00Qy3/hf_20260309_204531_323f2eb0-3e13-46c0-9322-cbe87daf355a.png', description: 'Her holding MAJU bottle near face, confident radiant smile, glowing skin, warm golden kitchen light' },
       },
       // Flux Kontext Max prompts — use these on higgsfield.ai to generate each frame
@@ -43,7 +43,6 @@
         hook:   'A young woman with her hair in a bun wearing a black tank top stands in a dark moody kitchen with warm golden lighting. She holds a whole peeled red onion in one hand near her chest, looking directly at the camera with a calm confident expression. A dark glass bottle labeled "MAJU BLACK SEED OIL" sits on the dark rustic wooden counter beside her. Dramatic warm golden-hour side lighting, dark cabinets in background. Shot on iPhone 15 Pro, natural mobile photography, vertical 9:16 format, photorealistic, natural skin texture.',
         reveal: 'A peeled red onion cut cleanly in half on a dark rustic wooden cutting board, with dark black seed oil being poured from a bottle labeled "MAJU BLACK SEED OIL" over the onion halves. A small pinch of coarse salt is sprinkled on top. Dramatic moody warm golden-hour lighting, dark kitchen background. Oil glistening on the purple-red onion flesh. Shot on iPhone 15 Pro, natural mobile photography, vertical 9:16 format, photorealistic.',
         demo:   'A young woman with her hair in a bun wearing a black tank top, taking a big bite out of a raw peeled red onion half glistening with dark oil. She has a fun slightly surprised expression mid-bite. Dark moody kitchen with warm golden lighting behind her. A dark bottle labeled "MAJU BLACK SEED OIL" is visible on the counter. Shot on iPhone 15 Pro, authentic unpolished moment, vertical 9:16 format, photorealistic, natural skin texture.',
-        result: 'Close-up portrait of a young woman with her hair in a bun, gently touching her smooth glowing cheek with one hand. Her skin looks visibly de-puffed, dewy, and healthy. Soft warm morning light on her face in a dark moody kitchen. She has a calm satisfied expression. Minimal makeup, natural skin texture visible. Shot on iPhone 15 Pro, authentic casual selfie angle, vertical 9:16 format, photorealistic.',
         glow:   'A young woman with her hair in a bun wearing a black tank top, holding a dark bottle labeled "MAJU BLACK SEED OIL" near her face with a confident radiant smile. Her skin is glowing and healthy looking. Warm golden-hour lighting in a dark moody kitchen. The bottle label is clearly visible facing camera. Shot on iPhone 15 Pro, authentic casual iPhone selfie, vertical 9:16 format, photorealistic, natural skin texture.',
       },
     },
@@ -222,7 +221,7 @@
         strip.style.cssText = 'display:flex; gap:6px; margin-top:8px; overflow-x:auto;';
         area.appendChild(strip);
       }
-      const segNames = ['hook', 'reveal', 'demo', 'result', 'glow'];
+      const segNames = ['hook', 'reveal', 'demo', 'glow'];
       strip.innerHTML = segNames.map(s => {
         const si = story.segmentImages[s];
         const hasImg = si && si.imageUrl;
@@ -267,24 +266,30 @@ Avatar: ${avatar} (Patient Maya / Bree Alba — young woman, hair in bun, black 
 Product: ${product} (Maju's Black Seed Oil 8oz — dark glass bottle with "MAJU BLACK SEED OIL" label)
 Video model: Kling v2 Master (text-to-video, 5s per segment)
 
-This is the "Anti-Puffy Face Snack" Selfcare Snack Reel — red onion + Maju Black Seed Oil + salt. Total duration: 15 seconds (5 segments x 3s each), 9:16 vertical.
+This is the "Anti-Puffy Face Snack" Selfcare Snack Reel — red onion + Maju Black Seed Oil + salt. Total duration: 12 seconds (4 segments x 3s each), 9:16 vertical.
 
-The video has exactly 5 segments. Each segment is generated as a 5-second Kling text-to-video clip. Prompts must be rich, descriptive, and cinematic — Kling generates from text alone (no reference image).
+The video has exactly 4 segments. Each segment is generated as a 5-second Kling text-to-video clip (trimmed to 3s at stitch). Prompts must be rich, descriptive, and cinematic — Kling generates from text alone (no reference image).
 
-SEGMENT 1: HOOK (0-5s) — Stop the scroll
-Text overlay: "de-puff your face snack" OR "wake up puffy? eat this"
+EVERY segment MUST have a textOverlay — no segment should ever be null. Text should feel organic, like creator-written captions, NEVER salesy.
 
-SEGMENT 2: THE REVEAL — Ingredients + Pour (5-10s) — Product placement money shot
+SEGMENT 1: HOOK (0-3s) — Stop the scroll
+Text overlay variations (pick one, keep it short + slightly controversial/curiosity-driven):
+- "de-puff your face snack"
+- "wake up puffy? eat this"
+- "the anti-bloat snack nobody talks about"
+- "she ate a raw onion for her face"
+- "puffy face? try this weird snack"
+
+SEGMENT 2: THE REVEAL — Ingredients + Pour (3-6s) — Product placement money shot
 Text overlay: "1 red onion\\n+ black seed oil\\n+ salt"
 
-SEGMENT 3: THE DEMO — Eating the Snack (10-15s) — Viral hook, authentic reaction
-Text overlay: NONE (let the visual do the work)
+SEGMENT 3: THE DEMO — Eating the Snack (6-9s) — Viral moment, authentic reaction
+Text overlay: "yes she ate a raw onion" (or similar short organic reaction text)
 
-SEGMENT 4: RESULT + BENEFITS (15-20s) — Educate on benefits
-Text overlay: "drains facial bloat\\nreduces water retention\\ntightens puffy skin"
-
-SEGMENT 5: THE GLOW — Result + CTA (20-25s) — Payoff beauty shot
-Text overlay: "anti-puffy face snack\\n(onion + black seed oil + salt)" + CTA
+SEGMENT 4: THE GLOW — Results + Benefits + CTA (9-12s) — Payoff beauty shot with call to action
+Text overlay MUST end with the CTA. Format:
+"drains bloat + reduces puffiness\\ncomment \\"puffy\\" for the link"
+NEVER use "shop now", "link in bio", or any salesy CTA. The CTA is ALWAYS: comment "puffy" for the link.
 
 CRITICAL RULES FOR EVERY PROMPT:
 - EVERY prompt MUST describe Patient Maya: "a young woman with her hair in a bun wearing a black tank top"
@@ -297,20 +302,21 @@ CRITICAL RULES FOR EVERY PROMPT:
 - Movement: smooth, natural, never robotic
 - Each prompt should be 2-3 sentences of rich visual description for Kling text-to-video
 - Include "Vertical 9:16 format" in each prompt
+- NEVER use "shop now" anywhere — not in textOverlay, not in CTA, not in instagramCaption
 
-For A/B testing, vary: hook text, CTA ("save for later" / "link in bio" / "shop now"), and lighting intensity.
+For A/B testing, vary: hook text (controversial/curiosity angles), glow benefit phrasing, and lighting intensity. CTA is always "comment puffy for the link" — do NOT vary the CTA.
 
 Return ONLY a JSON object with these fields:
-- "segments": array of 5 objects, each with { "name": segment name, "prompt": optimized Kling text-to-video prompt, "duration": 3, "textOverlay": text to show or null, "model": "kling-v2-master" }
+- "segments": array of 4 objects, each with { "name": segment name, "prompt": optimized Kling text-to-video prompt, "duration": 3, "textOverlay": text to show (NEVER null), "model": "kling-v2-master" }
 - "direction": overall visual/pacing/tone direction
 - "reasoning": 1 sentence explaining what you optimized based on feedback
-- "captions": array of 5 objects for each segment with { "text": "caption text", "startTime": seconds, "endTime": seconds }
+- "captions": array of 4 objects for each segment with { "text": "caption text", "startTime": seconds, "endTime": seconds }
 - "hookVariant": which hook text variant this version uses
-- "instagramCaption": a ready-to-post Instagram caption (hook line + value prop + CTA, 150-300 characters, NO hashtags here)
+- "instagramCaption": a ready-to-post Instagram caption (hook line + value prop + CTA with "comment puffy", 150-300 characters, NO hashtags here)
 - "hashtags": array of 10-15 relevant hashtags (strings without the # prefix, e.g. ["blackseedoil","wellness","skincare"])
 
 Example:
-{"segments":[{"name":"hook","prompt":"A young woman with her hair in a bun wearing a black tank top...","duration":5,"textOverlay":"de-puff your face snack","model":"kling-v2-master"},{"name":"reveal","prompt":"A young woman with hair in a bun wearing a black tank top pours...","duration":5,"textOverlay":"1 red onion\\n+ black seed oil\\n+ salt","model":"kling-v2-master"},{"name":"demo","prompt":"Tight close-up of a young woman with hair in a bun...","duration":5,"textOverlay":null,"model":"kling-v2-master"},{"name":"result","prompt":"A young woman with hair in a bun wearing a black tank top holds...","duration":5,"textOverlay":"drains facial bloat\\nreduces water retention\\ntightens puffy skin","model":"kling-v2-master"},{"name":"glow","prompt":"A young woman with hair in a bun wearing a black tank top looks...","duration":5,"textOverlay":"anti-puffy face snack","model":"kling-v2-master"}],"direction":"Warm, moody kitchen. Authentic reactions.","reasoning":"Used default SOP prompts.","captions":[{"text":"de-puff your face snack","startTime":0,"endTime":3},{"text":"1 red onion + black seed oil + salt","startTime":3,"endTime":6},{"text":"","startTime":6,"endTime":9},{"text":"drains facial bloat, reduces water retention, tightens puffy skin","startTime":9,"endTime":12},{"text":"anti-puffy face snack","startTime":12,"endTime":15}],"hookVariant":"de-puff your face snack","instagramCaption":"Wake up puffy? Try this anti-bloat snack! Red onion + Maju Black Seed Oil + salt = natural de-puff. Your face will thank you. Save for later!","hashtags":["blackseedoil","depuff","wellness","skincare","naturalremedies","majuoil","antiinflammatory","selfcare","beautyhack","healthysnack","glowup","facialcare","holistic","puffyface","bloatremedy"]}`;
+{"segments":[{"name":"hook","prompt":"A young woman with her hair in a bun wearing a black tank top stands in a dark moody kitchen with warm golden lighting. She holds a whole red onion near her face, looking at the camera with a calm confident expression. A dark bottle labeled MAJU BLACK SEED OIL sits on the counter. Vertical 9:16 format.","duration":3,"textOverlay":"de-puff your face snack","model":"kling-v2-master"},{"name":"reveal","prompt":"A young woman with hair in a bun wearing a black tank top pours dark oil from a bottle labeled MAJU BLACK SEED OIL onto a halved red onion on a cutting board. Dark moody kitchen, warm golden lighting. Vertical 9:16 format.","duration":3,"textOverlay":"1 red onion\\n+ black seed oil\\n+ salt","model":"kling-v2-master"},{"name":"demo","prompt":"Tight close-up of a young woman with hair in a bun wearing a black tank top biting into a raw red onion glistening with oil. Authentic reaction, slight grimace then nods approvingly. A dark bottle labeled MAJU BLACK SEED OIL on counter behind her. Warm golden kitchen lighting. Vertical 9:16 format.","duration":3,"textOverlay":"yes she ate a raw onion","model":"kling-v2-master"},{"name":"glow","prompt":"A young woman with hair in a bun wearing a black tank top holds a dark bottle labeled MAJU BLACK SEED OIL near her glowing face with a confident radiant smile. Her skin looks visibly de-puffed and dewy. She gently touches her cheek. Warm golden lighting, dark moody kitchen. Vertical 9:16 format.","duration":3,"textOverlay":"drains bloat + reduces puffiness\\ncomment \\"puffy\\" for the link","model":"kling-v2-master"}],"direction":"Warm, moody kitchen. Authentic reactions. Organic creator feel.","reasoning":"Used SOP v3.0 — 4 segments, organic text on every clip, CTA drives comments.","captions":[{"text":"de-puff your face snack","startTime":0,"endTime":3},{"text":"1 red onion + black seed oil + salt","startTime":3,"endTime":6},{"text":"yes she ate a raw onion","startTime":6,"endTime":9},{"text":"drains bloat + reduces puffiness, comment puffy for the link","startTime":9,"endTime":12}],"hookVariant":"de-puff your face snack","instagramCaption":"Wake up puffy? This weird snack actually works. Red onion + black seed oil + salt = natural de-puff. Comment \\"puffy\\" and I'll send you the link to the oil I use!","hashtags":["blackseedoil","depuff","wellness","skincare","naturalremedies","majuoil","antiinflammatory","selfcare","beautyhack","healthysnack","glowup","facialcare","holistic","puffyface","bloatremedy"]}`;
 
     const feedbackContext = relevantFeedback.length
       ? `\n\nPast feedback for this format (${relevantFeedback.length} entries):
@@ -503,15 +509,15 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     runRealPipeline(steps, msg, setStage);
   }
 
-  // SOP v2.0 default Kling prompts for each segment
+  // SOP v3.0 default Kling prompts — 4 segments, hard cuts, organic text on every clip
   // Avatar: Patient Maya (Bree Alba) — young woman, black tank top, hair in bun, minimal makeup, natural look
   // Product: Maju's Black Seed Oil 8oz dark bottle with "MAJU BLACK SEED OIL" label
+  // NOTE: "result" segment removed — glow now covers results + benefits + CTA
   const DEFAULT_SEGMENT_PROMPTS = [
     { name: 'hook', duration: 3, prompt: 'A young woman with her hair in a bun wearing a black tank top stands in a dark moody kitchen with warm golden lighting. She holds a whole red onion near her face, holding it up toward the camera with a slight smile. A dark glass bottle labeled "MAJU BLACK SEED OIL" sits prominently on the wooden counter beside her. Minimal movement, mostly still pose. Cinematic warm golden-hour lighting from a window, dark cabinets in background. Vertical 9:16 format, smooth natural motion.', textOverlay: 'de-puff your face snack', model: 'kling-v2-master' },
     { name: 'reveal', duration: 3, prompt: 'A young woman with hair in a bun wearing a black tank top pours dark oil from a bottle labeled "MAJU BLACK SEED OIL" onto a halved red onion on a wooden cutting board. Camera slightly wider showing her waist up. She looks down at the onion as she pours, the bottle label clearly readable facing camera. Dark moody kitchen with warm golden lighting, dark cabinets behind her. Smooth satisfying pour motion, oil glistening on the onion. Vertical 9:16 format.', textOverlay: '1 red onion\n+ black seed oil\n+ salt', model: 'kling-v2-master' },
-    { name: 'demo', duration: 3, prompt: 'Tight close-up of a young woman with hair in a bun wearing a black tank top biting into a raw red onion half glistening with dark oil. She takes a big crunchy bite, chews with a slight grimace then settles into it and nods approvingly. A dark bottle labeled "MAJU BLACK SEED OIL" is visible on the counter behind her. Warm golden kitchen lighting, dark moody background. Authentic unpolished eating reaction. Vertical 9:16 format, natural motion.', textOverlay: null, model: 'kling-v2-master' },
-    { name: 'result', duration: 3, prompt: 'A young woman with hair in a bun wearing a black tank top holds a bitten red onion near her face, looking confidently at camera. She gently touches her cheek with her free hand, feeling her skin. A dark bottle labeled "MAJU BLACK SEED OIL" is visible on the counter beside her. Warm golden lighting in a dark moody kitchen. Calm, satisfied expression on her face. Vertical 9:16 format.', textOverlay: 'drains facial bloat\nreduces water retention\ntightens puffy skin', model: 'kling-v2-master' },
-    { name: 'glow', duration: 3, prompt: 'A young woman with hair in a bun wearing a black tank top looks at herself in a mirror, gently touching her glowing dewy face with both hands. She looks serene and satisfied with her skin. A dark bottle labeled "MAJU BLACK SEED OIL" is prominently placed in the foreground near the mirror. Warm soft golden lighting emphasizes her healthy glowing skin. Dark moody background. Vertical 9:16 format, slow smooth motion.', textOverlay: 'anti-puffy face snack\n(onion + black seed oil + salt)', model: 'kling-v2-master' },
+    { name: 'demo', duration: 3, prompt: 'Tight close-up of a young woman with hair in a bun wearing a black tank top biting into a raw red onion half glistening with dark oil. She takes a big crunchy bite, chews with a slight grimace then settles into it and nods approvingly. A dark bottle labeled "MAJU BLACK SEED OIL" is visible on the counter behind her. Warm golden kitchen lighting, dark moody background. Authentic unpolished eating reaction. Vertical 9:16 format, natural motion.', textOverlay: 'yes she ate a raw onion', model: 'kling-v2-master' },
+    { name: 'glow', duration: 3, prompt: 'A young woman with hair in a bun wearing a black tank top holds a dark bottle labeled "MAJU BLACK SEED OIL" near her glowing face with a confident radiant smile. Her skin looks visibly de-puffed and dewy. She gently touches her cheek with her free hand. Warm soft golden lighting emphasizes her healthy glowing skin. Dark moody kitchen background. Vertical 9:16 format, slow smooth motion.', textOverlay: 'drains bloat + reduces puffiness\ncomment "puffy" for the link', model: 'kling-v2-master' },
   ];
 
   // Helper: poll a Higgsfield image request until done
@@ -660,7 +666,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       if (testMode) debugPanel('[Test Mode] Generating 1 segment only (hook)');
 
       // Inject per-segment preloaded images from the selected story.
-      // Each segment (hook, reveal, demo, result, glow) gets its OWN starting image.
+      // Each segment (hook, reveal, demo, glow) gets its OWN starting image.
       if (item.story && item.story.segmentImages) {
         debugPanel('[Pipeline] Story: ' + item.story.name + ' — injecting per-segment images');
         let injected = 0;
