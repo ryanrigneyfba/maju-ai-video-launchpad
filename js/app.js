@@ -9,10 +9,10 @@
   const CONFIG = {
     higgsfield: {
       asset: 'majurender8oz',
-      avatar: 'b262e935-4460-4026-980b-926aa0babdec'
+      avatar: '6bceded1-e872-41d7-824b-8476faf87fa4'
     },
     avatarMeta: {
-      'b262e935-4460-4026-980b-926aa0babdec': { name: 'Patient Maya', ig: '@breealba' },
+      '6bceded1-e872-41d7-824b-8476faf87fa4': { name: 'Patient Maya', ig: '@breealba' },
     },
     productMeta: {
       majurender8oz: { name: "Maju's Black Seed Oil 8oz" },
@@ -719,7 +719,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
 
       let characterId = item.avatar || CONFIG.higgsfield.avatar || null;
       // Resolve legacy avatar keys to Soul UUID
-      if (characterId && CONFIG.avatarMeta[characterId] === undefined && characterId === 'pateit') characterId = 'b262e935-4460-4026-980b-926aa0babdec';
+      if (characterId && CONFIG.avatarMeta[characterId] === undefined && characterId === 'pateit') characterId = '6bceded1-e872-41d7-824b-8476faf87fa4';
       const productImageUrl = apiKeys.productImageUrl || null;
       if (characterId) console.log(`[Pipeline] Using Soul character ID: ${characterId}`);
       if (productImageUrl) console.log(`[Pipeline] Using product reference image: ${productImageUrl.slice(0, 60)}…`);
