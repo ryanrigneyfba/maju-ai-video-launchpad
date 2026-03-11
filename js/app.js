@@ -1888,6 +1888,27 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
         }
       },
 
+      async normalizeMediaUrl(url) {
+        console.log('[Metricool] Normalizing media URL:', url?.substring(0, 80));
+        if (!apiKeys.metricool) return url;
+        try {
+          const res = await fetch(backendUrl(`/api/proxy/metricool/normalize?url=${encodeURIComponent(url)}`), {
+            headers: { 'x-api-key-value': apiKeys.metricool },
+          });
+          if (res.ok) {
+            const data = await res.json();
+            const normalized = data.url || data.normalizedUrl || data;
+            console.log('[Metricool] ✅ Normalized URL:', typeof normalized === 'string' ? normalized.substring(0, 80) : JSON.stringify(data).substring(0, 200));
+            return typeof normalized === 'string' ? normalized : url;
+          }
+          console.warn('[Metricool] Normalize returned non-ok:', res.status, await res.text());
+          return url;
+        } catch (err) {
+          console.warn('[Metricool] Normalize failed, using original URL:', err.message);
+          return url;
+        }
+      },
+
       async schedulePost(params) {
         console.log('[Metricool] Schedule post:', params);
         if (!apiKeys.metricool) return { ok: false, error: 'No API key set' };
@@ -1907,6 +1928,16 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
           const blogId = brand?.id || '';
           const userId = brand?.userId || '';
           const qs = `blogId=${blogId}&userId=${userId}`;
+
+          // Normalize media URLs before posting (uploads to Metricool CDN)
+          if (params.media && Array.isArray(params.media)) {
+            for (let i = 0; i < params.media.length; i++) {
+              if (params.media[i].url) {
+                params.media[i].url = await this.normalizeMediaUrl(params.media[i].url);
+              }
+            }
+          }
+
           const res = await fetch(backendUrl(`/api/proxy/metricool/posts?${qs}`), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'x-api-key-value': apiKeys.metricool },

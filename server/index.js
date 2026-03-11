@@ -1203,6 +1203,24 @@ app.get('/api/proxy/metricool/brands', async (req, res) => {
   }
 });
 
+// ── Metricool Media Normalize Proxy ──
+app.get('/api/proxy/metricool/normalize', async (req, res) => {
+  const apiKey = req.headers['x-api-key-value'];
+  if (!apiKey) return res.status(400).json({ error: 'Missing API key' });
+  const mediaUrl = req.query.url;
+  if (!mediaUrl) return res.status(400).json({ error: 'Missing url parameter' });
+  try {
+    const result = await proxyRequest(
+      `https://app.metricool.com/api/actions/normalize/image/url?url=${encodeURIComponent(mediaUrl)}`,
+      'GET',
+      { 'X-Mc-Auth': apiKey }
+    );
+    res.status(result.status).json(result.data);
+  } catch (err) {
+    res.status(502).json({ error: err.message });
+  }
+});
+
 // ── Metricool Analytics Proxy ──
 app.get('/api/proxy/metricool/networks', async (req, res) => {
   const apiKey = req.headers['x-api-key-value'];
