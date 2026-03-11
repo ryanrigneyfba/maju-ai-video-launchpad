@@ -13,6 +13,13 @@
 - JWT is NOT needed for re-stitching (only for video generation via Higgsfield/Kling APIs).
 - CORS blocks fetch from higgsfield.ai to awsapprunner.com. Use skill-based relay approach.
 
+## Segment Completeness
+- **Never stitch partial videos.** If any segment fails generation, abort the pipeline. A video missing the CTA is useless.
+- Pipeline used to silently drop failed segments and stitch whatever succeeded. This produced a 3-segment video missing the CTA that reached the approval queue.
+- Fix: Pipeline now checks `segmentResults.length === segments.length` before proceeding to stitch. Partial results are marked `failed` with a clear log of which segments are missing.
+- Recovery: Borrow a clip from another queue item that has the same segment type (e.g., glow_cta), patch it into `segmentVideos`, and re-stitch.
+
 ## General
 - Always save audioBg and captions on queue items during auto-stitch so re-stitch can use them.
 - Don't re-render videos to fix stitch issues — just re-stitch. Saves Higgsfield/Kling credits.
+- When borrowing clips between queue items, verify the clip URL is still accessible (Higgsfield CDN URLs may expire).

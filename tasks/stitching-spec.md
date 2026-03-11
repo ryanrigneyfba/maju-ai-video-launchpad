@@ -42,9 +42,18 @@ The re-stitch handler MUST pass the same options as auto-stitch:
 3. `options.maxClipDuration` — default 3 seconds
 4. `captionsSrt` / `captionsAss` — if stored on queue item
 
+## Segment Completeness — ALL Segments Required
+- The pipeline defines segments in `aiPrompt.segments` (typically 4: Hook, Reveal, Demo, The Glow/CTA)
+- **ALL segments MUST generate successfully before stitching**
+- If any segment fails (no preloaded image, API error, timeout), the pipeline ABORTS
+- A partial video (e.g., 3/4 segments, missing CTA) MUST NEVER reach the approval queue
+- The pipeline logs which segments are missing and marks the item as `failed`
+- To recover: regenerate the missing segment or borrow from another queue item, then re-stitch
+
 ## Lessons Learned
 1. **Captions too small**: Font size 22 is unreadable on 1080x1920. Must be 64+.
 2. **Captions hidden by Instagram UI**: MarginV 80 gets buried. Must be 500.
 3. **Music disappearing on re-stitch**: Re-stitch handler wasn't passing audioBg. Always pass it.
 4. **Captions disappearing on re-stitch**: Re-stitch handler wasn't passing captions array. Always pass it.
 5. **Caption position must not block face**: MarginV 500 keeps captions in lower 26% of frame, safely below subject's face.
+6. **Missing CTA segment**: Pipeline silently dropped failed segments and stitched partial video (3/4). Now aborts if any segment fails. All segments (especially CTA) are required for a complete Reel.

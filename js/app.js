@@ -819,11 +819,22 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
 
       // Store segment results on the item
       item.segmentVideos = segmentResults;
-      if (segmentResults.length > 0) {
+      if (segmentResults.length === segments.length) {
+        // All segments generated — proceed to stitch
         item.videoUrl = segmentResults[0].url; // preview = first segment
         item.pipelineStage = 'stitch';
         allSegmentVideos.push(...segmentResults.map(s => ({ url: s.url, label: `${item.typeName} - ${s.label}` })));
         msg.textContent = `v${item.version}: ${segmentResults.length}/${segments.length} segments rendered!`;
+      } else if (segmentResults.length > 0) {
+        // PARTIAL generation — some segments failed. Do NOT proceed to stitch.
+        // An incomplete video (missing CTA, etc.) should never reach approval queue.
+        const missing = segments.filter((s, i) => !videoResults[i] || !videoResults[i].url).map(s => s.name);
+        item.pipelineStage = 'failed';
+        item.status = 'failed';
+        item.videoUrl = segmentResults[0].url; // store preview for debugging
+        msg.textContent = `⚠️ v${item.version}: Only ${segmentResults.length}/${segments.length} segments rendered. Missing: ${missing.join(', ')}. Pipeline aborted — all segments required.`;
+        debugPanel(`[Pipeline] ❌ INCOMPLETE: Missing segments: ${missing.join(', ')}. Will NOT auto-stitch partial video.`);
+        if (typeof fetchDebugLog === 'function') fetchDebugLog();
       } else {
         item.pipelineStage = 'failed';
         item.status = 'failed';
