@@ -373,6 +373,49 @@ app.get('/api/download/:id', (req, res) => {
   res.download(filePath);
 });
 
+// Stream video with proper Content-Type (no Content-Disposition: attachment)
+// URL ends in .mp4 so external services (Metricool) recognize it as video
+app.get('/api/video/:id.mp4', (req, res) => {
+  const jobId = req.params.id;
+  let job = jobs.get(jobId);
+
+  if (!job) {
+    try {
+      if (fs.existsSync(JOBS_FILE)) {
+        const data = JSON.parse(fs.readFileSync(JOBS_FILE, 'utf8'));
+        if (data && data[jobId]) {
+          job = data[jobId];
+          jobs.set(jobId, job);
+          console.log('[Video] Re-hydrated job', jobId, 'from disk');
+        }
+      }
+    } catch (err) {
+      console.error('[Video] Error reading jobs file:', err.message);
+    }
+  }
+
+  if (!job) {
+    const directPath = path.join(OUTPUT_DIR, jobId + '.mp4');
+    if (fs.existsSync(directPath)) {
+      console.log('[Video] Found orphan file for', jobId);
+      res.set('Content-Type', 'video/mp4');
+      return res.sendFile(directPath);
+    }
+    return res.status(404).json({ error: 'Job not found' });
+  }
+
+  if (job.status !== 'done') {
+    return res.status(400).json({ error: 'Job not complete', status: job.status });
+  }
+
+  const filePath = path.join(OUTPUT_DIR, job.outputFile);
+  if (!fs.existsSync(filePath)) {
+    return res.status(404).json({ error: 'Output file missing from disk' });
+  }
+  res.set('Content-Type', 'video/mp4');
+  res.sendFile(filePath);
+});
+
 // Direct URL endpoint for Metricool / external consumers
 app.get('/api/download/:id/url', (req, res) => {
   const jobId = req.params.id;

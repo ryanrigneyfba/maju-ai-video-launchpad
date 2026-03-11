@@ -2360,22 +2360,14 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       alert('Metricool scheduling failed: No video URL available for this item.');
       return Promise.resolve({ ok: false, error: 'no_video_url' });
     }
-    // Try to get a direct/static URL for the video (survives server restarts)
+    // Convert download URL to video-streaming URL with .mp4 extension
+    // Metricool inspects the URL to determine media type — without .mp4 extension
+    // it treats the media as an image instead of video, breaking Reel posting
     let finalVideoSrc = videoSrc;
     if (videoSrc && videoSrc.includes('/api/download/')) {
-      try {
-        const urlEndpoint = videoSrc.replace('/api/download/', '/api/download/') + '/url';
-        const urlRes = await fetch(urlEndpoint);
-        if (urlRes.ok) {
-          const urlData = await urlRes.json();
-          if (urlData.url) {
-            finalVideoSrc = urlData.url;
-            console.log('[Metricool] Using direct URL:', finalVideoSrc);
-          }
-        }
-      } catch (e) {
-        console.warn('[Metricool] Could not fetch direct URL, using original:', e.message);
-      }
+      const jobId = videoSrc.split('/api/download/')[1].split('/')[0].split('?')[0];
+      finalVideoSrc = videoSrc.split('/api/download/')[0] + `/api/video/${jobId}.mp4`;
+      console.log('[Metricool] Using .mp4 video URL:', finalVideoSrc);
     }
 
     // Build publication date: use item.schedDate or default to 10 min from now
