@@ -27,6 +27,19 @@
 - **autoPublish**: Set `autoPublish: true` to auto-post instead of requiring manual approval in Metricool app.
 - **Publication date timezone**: `publicationDate.dateTime` must be in **local time** matching the specified `timezone`. Do NOT use `toISOString()` which outputs UTC — build the string from `toLocaleString()` instead.
 - **Brand caching**: Cache the blogId/userId after first brands fetch to avoid redundant API calls.
+- **Media format**: Must be plain URL strings `media: ['https://...']`, NOT objects `media: [{ url, type }]`. The official Metricool MCP code confirms `info` JSON is passed directly with media as a simple list. Objects cause "You need to add a picture" error at publish time despite 201 response.
+- **`saveExternalMediaFiles: false`**: Metricool does NOT pre-download media at schedule time — it fetches at publish time. The video URL MUST be alive when the scheduled time arrives or the post will fail.
+- **Normalize endpoint not needed**: `app.metricool.com/api/actions/normalize/image/url` just returns the same URL. The official Metricool MCP doesn't use it at all.
+
+## App Runner / Ephemeral Storage
+- **Stitched videos are ephemeral.** App Runner containers restart and lose all files in `/tmp/maju_output/`. Download URLs break after restart.
+- **Since Metricool fetches media at publish time** (not schedule time), a scheduled post will fail if the container restarts between scheduling and publishing.
+- **Long-term fix needed**: Upload stitched videos to persistent storage (S3 or similar) before scheduling. Use the persistent URL for Metricool.
+- **Re-stitch from segments**: If the stitched .mp4 is lost, re-stitch from original Higgsfield CloudFront segment URLs (these persist longer).
+
+## Stitch Endpoint Details
+- **Captions format**: `captionsAss` (raw ASS string) or `captionsSrt` (raw SRT string) must be at **body level**, NOT inside `options`. Passing captions as `options.captions` (JSON array) is silently ignored.
+- **audioBg**: Passed via `options.audioBg` (filename). Server checks `AUDIO_DIR` then `UPLOAD_DIR` for the file.
 
 ## General
 - Always save audioBg and captions on queue items during auto-stitch so re-stitch can use them.

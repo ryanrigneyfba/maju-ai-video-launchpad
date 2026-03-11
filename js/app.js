@@ -2393,7 +2393,7 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     const postParams = {
       text: fullContent,
       providers: [{ network: 'INSTAGRAM' }],
-      media: [{ url: finalVideoSrc, type: 'VIDEO' }],
+      media: [finalVideoSrc],
       instagramData: { type: 'REEL' },
       autoPublish: true,
       publicationDate: { dateTime: pubDateTime, timezone: tz },
