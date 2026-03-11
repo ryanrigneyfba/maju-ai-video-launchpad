@@ -19,6 +19,15 @@
 - Fix: Pipeline now checks `segmentResults.length === segments.length` before proceeding to stitch. Partial results are marked `failed` with a clear log of which segments are missing.
 - Recovery: Borrow a clip from another queue item that has the same segment type (e.g., glow_cta), patch it into `segmentVideos`, and re-stitch.
 
+## Metricool API v2 (Instagram Scheduling)
+- **Field names are case-sensitive**: `text` (not `content`), `providers` (not `networks`), `publicationDate` (not optional).
+- **Provider format**: `providers: [{ network: 'INSTAGRAM' }]` — no `postType` in providers.
+- **Reel type**: Must be specified as `instagramData: { type: 'REEL' }` (singular, not `REELS`). Valid types: POST, REEL, TRIAL_REEL, STORY.
+- **blogId & userId**: Required as **query parameters** (not body). Fetch from `GET /api/v2/scheduler/brands` first.
+- **autoPublish**: Set `autoPublish: true` to auto-post instead of requiring manual approval in Metricool app.
+- **Publication date timezone**: `publicationDate.dateTime` must be in **local time** matching the specified `timezone`. Do NOT use `toISOString()` which outputs UTC — build the string from `toLocaleString()` instead.
+- **Brand caching**: Cache the blogId/userId after first brands fetch to avoid redundant API calls.
+
 ## General
 - Always save audioBg and captions on queue items during auto-stitch so re-stitch can use them.
 - Don't re-render videos to fix stitch issues — just re-stitch. Saves Higgsfield/Kling credits.
