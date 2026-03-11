@@ -1892,13 +1892,29 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
         console.log('[Metricool] Schedule post:', params);
         if (!apiKeys.metricool) return { ok: false, error: 'No API key set' };
         try {
-          const res = await fetch(backendUrl('/api/proxy/metricool/posts'), {
+          // Resolve blogId/userId from brand cache or fetch fresh
+          let brand = this._brandCache;
+          if (!brand) {
+            const bRes = await fetch(backendUrl('/api/proxy/metricool/brands'), {
+              headers: { 'x-api-key-value': apiKeys.metricool },
+            });
+            if (bRes.ok) {
+              const bData = await bRes.json();
+              brand = (bData.data || [])[0] || {};
+              this._brandCache = brand;
+            }
+          }
+          const blogId = brand?.id || '';
+          const userId = brand?.userId || '';
+          const qs = `blogId=${blogId}&userId=${userId}`;
+          const res = await fetch(backendUrl(`/api/proxy/metricool/posts?${qs}`), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'x-api-key-value': apiKeys.metricool },
             body: JSON.stringify(params),
           });
           const data = await res.json();
-          return { ok: res.ok, ...data };
+          const postId = data.data?.id || data.id || data.postId;
+          return { ok: res.ok, postId, ...data };
         } catch (err) {
           console.error('[Metricool] Error:', err);
           return { ok: false, error: err.message };
@@ -2331,19 +2347,31 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
       }
     }
 
+    // Build publication date: use item.schedDate or default to 10 min from now
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    let pubDateTime;
+    if (item.schedDate) {
+      pubDateTime = item.schedDate;
+    } else {
+      const soon = new Date(new Date().toLocaleString('en-US', { timeZone: tz }));
+      soon.setMinutes(soon.getMinutes() + 10);
+      const pad = n => String(n).padStart(2, '0');
+      pubDateTime = `${soon.getFullYear()}-${pad(soon.getMonth()+1)}-${pad(soon.getDate())}T${pad(soon.getHours())}:${pad(soon.getMinutes())}:00`;
+    }
+
     const postParams = {
-      content: fullContent,
-      networks: [{ network: 'instagram', type: 'reels' }],
-      media: [{ url: finalVideoSrc, type: 'video' }],
-      publicationDate: item.schedDate
-        ? { dateTime: item.schedDate, timezone: Intl.DateTimeFormat().resolvedOptions().timeZone }
-        : undefined,
+      text: fullContent,
+      providers: [{ network: 'INSTAGRAM' }],
+      media: [{ url: finalVideoSrc, type: 'VIDEO' }],
+      instagramData: { type: 'REEL' },
+      autoPublish: true,
+      publicationDate: { dateTime: pubDateTime, timezone: tz },
     };
-    console.log('[Metricool] Scheduling Instagram Reel:', { content: fullContent.substring(0, 80) + '...', videoSrc: videoSrc.substring(0, 80), schedDate: item.schedDate || 'immediate' });
+    console.log('[Metricool] Scheduling Instagram Reel:', { text: fullContent.substring(0, 80) + '...', videoSrc: videoSrc.substring(0, 80), schedDate: pubDateTime });
     return API.metricool.schedulePost(postParams).then((res) => {
       if (res.ok) {
         console.log('[Metricool] ✅ Post scheduled successfully:', res);
-        item.metricoolId = res.postId || res.id;
+        item.metricoolId = res.postId || res.data?.id || res.id;
         saveQueue();
       } else {
         console.error('[Metricool] ❌ Schedule failed — API returned not ok:', JSON.stringify(res));
