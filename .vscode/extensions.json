@@ -1,0 +1,26 @@
+{
+  "recommendations": [
+    // Core editing
+    "esbenp.prettier-vscode",
+    "dbaeumer.vscode-eslint",
+
+    // HTML / CSS
+    "ritwickdey.liveserver",
+    "ecmel.vscode-html-css",
+    "formulahendry.auto-rename-tag",
+
+    // JavaScript / Node
+    "christian-kohler.path-intellisense",
+    "christian-kohler.npm-intellisense",
+
+    // Git
+    "eamodio.gitlens",
+    "mhutchie.git-graph",
+
+    // REST API testing
+    "humao.rest-client",
+
+    // Claude Code
+    "anthropic.claude-code"
+  ]
+}
