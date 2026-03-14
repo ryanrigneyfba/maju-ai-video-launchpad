@@ -1688,6 +1688,87 @@ app.post('/api/ig-research/:tool', (req, res) => {
   }
 });
 
+// ─── Animal Stash Pipeline API ────────────────────────────────────────────────
+const PIPELINE_RUNS_DIR = path.join(__dirname, 'pipeline', 'runs');
+fs.mkdirSync(PIPELINE_RUNS_DIR, { recursive: true });
+
+// POST /api/pipeline/animal-stash/run  { animal, location }
+app.post('/api/pipeline/animal-stash/run', (req, res) => {
+  const { animal, location } = req.body || {};
+  if (!animal || !location) {
+    return res.status(400).json({ error: 'animal and location are required' });
+  }
+
+  const pipelineScript = path.join(__dirname, 'pipeline', 'index.js');
+  if (!fs.existsSync(pipelineScript)) {
+    return res.status(500).json({ error: 'Pipeline script not found' });
+  }
+
+  // Spawn the pipeline — it creates its own runId and writes state to runs/
+  // We need to capture the runId from stdout
+  const child = spawn('node', [pipelineScript, 'run', animal, location], {
+    detached: true,
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+
+  let runId = null;
+  let output = '';
+
+  child.stdout.on('data', (data) => {
+    const text = data.toString();
+    output += text;
+    // Pipeline prints: [pipeline] created run <runId>
+    const match = text.match(/created run ([\w-]+)/);
+    if (match) runId = match[1];
+  });
+
+  child.stderr.on('data', (data) => { output += data.toString(); });
+
+  // Give it 3s to emit runId, then detach
+  const timeout = setTimeout(() => {
+    if (runId) {
+      res.json({ runId, started: true });
+    } else {
+      res.status(500).json({ error: 'Pipeline started but no runId captured', output });
+    }
+    child.unref();
+  }, 3000);
+
+  child.on('error', (err) => {
+    clearTimeout(timeout);
+    res.status(500).json({ error: err.message });
+  });
+});
+
+// GET /api/pipeline/animal-stash/status/:runId
+app.get('/api/pipeline/animal-stash/status/:runId', (req, res) => {
+  const file = path.join(PIPELINE_RUNS_DIR, `${req.params.runId}.json`);
+  if (!fs.existsSync(file)) return res.status(404).json({ error: 'Run not found' });
+  try {
+    res.json(JSON.parse(fs.readFileSync(file, 'utf8')));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// GET /api/pipeline/animal-stash/list
+app.get('/api/pipeline/animal-stash/list', (req, res) => {
+  try {
+    if (!fs.existsSync(PIPELINE_RUNS_DIR)) return res.json([]);
+    const runs = fs.readdirSync(PIPELINE_RUNS_DIR)
+      .filter(f => f.endsWith('.json'))
+      .map(f => {
+        try { return JSON.parse(fs.readFileSync(path.join(PIPELINE_RUNS_DIR, f), 'utf8')); }
+        catch { return null; }
+      })
+      .filter(Boolean)
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    res.json(runs);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ─── Start ───
 app.listen(PORT, () => {
   loadJobs();

@@ -456,6 +456,76 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
     }
 
     const type = $('#video-type').value;
+
+    // ── Animal Stash pipeline ──
+    if (type === 'animal-stash') {
+      const animal   = ($('#as-animal')?.value || '').trim();
+      const location = ($('#as-location')?.value || '').trim();
+      if (!animal || !location) {
+        alert('Please enter an Animal and Location for Animal Stash.');
+        return;
+      }
+      const backend = apiKeys.backendUrl || window.DEFAULT_BACKEND || 'http://localhost:3001';
+      const btn = $('#submit-video');
+      btn.disabled = true;
+      btn.textContent = 'Starting pipeline…';
+      try {
+        const resp = await fetch(`${backend}/api/pipeline/animal-stash/run`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ animal, location }),
+        });
+        const data = await resp.json();
+        if (!resp.ok || !data.runId) throw new Error(data.error || 'No runId returned');
+        const runId = data.runId;
+        const card = $('#as-pipeline-card');
+        card.classList.remove('hidden');
+        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        $('#as-run-id').textContent = runId;
+        // Poll for status
+        const pollInterval = setInterval(async () => {
+          try {
+            const sr = await fetch(`${backend}/api/pipeline/animal-stash/status/${runId}`);
+            const state = await sr.json();
+            // Update stage indicators
+            const stages = ['brief','statics','animate','stitch','postprod','publish'];
+            stages.forEach(s => {
+              const el = document.querySelector(`#as-stages .as-stage[data-stage="${s}"]`);
+              if (!el) return;
+              const st = state.stages?.[s]?.status || 'pending';
+              el.setAttribute('data-status', st);
+              el.querySelector('.as-stage-status').textContent = st;
+              el.querySelector('.as-stage-icon').textContent = '';
+            });
+            const msg = $('#as-pipeline-msg');
+            if (state.completedAt) {
+              clearInterval(pollInterval);
+              msg.textContent = 'Pipeline complete! Video published.';
+              btn.disabled = false;
+              btn.textContent = '🚀 Generate & Send to Queue';
+            } else {
+              // Find running stage
+              const running = stages.find(s => state.stages?.[s]?.status === 'running');
+              const failed  = stages.find(s => state.stages?.[s]?.status === 'failed');
+              if (failed) {
+                clearInterval(pollInterval);
+                msg.textContent = `Pipeline failed at stage: ${failed} — ${state.stages[failed]?.error || ''}`;
+                btn.disabled = false;
+                btn.textContent = '🚀 Generate & Send to Queue';
+              } else if (running) {
+                msg.textContent = `Running: ${running}…`;
+              }
+            }
+          } catch (e) { /* ignore poll errors */ }
+        }, 3000);
+      } catch (err) {
+        alert('Pipeline error: ' + err.message);
+        btn.disabled = false;
+        btn.textContent = '🚀 Generate & Send to Queue';
+      }
+      return;
+    }
+
     const versions = parseInt($('#versions').value);
     const avatar = $('#avatar').value;
     const avatarName = $('#avatar').selectedOptions[0].textContent;
@@ -2607,4 +2677,16 @@ REJECTED videos — what to avoid:\n${rejections.map((f) => `- "${f.notes}"`).jo
 
   // Expose jwtConnected for pipeline pre-check
   window.__MAJU_JWT_CONNECTED = () => jwtConnected;
+
+  // ─── Animal Stash — show/hide fields based on video type ───
+  function updateAnimalStashFields() {
+    const type = $('#video-type')?.value;
+    const fields = $('#animal-stash-fields');
+    if (!fields) return;
+    fields.style.display = (type === 'animal-stash') ? 'flex' : 'none';
+  }
+  if ($('#video-type')) {
+    $('#video-type').addEventListener('change', updateAnimalStashFields);
+    updateAnimalStashFields(); // run on init
+  }
 })();

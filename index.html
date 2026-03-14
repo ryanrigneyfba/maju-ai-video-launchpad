@@ -68,7 +68,8 @@
           <div class="form-group">
             <label for="video-type">Video Type</label>
             <select id="video-type">
-              <option value="selfcare-snack-reel" selected>Selfcare Snack Reel</option>
+              <option value="animal-stash" selected>Animal Stash (GoPro POV)</option>
+              <option value="selfcare-snack-reel">Selfcare Snack Reel</option>
             </select>
           </div>
           <div class="form-group">
@@ -92,6 +93,18 @@
               <option value="majurender8oz" selected>Maju's Black Seed Oil 8oz</option>
             </select>
           </div>
+          <!-- Animal Stash specific inputs -->
+          <div id="animal-stash-fields" class="form-group full-width" style="display:flex;gap:12px;flex-wrap:wrap;">
+            <div style="flex:1;min-width:160px;">
+              <label for="as-animal">Animal</label>
+              <input type="text" id="as-animal" placeholder="e.g. fox, bear, raccoon" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card);color:var(--text);">
+            </div>
+            <div style="flex:1;min-width:160px;">
+              <label for="as-location">Location</label>
+              <input type="text" id="as-location" placeholder="e.g. misty forest, backyard" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card);color:var(--text);">
+            </div>
+          </div>
+
           <div class="form-group full-width">
             <label>Posting</label>
             <div class="posting-toggle">
@@ -285,6 +298,47 @@
         </div>
 
         <p class="pipeline-msg mt-3" id="pipeline-msg"></p>
+      </div>
+
+      <!-- Animal Stash Pipeline Status -->
+      <div class="card hidden" id="as-pipeline-card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+          <h3 class="card-title" style="margin-bottom:0">Animal Stash Pipeline</h3>
+          <span id="as-run-id" style="font-size:0.7rem;color:#8a8fa3;font-family:monospace;"></span>
+        </div>
+        <div id="as-stages" style="display:flex;flex-direction:column;gap:6px;">
+          <div class="as-stage" data-stage="brief">
+            <span class="as-stage-icon">&#9675;</span>
+            <span class="as-stage-name">Brief</span>
+            <span class="as-stage-status" style="margin-left:auto;font-size:0.75rem;color:#8a8fa3;">pending</span>
+          </div>
+          <div class="as-stage" data-stage="statics">
+            <span class="as-stage-icon">&#9675;</span>
+            <span class="as-stage-name">Static Frames</span>
+            <span class="as-stage-status" style="margin-left:auto;font-size:0.75rem;color:#8a8fa3;">pending</span>
+          </div>
+          <div class="as-stage" data-stage="animate">
+            <span class="as-stage-icon">&#9675;</span>
+            <span class="as-stage-name">Animate Clips</span>
+            <span class="as-stage-status" style="margin-left:auto;font-size:0.75rem;color:#8a8fa3;">pending</span>
+          </div>
+          <div class="as-stage" data-stage="stitch">
+            <span class="as-stage-icon">&#9675;</span>
+            <span class="as-stage-name">Stitch</span>
+            <span class="as-stage-status" style="margin-left:auto;font-size:0.75rem;color:#8a8fa3;">pending</span>
+          </div>
+          <div class="as-stage" data-stage="postprod">
+            <span class="as-stage-icon">&#9675;</span>
+            <span class="as-stage-name">Post-Production</span>
+            <span class="as-stage-status" style="margin-left:auto;font-size:0.75rem;color:#8a8fa3;">pending</span>
+          </div>
+          <div class="as-stage" data-stage="publish">
+            <span class="as-stage-icon">&#9675;</span>
+            <span class="as-stage-name">Publish</span>
+            <span class="as-stage-status" style="margin-left:auto;font-size:0.75rem;color:#8a8fa3;">pending</span>
+          </div>
+        </div>
+        <p id="as-pipeline-msg" style="font-size:0.82rem;color:#a78bfa;margin-top:12px;"></p>
       </div>
 
       <!-- FFmpeg Auto-Stitch Panel -->
