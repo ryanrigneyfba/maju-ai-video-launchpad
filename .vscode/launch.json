@@ -13,16 +13,6 @@
       "skipFiles": ["<node_internals>/**"]
     },
     {
-      "name": "IG Research Agent",
-      "type": "node",
-      "request": "launch",
-      "program": "${workspaceFolder}/ig-research-agent/src/index.js",
-      "cwd": "${workspaceFolder}/ig-research-agent",
-      "envFile": "${workspaceFolder}/.env",
-      "console": "integratedTerminal",
-      "skipFiles": ["<node_internals>/**"]
-    },
-    {
       "name": "Open Frontend (Live Server)",
       "type": "chrome",
       "request": "launch",
