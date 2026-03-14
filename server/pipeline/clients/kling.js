@@ -1,5 +1,9 @@
 'use strict';
 
+// Kling video generation via Higgsfield proxy
+// Uses kling-video/v2.1/master/image-to-video through /api/proxy/higgsfield/generate
+// Polling via /api/proxy/higgsfield/status/:requestId (same pattern as image gen)
+
 const { fetchJSON, poll } = require('./http');
 const { getKey, MAJU_SERVER, VIDEO_TIMEOUT } = require('../config');
 
@@ -12,55 +16,53 @@ const NEGATIVE_PROMPT = [
 
 function headers() {
   return {
-    'Content-Type':      'application/json',
-    'x-api-key-value':   getKey('higgsFieldApiKey'),
+    'Content-Type':       'application/json',
+    'x-api-key-value':    getKey('higgsFieldApiKey'),
     'x-api-secret-value': getKey('higgsFieldApiSecret'),
   };
 }
 
 async function generateClip(startImageUrl, endImageUrl, prompt) {
-  const data = await fetchJSON(`${MAJU_SERVER}/api/proxy/kling/image2video`, {
+  const data = await fetchJSON(`${MAJU_SERVER}/api/proxy/higgsfield/generate`, {
     method:  'POST',
     headers: headers(),
     body: JSON.stringify({
-      model_name:      'kling-v2-master',
-      image:           startImageUrl,
-      tail_image_url:  endImageUrl,
-      prompt,
-      negative_prompt: NEGATIVE_PROMPT,
-      duration:        '6',
-      aspect_ratio:    '9:16',
-      mode:            'std',
+      endpoint: 'kling-video/v2.1/master/image-to-video',
+      input: {
+        image_url:       startImageUrl,
+        prompt,
+        negative_prompt: NEGATIVE_PROMPT,
+        duration:        5,
+        aspect_ratio:    '9:16',
+      },
     }),
   });
 
-  const taskId = data?.data?.task_id || data?.task_id || data?.taskId;
-  if (!taskId) throw new Error(`Kling returned no task ID: ${JSON.stringify(data)}`);
-  return taskId;
+  const requestId = data?.request_id || data?.id;
+  if (!requestId) throw new Error(`Kling returned no request_id: ${JSON.stringify(data)}`);
+  return requestId;
 }
 
-async function pollClip(taskId) {
+async function pollClip(requestId, timeoutMs = VIDEO_TIMEOUT) {
   return poll(
-    `${MAJU_SERVER}/api/proxy/kling/image2video/${taskId}`,
+    `${MAJU_SERVER}/api/proxy/higgsfield/status/${encodeURIComponent(requestId)}`,
     { headers: headers() },
     (data) => {
-      const status = (
-        data?.data?.task_status ||
-        data?.task_status || ''
-      ).toLowerCase();
-
-      if (status === 'failed') {
-        throw new Error(`Kling task failed: ${data?.data?.task_status_msg || 'unknown'}`);
+      const status = (data?.status || '').toLowerCase();
+      if (status === 'failed' || status === 'error') {
+        throw new Error(`Kling job failed: ${JSON.stringify(data)}`);
       }
-      if (status === 'succeed') {
-        const videos = data?.data?.task_result?.videos || [];
-        const url = videos[0]?.url;
-        if (!url) throw new Error('Kling succeeded but no video URL in response');
-        return url;
+      if (status === 'completed' || status === 'ready' || status === 'succeeded') {
+        // Kling returns video URL in different shapes
+        const url = data?.video?.url
+          || data?.videos?.[0]?.url
+          || data?.result?.video_url
+          || data?.output?.[0];
+        if (url) return url;
       }
       return null;
     },
-    VIDEO_TIMEOUT,
+    timeoutMs,
   );
 }
 

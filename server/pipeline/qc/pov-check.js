@@ -8,7 +8,7 @@ const path = require('path');
 const os   = require('os');
 const { extractFrame } = require('../clients/ffmpeg');
 const { fetchJSON }    = require('../clients/http');
-const { getKey, MAJU_SERVER } = require('../config');
+const { getKey } = require('../config');
 
 const SYSTEM = `You are a POV integrity checker for Animal Stash videos.
 Rules (STRICT):
@@ -46,9 +46,14 @@ async function checkFrame(framePath, clipLabel, timeLabel) {
   const apiKey  = getKey('claudeApiKey');
   const imgData = fs.readFileSync(framePath).toString('base64');
 
-  const data = await fetchJSON(`${MAJU_SERVER}/api/proxy/claude/messages`, {
+  // Call Claude API directly — avoids MAJU proxy body size limits
+  const data = await fetchJSON('https://api.anthropic.com/v1/messages', {
     method:  'POST',
-    headers: { 'Content-Type': 'application/json', 'x-api-key-value': apiKey },
+    headers: {
+      'Content-Type':      'application/json',
+      'x-api-key':         apiKey,
+      'anthropic-version': '2023-06-01',
+    },
     body: JSON.stringify({
       model:      'claude-haiku-4-5-20251001',
       max_tokens: 256,

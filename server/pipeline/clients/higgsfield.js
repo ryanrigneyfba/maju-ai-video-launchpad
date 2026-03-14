@@ -1,94 +1,83 @@
 'use strict';
 
-const { fetchJSON, poll, sleep } = require('./http');
-const { getKey, MAJU_SERVER, IMAGE_TIMEOUT, POLL_INTERVAL, JWT_WAIT_TIMEOUT } = require('../config');
+// Higgsfield image generation — Nano Banana Pro ONLY (vault HARD RULE #8)
+// Endpoint: nano-banana-pro via MAJU proxy /api/proxy/higgsfield/generate
+// Soul injection for Patient Maya (clip1Start) and MajuBottle (clip2End)
+// Poll via /api/proxy/higgsfield/status/:requestId
 
-// ─── FNF image generation (fnf.higgsfield.ai via backend proxy) ──────────────
-// Requires a valid Higgsfield JWT stored via the bookmarklet (/api/jwt-store)
+const { fetchJSON, poll } = require('./http');
+const { getKey, MAJU_SERVER, IMAGE_TIMEOUT } = require('../config');
 
-async function ensureJWT() {
-  const status = await fetchJSON(`${MAJU_SERVER}/api/jwt-status`);
-  if (status.valid) return;
+// Soul IDs — must match vault definitions exactly
+const SOUL_IDS = {
+  patientMaya: '6bceded1-e872-41d7-824b-8476faf87fa4',
+  majuBottle:  'b360f0d3-51f4-4801-85e7-be9adacc6a47',
+};
 
-  console.log('\n  ⚡ ACTION REQUIRED: Higgsfield JWT needed.');
-  console.log('  1. Open https://fnf.higgsfield.ai in your browser (must be logged in)');
-  console.log('  2. Run the Soul Connect bookmarklet');
-  console.log(`  3. Pipeline will continue automatically (waiting up to ${JWT_WAIT_TIMEOUT / 1000}s)...\n`);
+// Style ID for Nano Banana Pro soul generation (from fnf-patch.js)
+const NBP_STYLE_ID = '1cb4b936-77bf-4f9a-9039-f3d349a4cdbe';
 
-  const deadline = Date.now() + JWT_WAIT_TIMEOUT;
-  while (Date.now() < deadline) {
-    await sleep(3000);
-    const s = await fetchJSON(`${MAJU_SERVER}/api/jwt-status`);
-    if (s.valid) {
-      console.log('  JWT received — continuing.\n');
-      return;
-    }
-  }
-  throw new Error('Timed out waiting for Higgsfield JWT. Run the Soul Connect bookmarklet and retry.');
+function proxyHeaders() {
+  return {
+    'Content-Type':       'application/json',
+    'x-api-key-value':    getKey('higgsFieldApiKey'),
+    'x-api-secret-value': getKey('higgsFieldApiSecret'),
+  };
 }
 
+// ─── Generate frame with Nano Banana Pro ────────────────────────────────────
+// soulId: inject soul character into the frame (Patient Maya or MajuBottle)
 async function generateFrame(prompt, soulId = null) {
-  await ensureJWT();
-  const apiKey    = getKey('higgsFieldApiKey');
-  const apiSecret = getKey('higgsFieldApiSecret');
-
-  const params = {
-    prompt,
-    quality:    '1080p',
-    aspect_ratio: '9:16',
-    enhance_prompt: true,
+  const input = {
+    prompt:    soulId ? `<<<${soulId}>>> ${prompt}` : prompt,
+    quality:   '1k',
     batch_size: 1,
-    use_unlim:  true,
+    width:     1152,
+    height:    2048,
   };
 
   if (soulId) {
-    params.custom_reference_id       = soulId;
-    params.custom_reference_strength = 0.9;
+    input.custom_reference_id       = soulId;
+    input.custom_reference_strength = 0.9;
+    input.style_id                  = NBP_STYLE_ID;
+    input.style_strength            = 0.6;
   }
 
-  const data = await fetchJSON(`${MAJU_SERVER}/api/proxy/higgsfield/fnf-generate`, {
+  const data = await fetchJSON(`${MAJU_SERVER}/api/proxy/higgsfield/generate`, {
     method:  'POST',
-    headers: {
-      'Content-Type':      'application/json',
-      'x-api-key-value':   apiKey,
-      'x-api-secret-value': apiSecret,
-    },
-    body: JSON.stringify({ params }),
+    headers: proxyHeaders(),
+    body: JSON.stringify({
+      endpoint: 'nano-banana-pro',
+      input,
+    }),
   });
 
-  const jobSetId = data?.id || data?.job_set_id;
-  if (!jobSetId) throw new Error(`FNF generate returned no job ID: ${JSON.stringify(data)}`);
-  return jobSetId;
+  const requestId = data?.request_id || data?.id;
+  if (!requestId) throw new Error(`nano-banana-pro returned no request_id: ${JSON.stringify(data)}`);
+  return requestId;
 }
 
-async function pollFrame(jobSetId) {
-  const apiKey    = getKey('higgsFieldApiKey');
-  const apiSecret = getKey('higgsFieldApiSecret');
-
+// ─── Poll for image result ────────────────────────────────────────────────────
+async function pollFrame(requestId, timeoutMs = IMAGE_TIMEOUT) {
   return poll(
-    `${MAJU_SERVER}/api/proxy/higgsfield/fnf-job-set/${jobSetId}`,
-    {
-      headers: {
-        'x-api-key-value':   apiKey,
-        'x-api-secret-value': apiSecret,
-      },
-    },
+    `${MAJU_SERVER}/api/proxy/higgsfield/status/${encodeURIComponent(requestId)}`,
+    { headers: proxyHeaders() },
     (data) => {
       const status = (data?.status || '').toLowerCase();
       if (status === 'failed' || status === 'error') {
-        throw new Error(`FNF job failed: ${JSON.stringify(data)}`);
+        throw new Error(`Nano Banana Pro frame failed: ${JSON.stringify(data)}`);
       }
-      // Extract image URL from completed job
-      const jobs = data?.jobs || data?.results || [];
-      if (jobs.length > 0) {
-        const url = jobs[0]?.result?.url || jobs[0]?.url || jobs[0]?.image_url;
+      if (status === 'completed' || status === 'ready' || status === 'succeeded') {
+        const url = data?.images?.[0]?.url
+          || data?.result?.sample
+          || data?.result?.url
+          || data?.output?.[0];
         if (url) return url;
       }
-      if (data?.result?.url) return data.result.url;
       return null;
     },
-    IMAGE_TIMEOUT,
+    timeoutMs,
   );
 }
 
-module.exports = { generateFrame, pollFrame };
+module.exports = { generateFrame, pollFrame, SOUL_IDS };

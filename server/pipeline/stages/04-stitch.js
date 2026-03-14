@@ -40,8 +40,8 @@ async function run(state) {
       console.log('  [stitch] downloading stitched video...');
       await download(dlUrl, stitchedPath);
 
-      // QC
-      const errors = await checkVideo(stitchedPath);
+      // QC — audio added in postprod, so skip audio check here
+      const errors = await checkVideo(stitchedPath, { requireAudio: false });
       if (errors.length) throw new Error(`Video QC failed: ${errors.join('; ')}`);
 
       return { stitchedPath, jobId, downloadUrl: dlUrl, streamUrl: strUrl };

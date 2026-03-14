@@ -3,44 +3,36 @@
 const { fetchJSON } = require('./http');
 const { getKey, MAJU_SERVER } = require('../config');
 
-const NETWORKS = ['instagram', 'tiktok', 'youtube', 'facebook', 'twitter'];
+// Metricool ScheduledPost field names per network
+const NETWORK_FIELDS = {
+  instagram: 'instagramPost',
+  tiktok:    'tiktokPost',
+  youtube:   'youtubePost',
+  facebook:  'facebookPost',
+  twitter:   'twitterPost',
+};
 
 async function publish(streamUrl, caption, hashtags) {
-  const token   = getKey('metricoolToken');
-  const blogId  = getKey('metricoolBlogId');
-  const fullText = `${caption}\n\n${hashtags.map(h => `#${h}`).join(' ')}`;
+  const token  = getKey('metricoolToken');
+  const blogId = getKey('metricoolBlogId');
+  const text   = `${caption}\n\n${hashtags.map(h => `#${h}`).join(' ')}`;
+  const media  = [{ url: streamUrl, type: 'VIDEO' }];
 
-  // Normalize URL for Metricool
-  const normalizeRes = await fetchJSON(`${MAJU_SERVER}/api/proxy/metricool/normalize`, {
-    method:  'POST',
-    headers: {
-      'Content-Type':  'application/json',
-      'x-metricool-token': token,
-      'x-blog-id':     String(blogId),
-    },
-    body: JSON.stringify({ url: streamUrl }),
-  });
-
-  const mediaUrl = normalizeRes?.url || normalizeRes?.normalized_url || streamUrl;
-
-  // Post to all networks
+  // Post to each network individually with correct field structure
   const results = {};
-  for (const network of NETWORKS) {
+  for (const [network, field] of Object.entries(NETWORK_FIELDS)) {
     try {
-      const res = await fetchJSON(`${MAJU_SERVER}/api/proxy/metricool/posts`, {
-        method:  'POST',
-        headers: {
-          'Content-Type':      'application/json',
-          'x-metricool-token': token,
-          'x-blog-id':         String(blogId),
+      const body = {
+        [field]: { text, media, type: 'REEL' },
+      };
+      const res = await fetchJSON(
+        `${MAJU_SERVER}/api/proxy/metricool/posts?blogId=${encodeURIComponent(blogId)}`,
+        {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json', 'x-api-key-value': token },
+          body:    JSON.stringify(body),
         },
-        body: JSON.stringify({
-          text:     fullText,
-          media:    mediaUrl,
-          networks: [network],
-          type:     'REEL',
-        }),
-      });
+      );
       results[network] = { ok: true, data: res };
       console.log(`  [publish] ${network} OK`);
     } catch (err) {

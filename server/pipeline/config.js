@@ -44,7 +44,7 @@ const RETRY_ATTEMPTS  = 3;
 const RETRY_DELAYS    = [2000, 4000, 8000]; // ms, exponential backoff
 const POLL_INTERVAL   = 3000;               // ms between status polls
 const IMAGE_TIMEOUT   = 180_000;            // 3 min
-const VIDEO_TIMEOUT   = 360_000;            // 6 min
+const VIDEO_TIMEOUT   = 900_000;            // 15 min (Kling takes 7-12 min)
 const STITCH_TIMEOUT  = 300_000;            // 5 min
 const JWT_WAIT_TIMEOUT = 120_000;           // 2 min to wait for bookmarklet JWT
 

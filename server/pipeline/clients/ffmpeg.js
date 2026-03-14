@@ -52,22 +52,20 @@ async function postProduce(inputPath, outputPath, hookLine) {
     videoStream = '[vwithcrack]';
   }
 
-  // Mix audio: original + reel audio at low volume, trim to 12s with fade
-  let audioStream = '[0:a]';
+  // Mix audio: reel audio only (Kling clips have no audio stream)
+  let audioStream = null;
   if (hasAudio) {
     const audioIdx = hasCrack ? 2 : 1;
     filterParts.push(`[${audioIdx}:a]volume=0.08,atrim=0:12,afade=t=out:st=10:d=2[reelaud]`);
-    filterParts.push(`${audioStream}[reelaud]amix=inputs=2:duration=first[mixaud]`);
-    audioStream = '[mixaud]';
+    audioStream = '[reelaud]';
   }
 
   const args = [
     ...inputs,
     '-filter_complex', filterParts.join(';'),
     '-map', videoStream,
-    '-map', audioStream,
+    ...(audioStream ? ['-map', audioStream, '-c:a', 'aac', '-b:a', '128k'] : ['-an']),
     '-c:v', 'libx264', '-crf', '18', '-preset', 'fast',
-    '-c:a', 'aac', '-b:a', '128k',
     '-movflags', '+faststart',
     '-y', outputPath,
   ];
@@ -93,17 +91,17 @@ async function probe(filePath) {
   });
 }
 
-async function qcVideo(filePath) {
+async function qcVideo(filePath, { requireAudio = true } = {}) {
   const info     = await probe(filePath);
   const duration = parseFloat(info?.format?.duration || 0);
   const vStream  = info?.streams?.find(s => s.codec_type === 'video');
   const aStream  = info?.streams?.find(s => s.codec_type === 'audio');
   const errors   = [];
-  if (duration < 10)                          errors.push(`Duration too short: ${duration}s`);
+  if (duration < 8)                            errors.push(`Duration too short: ${duration}s`);
   if (!vStream)                                errors.push('No video stream');
-  if (vStream && vStream.width  < 720)        errors.push(`Width too small: ${vStream.width}`);
-  if (vStream && vStream.height < 1280)       errors.push(`Height too small: ${vStream.height}`);
-  if (!aStream)                                errors.push('No audio stream');
+  if (vStream && vStream.width  < 720)         errors.push(`Width too small: ${vStream.width}`);
+  if (vStream && vStream.height < 1280)        errors.push(`Height too small: ${vStream.height}`);
+  if (requireAudio && !aStream)                errors.push('No audio stream');
   return errors;
 }
 

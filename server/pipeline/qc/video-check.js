@@ -2,8 +2,9 @@
 
 const { qcVideo } = require('../clients/ffmpeg');
 
-async function check(filePath) {
-  return qcVideo(filePath);
+// requireAudio: false for pre-postprod stitched video (audio added in postprod)
+async function check(filePath, { requireAudio = true } = {}) {
+  return qcVideo(filePath, { requireAudio });
 }
 
 module.exports = { check };

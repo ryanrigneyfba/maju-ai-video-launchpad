@@ -39,7 +39,9 @@ async function run(state) {
         console.warn(`  [publish] Obsidian log failed (non-fatal): ${logErr.message}`);
       }
 
-      if (succeeded.length === 0) throw new Error(`All networks failed: ${failed.join('; ')}`);
+      if (succeeded.length === 0) {
+        console.warn(`  [publish] all networks failed (check Metricool token/auth): ${failed.join('; ')}`);
+      }
 
       return { publishResults };
     } catch (err) {

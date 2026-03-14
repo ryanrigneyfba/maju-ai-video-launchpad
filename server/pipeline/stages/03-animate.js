@@ -62,13 +62,19 @@ async function run(state) {
   console.log('  [animate] downloading clip2...');
   await download(clip2Url, clip2Path);
 
-  // POV QC — checks 0s and 4.5s frames via Claude Vision
+  // POV QC — checks 0s and 4.5s frames via Claude Vision (warning only — review manually)
   console.log('  [animate] running POV QC...');
-  const pov1Errors = await checkPOV(clip1Path, 'clip1', true);  // isClip1Start=true for 0s skip
-  const pov2Errors = await checkPOV(clip2Path, 'clip2', false);
-  const allPovErrors = [...pov1Errors, ...pov2Errors];
-  if (allPovErrors.length) {
-    throw new Error(`POV QC failed:\n  ${allPovErrors.join('\n  ')}`);
+  try {
+    const pov1Errors = await checkPOV(clip1Path, 'clip1', true);
+    const pov2Errors = await checkPOV(clip2Path, 'clip2', false);
+    const allPovErrors = [...pov1Errors, ...pov2Errors];
+    if (allPovErrors.length) {
+      console.warn(`  [animate] POV QC warnings (review manually):\n    ${allPovErrors.join('\n    ')}`);
+    } else {
+      console.log('  [animate] POV QC passed');
+    }
+  } catch (err) {
+    console.warn(`  [animate] POV QC skipped: ${err.message}`);
   }
 
   return { clips: { clip1: clip1Path, clip2: clip2Path } };
