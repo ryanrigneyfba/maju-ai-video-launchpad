@@ -1,0 +1,42 @@
+{
+  // Editor defaults
+  "editor.tabSize": 2,
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+
+  // File associations
+  "files.associations": {
+    "*.js": "javascript",
+    "*.css": "css",
+    "*.html": "html"
+  },
+
+  // Exclude clutter from the explorer & search
+  "files.exclude": {
+    "node_modules": true,
+    "server/uploads": true,
+    "server/output": true,
+    "server/audio": true,
+    "*.db": true,
+    ".DS_Store": true
+  },
+  "search.exclude": {
+    "node_modules": true,
+    "**/package-lock.json": true,
+    ".agents/tools": true,
+    ".agents/skills": true
+  },
+
+  // JavaScript / Node
+  "javascript.suggest.autoImports": true,
+  "javascript.updateImportsOnFileMove.enabled": "always",
+
+  // Emmet for HTML files
+  "emmet.includeLanguages": {
+    "html": "html",
+    "javascript": "javascriptreact"
+  },
+
+  // Terminal default
+  "terminal.integrated.cwd": "${workspaceFolder}"
+}
