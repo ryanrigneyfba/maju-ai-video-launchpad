@@ -130,6 +130,49 @@
           </div>
         </div>
 
+        <!-- Animal Stash Pipeline Card -->
+        <div class="agent-card" id="animalStashCard" data-agent="animal-stash">
+          <div class="agent-header">
+            <div class="agent-icon">&#x1F98A;</div>
+            <div class="agent-info">
+              <h2>Animal Stash Pipeline</h2>
+              <p class="agent-desc">GoPro POV animal discovery videos with Maju bottle</p>
+            </div>
+            <div class="agent-status" id="animalStashStatus">
+              <span class="status-badge idle">Loading</span>
+            </div>
+          </div>
+          <div class="agent-metrics">
+            <div class="metric">
+              <span class="metric-value" id="asProjectCount">-</span>
+              <span class="metric-label">Projects</span>
+            </div>
+            <div class="metric">
+              <span class="metric-value" id="asStaticsCount">-</span>
+              <span class="metric-label">Statics Done</span>
+            </div>
+            <div class="metric">
+              <span class="metric-value" id="asClipsCount">-</span>
+              <span class="metric-label">Clips Done</span>
+            </div>
+            <div class="metric">
+              <span class="metric-value" id="asPublishedCount">-</span>
+              <span class="metric-label">Published</span>
+            </div>
+          </div>
+          <div class="agent-actions">
+            <button class="btn btn-primary" onclick="showAnimalStashProjects()">
+              View Projects
+            </button>
+            <button class="btn btn-ghost" onclick="showAgentDetail('animal-stash')">
+              View Details
+            </button>
+          </div>
+          <div class="agent-last-run">
+            <span>Last updated: </span><span id="asLastUpdated">-</span>
+          </div>
+        </div>
+
         <!-- Future Agent Placeholder -->
         <div class="agent-card agent-card-placeholder" id="futureAgentCard">
           <div class="agent-header">
@@ -168,11 +211,25 @@
           <select id="agentSelect" class="console-select">
             <option value="ig-research">IG Research Agent</option>
             <option value="video-launchpad">Video Launchpad</option>
+            <option value="animal-stash">Animal Stash</option>
           </select>
           <input type="text" id="commandInput" class="console-input"
                  placeholder="Type a command or ask a question..."
                  onkeydown="if(event.key==='Enter') sendCommand()">
           <button class="btn btn-primary" onclick="sendCommand()">Send</button>
+        </div>
+      </section>
+
+      <!-- Animal Stash Projects Panel -->
+      <section class="detail-panel" id="animalStashPanel" style="display:none;">
+        <div class="detail-header">
+          <h3>Animal Stash Projects</h3>
+          <button class="btn btn-ghost" onclick="hideAnimalStashProjects()">Close</button>
+        </div>
+        <div class="as-projects-container" id="asProjectsContainer">
+          <div class="as-section" id="asInProgress"></div>
+          <div class="as-section" id="asCompleted"></div>
+          <div class="as-section" id="asQueued"></div>
         </div>
       </section>
 

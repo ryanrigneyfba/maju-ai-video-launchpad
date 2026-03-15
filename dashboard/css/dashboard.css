@@ -491,6 +491,199 @@ body {
   min-height: 20px;
 }
 
+/* Animal Stash Projects Panel */
+.as-projects-container {
+  padding: 20px;
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.as-section {
+  margin-bottom: 24px;
+}
+
+.as-section:last-child {
+  margin-bottom: 0;
+}
+
+.as-section-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.as-section-count {
+  display: inline-block;
+  background: rgba(74, 158, 255, 0.15);
+  color: var(--accent-blue);
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.as-project-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+  gap: 12px;
+}
+
+.as-project-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 16px;
+  transition: border-color 0.2s;
+}
+
+.as-project-card:hover {
+  border-color: var(--accent-blue);
+}
+
+.as-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.as-animal-emoji {
+  font-size: 1.6rem;
+  line-height: 1;
+}
+
+.as-card-title {
+  flex: 1;
+  min-width: 0;
+}
+
+.as-card-title h5 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.as-location {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.as-status-badge {
+  font-size: 0.7rem;
+  padding: 3px 8px;
+  border-radius: 10px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.as-status-completed {
+  background: rgba(52, 211, 153, 0.15);
+  color: var(--accent-green);
+}
+
+.as-status-progress {
+  background: rgba(251, 191, 36, 0.15);
+  color: var(--accent-yellow);
+}
+
+.as-status-queued {
+  background: rgba(136, 136, 160, 0.15);
+  color: var(--text-secondary);
+}
+
+.as-status-failed {
+  background: rgba(248, 113, 113, 0.15);
+  color: var(--accent-red);
+}
+
+.as-hook {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  font-style: italic;
+  margin-bottom: 12px;
+  line-height: 1.4;
+}
+
+/* 6-step progress bar */
+.as-progress {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.as-step {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.as-step-bar {
+  width: 100%;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(42, 42, 64, 0.8);
+  transition: background 0.3s;
+}
+
+.as-step-done .as-step-bar {
+  background: var(--accent-green);
+}
+
+.as-step-current .as-step-bar {
+  background: var(--accent-yellow);
+  animation: pulse 2s infinite;
+}
+
+.as-step-future .as-step-bar {
+  background: rgba(42, 42, 64, 0.8);
+}
+
+.as-step-label {
+  font-size: 0.55rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.as-step-done .as-step-label {
+  color: var(--accent-green);
+}
+
+.as-step-current .as-step-label {
+  color: var(--accent-yellow);
+}
+
+.as-card-footer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.as-date {
+  opacity: 0.7;
+}
+
+.as-family {
+  background: rgba(167, 139, 250, 0.1);
+  color: var(--accent-purple);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.65rem;
+}
+
+.as-asset-counts {
+  margin-left: auto;
+}
+
 /* Scrollbar */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
@@ -509,4 +702,6 @@ body {
   .insights-grid { grid-template-columns: 1fr; }
   .console-input-row { flex-wrap: wrap; }
   .console-select { width: 100%; }
+  .as-project-grid { grid-template-columns: 1fr; }
+  .as-step-label { font-size: 0.5rem; }
 }

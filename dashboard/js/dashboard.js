@@ -6,7 +6,7 @@
 // 1. Open browser console
 // 2. Run: crypto.subtle.digest('SHA-256', new TextEncoder().encode('YOUR_NEW_PASSWORD')).then(b => console.log(Array.from(new Uint8Array(b)).map(x => x.toString(16).padStart(2,'0')).join('')))
 // 3. Replace the hash below
-const ACCESS_CODE_HASH = '5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8'; // default: "password"
+const ACCESS_CODE_HASH = '4208e138fc6b28af24bcf6d55046108bdc7183924ae71fc0e138cdea287d48d0'; // maju2026
 
 async function hashCode(code) {
   const data = new TextEncoder().encode(code);
@@ -61,6 +61,11 @@ const DASHBOARD_CONFIG = {
       appUrl: '../index.html',
       status: 'idle',
     },
+    'animal-stash': {
+      name: 'Animal Stash Pipeline',
+      apiBase: null,
+      status: 'idle',
+    },
   },
   refreshInterval: 30000, // 30s auto-refresh
 };
@@ -102,6 +107,9 @@ async function loadDashboardData() {
 
   // Check video launchpad backend
   checkVideoBackend();
+
+  // Load Animal Stash data
+  loadAnimalStashData();
 }
 
 async function fetchAgentData(agentId, tool, args = {}) {
@@ -416,6 +424,27 @@ function showAgentDetail(agentId) {
         content.innerHTML = `<p style="color: var(--text-muted);">Agent not connected. Start the MCP server to see details.</p>`;
       }
     });
+  } else if (agentId === 'animal-stash') {
+    if (animalStashData && animalStashData.projects) {
+      const p = animalStashData.projects;
+      const inProg = p.filter(x => x.status === 'in_progress').length;
+      const done = p.filter(x => x.status === 'completed').length;
+      const q = p.filter(x => x.status === 'queued').length;
+      content.innerHTML = `
+        <div style="color: var(--text-secondary); font-size: 0.85rem; line-height: 1.8;">
+          <p><strong>Pipeline:</strong> Brief &rarr; Statics &rarr; Animate &rarr; Stitch &rarr; PostProd &rarr; Publish</p>
+          <p><strong>Total projects:</strong> ${p.length} (${inProg} in progress, ${done} completed, ${q} queued)</p>
+          <p><strong>Total frames generated:</strong> ${p.reduce((s, x) => s + (x.statics_count || 0), 0)}</p>
+          <p><strong>Total clips generated:</strong> ${p.reduce((s, x) => s + (x.clips_count || 0), 0)}</p>
+          <p><strong>Data generated:</strong> ${animalStashData.generated_at || 'Unknown'}</p>
+          <p style="margin-top: 12px; color: var(--text-muted);">
+            Run <code style="background: var(--bg-secondary); padding: 2px 6px; border-radius: 4px;">python -m pipeline.dashboard</code> to refresh data.
+          </p>
+        </div>
+      `;
+    } else {
+      content.innerHTML = '<p style="color: var(--text-muted);">No Animal Stash data available.</p>';
+    }
   } else if (agentId === 'video-launchpad') {
     content.innerHTML = `
       <p style="color: var(--text-secondary);">
@@ -431,6 +460,193 @@ function showAgentDetail(agentId) {
 
 function hideDetail() {
   document.getElementById('detailPanel').style.display = 'none';
+}
+
+// --- Animal Stash Pipeline ---
+let animalStashData = null;
+
+const AS_STAGE_NAMES = ['Brief', 'Statics', 'Animate', 'Stitch', 'PostProd', 'Publish'];
+
+const ANIMAL_EMOJIS = {
+  'maltese': '\uD83D\uDC15',
+  'corgi': '\uD83D\uDC15',
+  'pembroke welsh corgi': '\uD83D\uDC15',
+  'red fox': '\uD83E\uDD8A',
+  'fox': '\uD83E\uDD8A',
+  'raccoon': '\uD83E\uDD9D',
+  'north american raccoon': '\uD83E\uDD9D',
+  'ball python': '\uD83D\uDC0D',
+  'python': '\uD83D\uDC0D',
+  'sugar glider': '\uD83D\uDC3F\uFE0F',
+  'sugar glider (caramel)': '\uD83D\uDC3F\uFE0F',
+  'cat': '\uD83D\uDC31',
+  'rabbit': '\uD83D\uDC07',
+  'hamster': '\uD83D\uDC39',
+  'ferret': '\uD83E\uDDAD',
+  'parrot': '\uD83E\uDD9C',
+  'owl': '\uD83E\uDD89',
+  'hedgehog': '\uD83E\uDD94',
+};
+
+function getAnimalEmoji(animal) {
+  const key = animal.toLowerCase();
+  if (ANIMAL_EMOJIS[key]) return ANIMAL_EMOJIS[key];
+  for (const [k, v] of Object.entries(ANIMAL_EMOJIS)) {
+    if (key.includes(k) || k.includes(key)) return v;
+  }
+  return '\uD83D\uDC3E';
+}
+
+async function loadAnimalStashData() {
+  try {
+    const resp = await fetch('data/projects.json');
+    if (!resp.ok) {
+      updateAnimalStashStatus('offline');
+      return;
+    }
+    animalStashData = await resp.json();
+    updateAnimalStashCard(animalStashData);
+    updateAnimalStashStatus('online');
+  } catch {
+    updateAnimalStashStatus('offline');
+  }
+}
+
+function updateAnimalStashStatus(status) {
+  const badge = document.querySelector('#animalStashStatus .status-badge');
+  if (!badge) return;
+  if (status === 'online') {
+    badge.className = 'status-badge success';
+    badge.textContent = 'Active';
+  } else {
+    badge.className = 'status-badge idle';
+    badge.textContent = 'No Data';
+  }
+}
+
+function updateAnimalStashCard(data) {
+  if (!data || !data.projects) return;
+  const projects = data.projects;
+
+  document.getElementById('asProjectCount').textContent = projects.length;
+  document.getElementById('asStaticsCount').textContent =
+    projects.reduce((sum, p) => sum + (p.statics_count || 0), 0);
+  document.getElementById('asClipsCount').textContent =
+    projects.reduce((sum, p) => sum + (p.clips_count || 0), 0);
+  document.getElementById('asPublishedCount').textContent =
+    projects.filter(p => p.status === 'completed').length;
+
+  if (data.generated_at) {
+    document.getElementById('asLastUpdated').textContent = formatDate(data.generated_at);
+  }
+}
+
+function showAnimalStashProjects() {
+  const panel = document.getElementById('animalStashPanel');
+  panel.style.display = 'block';
+
+  if (!animalStashData || !animalStashData.projects) {
+    document.getElementById('asProjectsContainer').innerHTML =
+      '<p style="color: var(--text-muted); padding: 20px;">No project data available. Run pipeline.dashboard to generate.</p>';
+    return;
+  }
+
+  const projects = animalStashData.projects;
+  const inProgress = projects.filter(p => p.status === 'in_progress');
+  const completed = projects.filter(p => p.status === 'completed');
+  const queued = projects.filter(p => p.status === 'queued');
+
+  renderProjectSection('asInProgress', 'In Progress', inProgress);
+  renderProjectSection('asCompleted', 'Completed', completed);
+  renderProjectSection('asQueued', 'Queued', queued);
+}
+
+function hideAnimalStashProjects() {
+  document.getElementById('animalStashPanel').style.display = 'none';
+}
+
+function renderProjectSection(containerId, title, projects) {
+  const container = document.getElementById(containerId);
+  if (!projects.length) {
+    container.innerHTML = '';
+    return;
+  }
+
+  container.innerHTML = `
+    <h4 class="as-section-title">${title} <span class="as-section-count">${projects.length}</span></h4>
+    <div class="as-project-grid">
+      ${projects.map(renderProjectCard).join('')}
+    </div>
+  `;
+}
+
+function renderProjectCard(project) {
+  const emoji = getAnimalEmoji(project.animal);
+  const statusClass = {
+    'completed': 'as-status-completed',
+    'in_progress': 'as-status-progress',
+    'queued': 'as-status-queued',
+    'failed': 'as-status-failed',
+  }[project.status] || 'as-status-queued';
+
+  const statusLabel = {
+    'completed': 'Completed',
+    'in_progress': 'In Progress',
+    'queued': 'Queued',
+    'failed': 'Failed',
+  }[project.status] || project.status;
+
+  const progressSteps = AS_STAGE_NAMES.map((name, i) => {
+    const stageNum = i + 1;
+    let stepClass = 'as-step-future';
+    if (stageNum < project.stage) stepClass = 'as-step-done';
+    else if (stageNum === project.stage) {
+      stepClass = project.status === 'completed' ? 'as-step-done' : 'as-step-current';
+    }
+    return `<div class="as-step ${stepClass}" title="${name}">
+      <div class="as-step-bar"></div>
+      <span class="as-step-label">${name}</span>
+    </div>`;
+  }).join('');
+
+  const hookText = project.hook_text
+    ? `<p class="as-hook">"${truncateText(project.hook_text, 60)}"</p>`
+    : '';
+
+  const familyInfo = project.family_composition
+    ? `<span class="as-family">${project.family_composition}</span>`
+    : '';
+
+  return `
+    <div class="as-project-card">
+      <div class="as-card-header">
+        <span class="as-animal-emoji">${emoji}</span>
+        <div class="as-card-title">
+          <h5>${project.animal}</h5>
+          <span class="as-location">${project.location}</span>
+        </div>
+        <span class="as-status-badge ${statusClass}">${statusLabel}</span>
+      </div>
+      ${hookText}
+      <div class="as-progress">
+        ${progressSteps}
+      </div>
+      <div class="as-card-footer">
+        <span class="as-date">${project.date}</span>
+        ${familyInfo}
+        <span class="as-asset-counts">
+          ${project.statics_count ? project.statics_count + ' frames' : ''}
+          ${project.statics_count && project.clips_count ? ' / ' : ''}
+          ${project.clips_count ? project.clips_count + ' clips' : ''}
+        </span>
+      </div>
+    </div>
+  `;
+}
+
+function truncateText(str, len) {
+  if (!str) return '';
+  return str.length > len ? str.slice(0, len) + '...' : str;
 }
 
 // --- Helpers ---
